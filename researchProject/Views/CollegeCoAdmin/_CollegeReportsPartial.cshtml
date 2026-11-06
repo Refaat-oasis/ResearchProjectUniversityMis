@@ -1,0 +1,113 @@
+@model researchProject.Models.DTOs.SystemStatisticsDto
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-pie-chart text-primary"></i> إحصائيات وتقارير أداء الكلية
+            </h4>
+            <div class="text-muted small">مؤشرات أداء فحص المقترحات وإنجاز لجان التحكيم على مستوى الكلية</div>
+        </div>
+        <button class="btn btn-outline-success btn-sm" onclick="window.print();">
+            <i class="bi bi-printer me-1"></i> طباعة التقرير
+        </button>
+    </div>
+
+    <!-- Stat Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">أبحاث الكلية الإجمالية</div>
+                    <div class="stat-number text-primary">@Model.TotalResearches</div>
+                </div>
+                <div class="stat-icon bg-primary-subtle text-primary">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">قيد الفحص الشكلي</div>
+                    <div class="stat-number text-warning">@Model.UnderScreeningCount</div>
+                </div>
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="bi bi-hourglass"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">مسندة للتحكيم</div>
+                    <div class="stat-number text-info">@Model.AssignedToJudgesCount</div>
+                </div>
+                <div class="stat-icon bg-info-subtle text-info">
+                    <i class="bi bi-person-lines-fill"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">شهادات صادرة</div>
+                    <div class="stat-number text-success">@Model.CertificatesIssuedCount</div>
+                </div>
+                <div class="stat-icon bg-success-subtle text-success">
+                    <i class="bi bi-patch-check-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality KPIs -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card p-3 bg-light border">
+                <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-2"></i>كفاءة الفحص الشكلي وسرعة الإنجاز</h6>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">متوسط زمن الفحص الإداري:</span>
+                    <strong class="text-dark">@Model.AverageScreeningHours ساعة</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">نسبة الالتزام بالمهلة (48h):</span>
+                    <strong class="text-success">@Model.SlaCompliancePercentage%</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">الباحثون المسجلون بالكلية:</span>
+                    <strong class="text-dark">@Model.TotalResearchers باحث</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3 bg-light border">
+                <h6 class="fw-bold mb-3"><i class="bi bi-sliders text-primary me-2"></i>توزيع أبحاث الكلية حسب التصنيف</h6>
+                <table class="table table-sm table-hover bg-white rounded">
+                    <thead>
+                        <tr>
+                            <th>التصنيف</th>
+                            <th class="text-center">العدد</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.ResearchesByCategory != null && Model.ResearchesByCategory.Any())
+                        {
+                            foreach (var item in Model.ResearchesByCategory)
+                            {
+                                <tr>
+                                    <td>@item.Key</td>
+                                    <td class="text-center fw-bold">@item.Value</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

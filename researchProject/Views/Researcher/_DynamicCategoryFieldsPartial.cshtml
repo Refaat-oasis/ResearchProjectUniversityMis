@@ -1,0 +1,79 @@
+@model researchProject.Models.Entities.ResearchCategory
+@using System.Text.Json
+
+@if (Model != null && !string.IsNullOrWhiteSpace(Model.FieldsDefinitionJson))
+{
+    <div class="card p-3 bg-light border mb-3">
+        <h6 class="fw-bold text-primary mb-3">
+            <i class="bi bi-ui-radios-grid me-2"></i>حقول نموذج التقديم الخاصة بتصنيف: « @Model.Name »
+        </h6>
+
+        <div class="row g-3">
+            @{
+                try
+                {
+                    using var doc = JsonDocument.Parse(Model.FieldsDefinitionJson);
+                    foreach (var element in doc.RootElement.EnumerateArray())
+                    {
+                        var name = element.GetProperty("Name").GetString() ?? "";
+                        var label = element.TryGetProperty("Label", out var lProp) ? lProp.GetString() : name;
+                        var type = element.TryGetProperty("Type", out var tProp) ? tProp.GetString()?.ToLowerInvariant() : "text";
+                        var isReq = element.TryGetProperty("IsRequired", out var rProp) && rProp.GetBoolean();
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                @label
+                                @if (isReq)
+                                {
+                                    <span class="text-danger">*</span>
+                                }
+                            </label>
+
+                            @if (type == "textarea")
+                            {
+                                <textarea name="DynamicFields[@name]" class="form-control" rows="2" @(isReq ? "required" : "") placeholder="@label"></textarea>
+                            }
+                            else if (type == "number")
+                            {
+                                <input type="number" name="DynamicFields[@name]" class="form-control" @(isReq ? "required" : "") placeholder="@label" />
+                            }
+                            else if (type == "date")
+                            {
+                                <input type="date" name="DynamicFields[@name]" class="form-control" @(isReq ? "required" : "") />
+                            }
+                            else if (type == "yesno")
+                            {
+                                <select name="DynamicFields[@name]" class="form-select" @(isReq ? "required" : "")>
+                                    <option value="">-- اختر --</option>
+                                    <option value="نعم">نعم</option>
+                                    <option value="لا">لا</option>
+                                </select>
+                            }
+                            else if (type == "dropdown")
+                            {
+                                <select name="DynamicFields[@name]" class="form-select" @(isReq ? "required" : "")>
+                                    <option value="">-- اختر من القائمة --</option>
+                                    @if (element.TryGetProperty("Options", out var optsProp) && optsProp.ValueKind == JsonValueKind.Array)
+                                    {
+                                        foreach (var opt in optsProp.EnumerateArray())
+                                        {
+                                            <option value="@opt.GetString()">@opt.GetString()</option>
+                                        }
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <input type="text" name="DynamicFields[@name]" class="form-control" @(isReq ? "required" : "") placeholder="@label" />
+                            }
+                        </div>
+                    }
+                }
+                catch
+                {
+                    <div class="col-12 text-muted small">تعذر قراءة الحقول الإضافية.</div>
+                }
+            }
+        </div>
+    </div>
+}

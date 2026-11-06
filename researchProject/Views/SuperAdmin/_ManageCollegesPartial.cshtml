@@ -1,0 +1,115 @@
+@model List<researchProject.Models.Entities.College>
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <h4 class="card-title-custom">
+            <i class="bi bi-buildings text-primary"></i> إدارة كليات الجامعة ولجانها الفرعية
+        </h4>
+        <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCollegeModal">
+            <i class="bi bi-plus-lg me-1"></i> إضافة كلية جديدة
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>اسم الكلية</th>
+                    <th>رمز الكلية</th>
+                    <th>مدير اللجنة الفرعية</th>
+                    <th>عدد التصنيفات</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var c in Model)
+                    {
+                        var coAdmin = c.CollegeCoAdmins?.FirstOrDefault()?.User?.FullName ?? "لم يُعين بعد";
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold text-dark">@c.Name</td>
+                            <td><span class="badge bg-secondary-subtle text-secondary font-monospace">@c.Code</span></td>
+                            <td>
+                                @if (c.CollegeCoAdmins != null && c.CollegeCoAdmins.Any())
+                                {
+                                    <span class="text-primary"><i class="bi bi-person-badge me-1"></i>@coAdmin</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger small"><i class="bi bi-exclamation-circle me-1"></i>لا يوجد مدير لجنة</span>
+                                }
+                            </td>
+                            <td>@(c.ResearchCategories?.Count ?? 0) تصنيف</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="editCollege(@c.Id, '@c.Name', '@c.Code')">
+                                    <i class="bi bi-pencil"></i> تعديل
+                                </button>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">لا توجد كليات مسجلة حالياً.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add College -->
+<div class="modal fade" id="addCollegeModal" tabindex="-1" aria-labelledby="addCollegeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addCollegeModalLabel"><i class="bi bi-building-add me-2 text-primary"></i>إضافة كلية جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createCollegeForm" action="/SuperAdmin/CreateCollege" method="post" onsubmit="return handleAjaxFormSubmit(this, onCollegeSaved);">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">اسم الكلية <span class="text-danger">*</span></label>
+                        <input type="text" name="Name" class="form-control" required placeholder="مثال: كلية الطب البشري" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">رمز الكلية (Code) <span class="text-danger">*</span></label>
+                        <input type="text" name="Code" class="form-control" required placeholder="مثال: MED" dir="ltr" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom">حفظ الكلية</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onCollegeSaved(res) {
+        $('#addCollegeModal').modal('hide');
+        $('.modal-backdrop').remove();
+        loadPartial('/SuperAdmin/ManageCollegesPartial', '#main-content-container', 'colleges');
+    }
+
+    function editCollege(id, name, code) {
+        var newName = prompt('تعديل اسم الكلية:', name);
+        if (newName === null) return;
+        var newCode = prompt('تعديل رمز الكلية:', code);
+        if (newCode === null) return;
+
+        $.post('/SuperAdmin/UpdateCollege', { Id: id, Name: newName, Code: newCode }, function (res) {
+            alert(res.message);
+            if (res.success) {
+                loadPartial('/SuperAdmin/ManageCollegesPartial', '#main-content-container', 'colleges');
+            }
+        });
+    }
+</script>

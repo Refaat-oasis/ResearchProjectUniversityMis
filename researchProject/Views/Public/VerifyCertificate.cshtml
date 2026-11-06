@@ -1,0 +1,72 @@
+@model researchProject.Models.DTOs.CertificateVerificationResultDto
+@{
+    ViewData["Title"] = "التحقق من صحة الشهادة الأخلاقية";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card card-custom shadow-sm border-0">
+                <div class="text-center mb-4">
+                    <div class="bg-primary text-white d-inline-flex p-3 rounded-circle shadow-sm mb-3">
+                        <i class="bi bi-qr-code-scan fs-2"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">التحقق الرسمي من الشهادات الأخلاقية</h4>
+                    <p class="text-muted small">نظام التحقق الإلكتروني المعتمد - جامعة مصر الأكاديمية</p>
+                </div>
+
+                <form asp-controller="Public" asp-action="VerifyCertificate" method="get" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="serialNumber" value="@Model.SerialNumber" class="form-control form-control-lg" placeholder="أدخل الرقم المسلسل للشهادة (مثال: REC-MED-2026-123456)" dir="ltr" />
+                        <button type="submit" class="btn btn-primary-custom px-4">
+                            <i class="bi bi-search me-1"></i> فحص وتحقق
+                        </button>
+                    </div>
+                </form>
+
+                @if (!string.IsNullOrEmpty(Model.SerialNumber))
+                {
+                    if (Model.IsValid)
+                    {
+                        <div class="border rounded-3 p-4 bg-success-subtle border-success">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <i class="bi bi-patch-check-fill text-success fs-1"></i>
+                                <div>
+                                    <h5 class="fw-bold text-success mb-0">شهادة معتمدة ورسمية</h5>
+                                    <div class="text-muted small">@Model.Message</div>
+                                </div>
+                            </div>
+
+                            <hr class="border-success-subtle my-3" />
+
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4 text-muted">الرقم المسلسل المعتمد:</dt>
+                                <dd class="col-sm-8 fw-bold text-dark" dir="ltr">@Model.SerialNumber</dd>
+
+                                <dt class="col-sm-4 text-muted">عنوان المقترح البحثي:</dt>
+                                <dd class="col-sm-8 fw-bold text-primary">« @Model.ResearchTitle »</dd>
+
+                                <dt class="col-sm-4 text-muted">الكلية التابع لها البحث:</dt>
+                                <dd class="col-sm-8">@Model.CollegeName</dd>
+
+                                <dt class="col-sm-4 text-muted">تاريخ الاعتماد والإصدار:</dt>
+                                <dd class="col-sm-8">@(Model.IssueDate?.ToString("yyyy/MM/dd") ?? "-")</dd>
+
+                                <dt class="col-sm-4 text-muted">الجهة المانحة:</dt>
+                                <dd class="col-sm-8">اللجنة الفرعية لأخلاقيات البحث العلمي والنزاهة الأكاديمية</dd>
+                            </dl>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="border rounded-3 p-4 bg-danger-subtle border-danger text-center">
+                            <i class="bi bi-x-circle-fill text-danger fs-1 mb-2"></i>
+                            <h5 class="fw-bold text-danger">شهادة غير صالحة أو غير مسجلة</h5>
+                            <p class="text-muted mb-0">@Model.Message</p>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

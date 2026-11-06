@@ -1,0 +1,215 @@
+@model List<researchProject.Models.Entities.Judge>
+@using researchProject.Models.Constants
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-mortarboard text-primary"></i> هيئة المحكمين المعتمدين والدعوات الأكاديمية
+            </h4>
+            <div class="text-muted small">إدارة المحكمين وتفعيلهم أو تعطيلهم، ومتابعة روابط الدعوات المرسلة</div>
+        </div>
+        <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#inviteJudgeModal">
+            <i class="bi bi-envelope-plus-fill me-1"></i> إرسال دعوة تحكيم جديدة
+        </button>
+    </div>
+
+    <!-- Nav Tabs for Active Judges and Invitations -->
+    <ul class="nav nav-pills mb-3" id="judgesTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active btn-sm" id="active-judges-tab" data-bs-toggle="pill" data-bs-target="#active-judges" type="button" role="tab">
+                المحكمون المسجلون (@(Model?.Count ?? 0))
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link btn-sm" id="invitations-tab" data-bs-toggle="pill" data-bs-target="#invitations" type="button" role="tab">
+                سجل الدعوات (@(ViewBag.Invitations != null ? ((List<researchProject.Models.Entities.JudgeInvitation>)ViewBag.Invitations).Count : 0))
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="judgesTabContent">
+        <!-- Tab 1: Judges List -->
+        <div class="tab-pane fade show active" id="active-judges" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>اسم المحكم</th>
+                            <th>اللقب الأكاديمي</th>
+                            <th>التخصص الدقيق</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>التقييمات المفتوحة</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            int index = 1;
+                            foreach (var j in Model)
+                            {
+                                int openEvals = j.Evaluations?.Count(e => e.Decision == EvaluationDecisionConstants.UnderEvaluation) ?? 0;
+                                <tr>
+                                    <td>@index</td>
+                                    <td class="fw-bold text-dark">@j.User?.FullName</td>
+                                    <td>@j.AcademicTitle</td>
+                                    <td><span class="badge bg-light text-primary border">@j.Specialty</span></td>
+                                    <td dir="ltr" class="text-end font-monospace small">@j.User?.Email</td>
+                                    <td>
+                                        <span class="badge @(openEvals > 0 ? "bg-warning text-dark" : "bg-success")">
+                                            @openEvals أبحاث
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (j.IsActive)
+                                        {
+                                            <span class="badge bg-success">نشط</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">معطل</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm @(j.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                onclick="toggleJudgeStatus(@j.Id, @(!j.IsActive ? "true" : "false"))">
+                                            <i class="bi @(j.IsActive ? "bi-person-x" : "bi-person-check")"></i>
+                                            @(j.IsActive ? "تعطيل" : "تفعيل")
+                                        </button>
+                                    </td>
+                                </tr>
+                                index++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">لا يوجد محكمون مسجلون حالياً.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 2: Invitations -->
+        <div class="tab-pane fade" id="invitations" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>البريد الإلكتروني</th>
+                            <th>التخصص المطلوب</th>
+                            <th>المرسل</th>
+                            <th>تاريخ الإرسال</th>
+                            <th>تاريخ الانتهاء</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Invitations != null)
+                        {
+                            foreach (var inv in (List<researchProject.Models.Entities.JudgeInvitation>)ViewBag.Invitations)
+                            {
+                                <tr>
+                                    <td dir="ltr" class="text-end font-monospace">@inv.Email</td>
+                                    <td>@(inv.Specialty ?? "عام")</td>
+                                    <td>@(inv.InvitedByUser?.FullName ?? "مدير النظام")</td>
+                                    <td>@inv.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                    <td>@inv.ExpiresAt.ToString("yyyy/MM/dd")</td>
+                                    <td>
+                                        @if (inv.Status == InvitationStatusConstants.Accepted)
+                                        {
+                                            <span class="badge bg-success">تم القبول</span>
+                                        }
+                                        else if (inv.Status == InvitationStatusConstants.Pending)
+                                        {
+                                            <span class="badge bg-warning text-dark">قيد الانتظار</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@inv.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (inv.Status == InvitationStatusConstants.Pending && inv.ExpiresAt > DateTime.UtcNow)
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger" onclick="revokeInvitation(@inv.Id)">
+                                                <i class="bi bi-x-circle me-1"></i> إلغاء
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Invite Judge -->
+<div class="modal fade" id="inviteJudgeModal" tabindex="-1" aria-labelledby="inviteJudgeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="inviteJudgeModalLabel"><i class="bi bi-envelope-plus me-2 text-primary"></i>دعوة محكم علمي للانضمام</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="inviteJudgeForm" action="/SuperAdmin/InviteJudge" method="post" onsubmit="return handleAjaxFormSubmit(this, onJudgeInvited);">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" required placeholder="judge@example.com" dir="ltr" />
+                        <div class="form-text small">يمكن إرسال الدعوة لخبراء من داخل أو خارج الجامعة (دون اشتراط بريد مؤسسي).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">التخصص الأكاديمي الدقيق</label>
+                        <input type="text" name="specialty" class="form-control" placeholder="مثال: العلوم الطبية والصحية / التجارب السريرية" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom">إرسال الدعوة بالبريد</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onJudgeInvited(res) {
+        $('#inviteJudgeModal').modal('hide');
+        $('.modal-backdrop').remove();
+        alert(res.message);
+        loadPartial('/SuperAdmin/ManageJudgesPartial', '#main-content-container', 'judges');
+    }
+
+    function toggleJudgeStatus(id, isActive) {
+        $.post('/SuperAdmin/ToggleJudgeStatus', { judgeId: id, isActive: isActive }, function (res) {
+            alert(res.message);
+            if (res.success) {
+                loadPartial('/SuperAdmin/ManageJudgesPartial', '#main-content-container', 'judges');
+            }
+        });
+    }
+
+    function revokeInvitation(id) {
+        if (!confirm('هل أنت متأكد من رغبتك في إلغاء هذه الدعوة؟')) return;
+        $.post('/SuperAdmin/RevokeInvitation', { invitationId: id }, function (res) {
+            alert(res.message);
+            if (res.success) {
+                loadPartial('/SuperAdmin/ManageJudgesPartial', '#main-content-container', 'judges');
+            }
+        });
+    }
+</script>

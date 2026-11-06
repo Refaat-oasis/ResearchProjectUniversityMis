@@ -1,0 +1,147 @@
+@model researchProject.Models.Entities.Research
+@using researchProject.Models.Constants
+
+@{
+    int currentStep = 1;
+    if (Model.WorkflowStatus == ResearchStatusConstants.UnderFormalScreening) currentStep = 1;
+    else if (Model.WorkflowStatus == ResearchStatusConstants.AssignedToJudges) currentStep = 2;
+    else if (Model.WorkflowStatus == ResearchStatusConstants.ModificationsRequired) currentStep = 3;
+    else if (Model.WorkflowStatus == ResearchStatusConstants.Approved) currentStep = 4;
+    else if (Model.WorkflowStatus == ResearchStatusConstants.CertificateIssued) currentStep = 5;
+}
+
+<div class="card card-custom" id="trackerCardContainer" data-research-id="@Model.Id">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-activity text-primary"></i> تتبع مسار المقترح البحثي (Status Tracker)
+            </h4>
+            <div class="text-muted small">« @Model.Title » - كلية @Model.College?.Name</div>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary btn-sm" onclick="loadPartial('/Researcher/MyResearchesPartial', '#main-content-container', 'my-researches');">
+                <i class="bi bi-arrow-right me-1"></i> العودة لقائمتي
+            </button>
+        </div>
+    </div>
+
+    <!-- Visual 5-Stage Stepper -->
+    <div class="status-tracker-container">
+        <!-- Stage 1 -->
+        <div class="status-step @(currentStep > 1 ? "step-completed" : (currentStep == 1 ? "step-active" : ""))">
+            <div class="step-circle">
+                @if (currentStep > 1) { <i class="bi bi-check-lg"></i> } else { <span>1</span> }
+            </div>
+            <div class="step-label">المراجعة الشكلية</div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="status-step @(currentStep > 2 ? "step-completed" : (currentStep == 2 ? "step-active" : ""))">
+            <div class="step-circle">
+                @if (currentStep > 2) { <i class="bi bi-check-lg"></i> } else { <span>2</span> }
+            </div>
+            <div class="step-label">مسند للمحكمين</div>
+        </div>
+
+        <!-- Stage 3 (Modifications or Under Review) -->
+        <div class="status-step @(currentStep > 3 ? "step-completed" : (currentStep == 3 ? "step-active text-danger" : ""))">
+            <div class="step-circle @(currentStep == 3 ? "bg-danger text-white border-danger" : "")">
+                @if (currentStep > 3) { <i class="bi bi-check-lg"></i> } else { <span>3</span> }
+            </div>
+            <div class="step-label">@(currentStep == 3 ? "تعديلات مطلوبة" : "مراجعة التعديلات")</div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="status-step @(currentStep > 4 ? "step-completed" : (currentStep == 4 ? "step-active" : ""))">
+            <div class="step-circle">
+                @if (currentStep > 4) { <i class="bi bi-check-lg"></i> } else { <span>4</span> }
+            </div>
+            <div class="step-label">معتمد بالكامل</div>
+        </div>
+
+        <!-- Stage 5 -->
+        <div class="status-step @(currentStep == 5 ? "step-completed" : "")">
+            <div class="step-circle">
+                @if (currentStep == 5) { <i class="bi bi-patch-check-fill text-white"></i> } else { <span>5</span> }
+            </div>
+            <div class="step-label">صادر الشهادة</div>
+        </div>
+    </div>
+
+    <!-- Status Action Banner -->
+    @if (Model.WorkflowStatus == ResearchStatusConstants.ModificationsRequired)
+    {
+        <div class="alert alert-danger p-3 my-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold text-danger mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>تعديلات مطلوبة من المحكمين</h6>
+                <div class="small">يرجى مراجعة الملاحظات المدونة أدناه وإعادة رفع خطة البحث أو الأدوات المعدلة.</div>
+            </div>
+            <button class="btn btn-danger btn-sm fw-bold px-3" onclick="loadPartial('/Researcher/UploadModificationsPartial/@Model.Id', '#main-content-container', 'my-researches');">
+                <i class="bi bi-upload me-1"></i> رفع الملفات المعدلة الآن
+            </button>
+        </div>
+    }
+    else if (Model.WorkflowStatus == ResearchStatusConstants.CertificateIssued)
+    {
+        <div class="alert alert-success p-3 my-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold text-success mb-1"><i class="bi bi-patch-check-fill me-1"></i>تم إصدار الشهادة الأخلاقية الرسمية بنجاح!</h6>
+                <div class="small">رقم الشهادة: <strong>@Model.CertificateSerialNumber</strong> (تاريخ الإصدار: @Model.CertificateIssuedAt?.ToString("yyyy/MM/dd"))</div>
+            </div>
+            <a href="/Researcher/DownloadCertificate?researchId=@Model.Id" target="_blank" class="btn btn-success btn-sm fw-bold px-3">
+                <i class="bi bi-download me-1"></i> تحميل الشهادة (HTML / PDF)
+            </a>
+        </div>
+    }
+
+    <!-- Timeline of Status Changes -->
+    <h6 class="fw-bold text-dark mt-4 mb-3"><i class="bi bi-clock-history me-2 text-primary"></i>سجل المسار وتاريخ الحالات</h6>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle border">
+            <thead class="table-light">
+                <tr>
+                    <th>تاريخ الإجراء</th>
+                    <th>الحالة السابقة</th>
+                    <th>الحالة الجديدة</th>
+                    <th>بيان الإجراء / ملاحظات اللجنة</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.ResearchStatusHistories != null && Model.ResearchStatusHistories.Any())
+                {
+                    foreach (var h in Model.ResearchStatusHistories.OrderByDescending(h => h.ChangedAt))
+                    {
+                        <tr>
+                            <td class="text-muted small">@h.ChangedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td>@(h.OldStatus ?? "طلب جديد")</td>
+                            <td class="fw-bold text-primary">@h.NewStatus</td>
+                            <td class="small" style="max-width: 450px; white-space: pre-line;">@h.Reason</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Polling Notice -->
+    <div class="text-muted text-center small mt-3">
+        <i class="bi bi-arrow-repeat me-1 spin-icon"></i> يتم تحديث حالة هذا المقترح تلقائياً كل 30 ثانية.
+    </div>
+</div>
+
+<script>
+    // Polling every 30 seconds per Rule Section 5.5
+    var trackerPollInterval = setInterval(function () {
+        var $tracker = $('#trackerCardContainer');
+        if ($tracker.length && $tracker.is(':visible')) {
+            var researchId = $tracker.data('research-id');
+            if (researchId) {
+                $.get('/Researcher/ResearchStatusTrackerPartial/' + researchId, function (html) {
+                    $('#main-content-container').html(html);
+                });
+            }
+        } else {
+            clearInterval(trackerPollInterval);
+        }
+    }, 30000);
+</script>

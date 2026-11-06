@@ -1,0 +1,64 @@
+@model List<researchProject.Models.Entities.Research>
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-patch-check-fill text-success"></i> شهاداتي الأخلاقية المعتمدة
+            </h4>
+            <div class="text-muted small">سجل الشهادات الأخلاقية الرسمية الصادرة لمقترحاتك البحثية المعتمدة</div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>الرقم المسلسل للشهادة</th>
+                    <th>عنوان المقترح البحثي</th>
+                    <th>الكلية</th>
+                    <th>تاريخ الاعتماد</th>
+                    <th>فحص الكود (QR)</th>
+                    <th>تحميل الوثيقة</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold font-monospace text-success" dir="ltr">@r.CertificateSerialNumber</td>
+                            <td class="fw-bold" style="max-width: 280px;">@r.Title</td>
+                            <td><span class="badge bg-light text-dark border">@r.College?.Name</span></td>
+                            <td class="text-muted small">@(r.CertificateIssuedAt?.ToString("yyyy/MM/dd") ?? "-")</td>
+                            <td>
+                                <a href="@r.CertificateQrCodeUrl" target="_blank" class="badge bg-primary text-decoration-none">
+                                    <i class="bi bi-qr-code me-1"></i> فحص رسمي
+                                </a>
+                            </td>
+                            <td>
+                                <a href="/Researcher/DownloadCertificate?researchId=@r.Id" target="_blank" class="btn btn-sm btn-success fw-bold">
+                                    <i class="bi bi-download me-1"></i> تحميل الشهادة
+                                </a>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-award text-muted fs-3 d-block mb-2"></i>
+                            لا توجد شهادات أخلاقية صادرة لك حتى الآن. بمجرد اعتماد أبحاثك من لجان الأخلاقيات، ستظهر شهاداتك هنا.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

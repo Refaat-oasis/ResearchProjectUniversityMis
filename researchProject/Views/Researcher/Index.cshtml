@@ -1,0 +1,29 @@
+@model researchProject.Models.Entities.Researcher
+@{
+    ViewData["Title"] = "بوابة الباحثين";
+}
+
+<div class="app-container">
+    <partial name="_RightSidebarPartial" />
+    <main id="main-content-container" class="main-content">
+        <div class="card card-custom">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h3 class="fw-bold text-success mb-1">أهلاً بك، @(Model?.User?.FullName ?? User.Identity?.Name)</h3>
+                    <div class="text-muted">@(Model?.AcademicDegree ?? "باحث") - قسم @(Model?.Department ?? "") - @(Model?.College?.Name ?? "")</div>
+                </div>
+                <div>
+                    <span class="badge bg-success-subtle text-success py-2 px-3 border border-success-subtle">
+                        <i class="bi bi-mortarboard me-1"></i> فئة الباحث: @(Model?.ResearcherType ?? "باحث")
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                loadPartial('/Researcher/MyResearchesPartial', '#main-content-container', 'my-researches');
+            });
+        </script>
+    </main>
+</div>

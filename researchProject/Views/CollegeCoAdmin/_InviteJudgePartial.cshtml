@@ -1,0 +1,42 @@
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-envelope-plus text-primary"></i> دعوة محكم علمي معتمد
+            </h4>
+            <div class="text-muted small">إرسال رابط دعوة آمن عبر البريد الإلكتروني لانضمام خبير أو باحث لهيئة المحكمين</div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="p-4 border rounded bg-light">
+                <form id="coAdminInviteForm" action="/CollegeCoAdmin/InviteJudge" method="post" onsubmit="return handleAjaxFormSubmit(this, onCoAdminJudgeInvited);">
+                    <div class="mb-3">
+                        <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" required placeholder="judge@example.com" dir="ltr" />
+                        <div class="form-text small">يمكن دعوة محكمين من داخل الكلية أو من خبراء خارجيين مستقلين.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">التخصص الأكاديمي الدقيق المطلوب للتحكيم</label>
+                        <input type="text" name="specialty" class="form-control" placeholder="مثال: علم الأدوية السريري / الأخلاقيات الحيوية" />
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                            <i class="bi bi-send-fill me-1"></i> إرسال رابط الدعوة الرسمية
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onCoAdminJudgeInvited(res) {
+        alert(res.message);
+        $('#coAdminInviteForm')[0].reset();
+    }
+</script>

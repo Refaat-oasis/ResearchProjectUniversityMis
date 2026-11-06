@@ -1,0 +1,141 @@
+@model List<researchProject.Models.Entities.Research>
+@using researchProject.Models.Constants
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-award text-success"></i> الاعتماد النهائي وإصدار الشهادات الأخلاقية الرقمية
+            </h4>
+            <div class="text-muted small">المقترحات التي نالت موافقة واكتمال جولات التحكيم (صلاحية حصرية لمدير اللجنة الفرعية بالكلية)</div>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadSigModal">
+            <i class="bi bi-pen me-1"></i> رفع / تحديث التوقيع الرقمي
+        </button>
+    </div>
+
+    <!-- Instructions Notice -->
+    <div class="alert alert-info small mb-4">
+        <i class="bi bi-info-circle-fill me-1"></i>
+        <strong>ملاحظة هامة:</strong> يتطلب إصدار الشهادة الأخلاقية وجود توقيع رقمي معتمد لمدير اللجنة ليتم ختمه تلقائياً على وثيقة الشهادة مع رمز الاستجابة السريعة (QR Code).
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>عنوان المقترح البحثي</th>
+                    <th>التصنيف والتخصص</th>
+                    <th>الباحث الرئيسي</th>
+                    <th>نتائج التحكيم</th>
+                    <th>الحالة الحالية</th>
+                    <th>الإجراء التنفيذي</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var r in Model)
+                    {
+                        var mainAuthor = r.ResearcherResearchesBridges?.FirstOrDefault()?.Researcher?.User?.FullName ?? "غير محدد";
+                        int approvedJudges = r.Evaluations?.Count(e => e.Decision == EvaluationDecisionConstants.Approved) ?? 0;
+
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold" style="max-width: 250px;">@r.Title</td>
+                            <td>
+                                <div>@r.Category?.Name</div>
+                                <div class="text-muted small">@r.AcademicSpecialty</div>
+                            </td>
+                            <td>@mainAuthor</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check2-all me-1"></i> موافقة @approvedJudges محكمين
+                                </span>
+                            </td>
+                            <td><span class="badge-status status-approved">@r.WorkflowStatus</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-success fw-bold px-3" onclick="issueCertificate(@r.Id, '@r.Title');">
+                                    <i class="bi bi-patch-check-fill me-1"></i> اعتماد وإصدار الشهادة
+                                </button>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            لا توجد أبحاث معتمدة بانتظار إصدار الشهادة حالياً.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Upload Signature -->
+<div class="modal fade" id="uploadSigModal" tabindex="-1" aria-labelledby="uploadSigModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="uploadSigModalLabel"><i class="bi bi-pen me-2 text-primary"></i>رفع صورة التوقيع الرقمي المعتمد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="uploadSignatureForm" action="/CollegeCoAdmin/UploadSignature" method="post" enctype="multipart/form-data" onsubmit="return handleAjaxFormSubmit(this, onSignatureUploaded);">
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">
+                        يرجى رفع صورة واضحة ومفرغة (PNG بخلفية شفافة) لتوقيع سعادتكم لاعتمادها وختمها على الشهادات الصادرة.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label">ملف صورة التوقيع (PNG, JPG) <span class="text-danger">*</span></label>
+                        <input type="file" name="signatureFile" class="form-control" accept="image/png,image/jpeg" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom">حفظ التوقيع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onSignatureUploaded(res) {
+        $('#uploadSigModal').modal('hide');
+        $('.modal-backdrop').remove();
+        alert(res.message);
+    }
+
+    function issueCertificate(researchId, title) {
+        if (!confirm('هل تؤكد اعتماد المقترح البحثي «' + title + '» وإصدار الشهادة الأخلاقية الرسمية رقمياً وختم توقيعكم عليها؟')) {
+            return;
+        }
+
+        $('#partial-loading-spinner').css('display', 'flex');
+
+        $.ajax({
+            url: '/CollegeCoAdmin/IssueCertificate?researchId=' + researchId,
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function (res) {
+                $('#partial-loading-spinner').hide();
+                alert(res.message);
+                if (res.success) {
+                    loadPartial('/CollegeCoAdmin/FinalApprovalPartial', '#main-content-container', 'final-approval');
+                }
+            },
+            error: function (xhr) {
+                $('#partial-loading-spinner').hide();
+                alert('فشل إصدار الشهادة: ' + xhr.responseText);
+            }
+        });
+    }
+</script>

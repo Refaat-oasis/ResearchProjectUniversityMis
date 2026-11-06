@@ -1,0 +1,29 @@
+## Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+## Database and local uploads
+*.mdf
+*.ldf
+App_Data/UploadedFiles/*
+!App_Data/UploadedFiles/.gitkeep
+App_Data/Certificates/*
+!App_Data/Certificates/.gitkeep
+researchProject/wwwroot/uploads/*
+!researchProject/wwwroot/uploads/.gitkeep

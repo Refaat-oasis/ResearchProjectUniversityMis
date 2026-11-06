@@ -1,0 +1,224 @@
+@model researchProject.Models.Entities.Research
+@using System.Text.Json
+@using researchProject.Models.Constants
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-file-earmark-check text-primary"></i> فحص المقترح وإسناد المحكمين
+            </h4>
+            <div class="text-muted small">« @Model.Title » - كلية @Model.College?.Name</div>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary btn-sm" onclick="loadPartial('/CollegeCoAdmin/ScreeningQueuePartial', '#main-content-container', 'screening-queue');">
+                <i class="bi bi-arrow-right me-1"></i> العودة لطابور الفحص
+            </button>
+        </div>
+    </div>
+
+    <!-- Metadata & Authors -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded border">
+                <div class="text-muted small">التصنيف والتخصص:</div>
+                <div class="fw-bold text-dark mt-1">@Model.Category?.Name</div>
+                <div class="text-primary small">@Model.AcademicSpecialty</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded border">
+                <div class="text-muted small">الباحثون والمشاركون:</div>
+                <div class="mt-1">
+                    @if (Model.ResearcherResearchesBridges != null)
+                    {
+                        foreach (var b in Model.ResearcherResearchesBridges)
+                        {
+                            <span class="badge bg-secondary-subtle text-secondary me-1">
+                                @b.Researcher?.User?.FullName @(b.IsMainAuthor ? "(رئيسي)" : "")
+                            </span>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded border">
+                <div class="text-muted small">الموعد النهائي للفحص الشكلي:</div>
+                <div class="fw-bold mt-1 @(Model.ScreeningDueAt < DateTime.UtcNow ? "text-danger" : "text-success")">
+                    @Model.ScreeningDueAt.ToString("yyyy/MM/dd HH:mm")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mandatory Documents Check -->
+    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-paperclip me-2 text-primary"></i>فحص الوثائق المرفوعة</h6>
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-sm align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>نوع الوثيقة</th>
+                    <th>النسخة</th>
+                    <th>اسم الملف</th>
+                    <th>الحجم</th>
+                    <th>تاريخ الرفع</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.ResearchAttachments != null && Model.ResearchAttachments.Any())
+                {
+                    foreach (var att in Model.ResearchAttachments)
+                    {
+                        <tr>
+                            <td class="fw-bold text-primary">@att.AttachmentType</td>
+                            <td><span class="badge bg-secondary">V @att.Version</span></td>
+                            <td>@att.OriginalFileName</td>
+                            <td>@(Math.Round(att.FileSize / 1024.0, 1)) KB</td>
+                            <td class="text-muted small">@att.UploadedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Screening Notes -->
+    <div class="card bg-light border p-3 mb-4">
+        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-pencil-square me-2 text-primary"></i>ملاحظات الفحص الشكلي</h6>
+        <div class="input-group">
+            <textarea id="screeningNotesText" class="form-control" rows="2" placeholder="اكتب ملاحظات الفحص الإداري هنا...">@Model.ScreeningNotes</textarea>
+            <button class="btn btn-primary-custom" onclick="saveNotes(@Model.Id);">
+                <i class="bi bi-save me-1"></i> حفظ الملاحظات
+            </button>
+        </div>
+    </div>
+
+    <!-- Auto Distribution / Judge Assignment Section -->
+    <div class="card border-primary mb-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-person-check-fill me-2"></i>نظام التوزيع الآلي واقتراح المحكمين</h6>
+            <span class="badge bg-light text-dark">يتم استبعاد باحثي المقترح تلقائياً لمنع تضارب المصالح</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">
+                يقترح النظام المحكمين المعتمدين مرتبين بحسب <strong>تطابق التخصص الأكاديمي الدقيق</strong> أولاً، ثم <strong>أقل عبء تقييمات مفتوحة</strong>.
+            </p>
+
+            <form id="assignJudgesForm" onsubmit="return submitJudgeAssignment(event, @Model.Id);">
+                <div class="table-responsive mb-3">
+                    <table class="table table-hover align-middle border">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">اختيار</th>
+                                <th>اسم المحكم</th>
+                                <th>اللقب العلمي</th>
+                                <th>التخصص الدقيق</th>
+                                <th>تطابق التخصص</th>
+                                <th>أبحاث قيد التقييم</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.SuggestedJudges != null && ((List<researchProject.Models.Entities.Judge>)ViewBag.SuggestedJudges).Any())
+                            {
+                                foreach (var j in (List<researchProject.Models.Entities.Judge>)ViewBag.SuggestedJudges)
+                                {
+                                    bool match = j.Specialty.Trim().Equals(Model.AcademicSpecialty.Trim(), StringComparison.OrdinalIgnoreCase);
+                                    int openLoad = j.Evaluations?.Count(e => e.Decision == EvaluationDecisionConstants.UnderEvaluation) ?? 0;
+
+                                    <tr class="@(match ? "table-success-subtle" : "")">
+                                        <td class="text-center">
+                                            <input type="checkbox" name="selectedJudge" value="@j.Id" class="form-check-input judge-checkbox" />
+                                        </td>
+                                        <td class="fw-bold">@j.User?.FullName</td>
+                                        <td>@j.AcademicTitle</td>
+                                        <td>@j.Specialty</td>
+                                        <td>
+                                            @if (match)
+                                            {
+                                                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>تطابق تام</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary-subtle text-secondary">تخصص قريب</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge @(openLoad > 0 ? "bg-warning text-dark" : "bg-light text-dark border")">
+                                                @openLoad أبحاث
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-3 text-muted">
+                                        لا يوجد محكمون متاحون للتخصص حالياً، يمكنك دعوة محكم جديد من تبويب "دعوة محكم".
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="small text-muted">
+                        <i class="bi bi-info-circle me-1"></i> يمكنك اختيار محكم واحد أو أكثر لتأكيد إسناد المقترح.
+                    </div>
+                    <button type="submit" class="btn btn-success px-4 py-2 fw-bold">
+                        <i class="bi bi-send-check-fill me-1"></i> تأكيد إسناد المحكمين وبدء التحكيم
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function saveNotes(researchId) {
+        var notes = $('#screeningNotesText').val();
+        $.post('/CollegeCoAdmin/SaveScreeningNotes', { researchId: researchId, notes: notes }, function (res) {
+            alert(res.message);
+        });
+    }
+
+    function submitJudgeAssignment(e, researchId) {
+        e.preventDefault();
+        var selected = [];
+        $('.judge-checkbox:checked').each(function () {
+            selected.push(parseInt($(this).val()));
+        });
+
+        if (selected.length === 0) {
+            alert('يرجى اختيار محكم واحد على الأقل لإسناد المقترح.');
+            return false;
+        }
+
+        $('#partial-loading-spinner').css('display', 'flex');
+
+        $.ajax({
+            url: '/CollegeCoAdmin/AssignJudges?researchId=' + researchId,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(selected),
+            headers: {
+                'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function (res) {
+                $('#partial-loading-spinner').hide();
+                alert(res.message);
+                if (res.success) {
+                    loadPartial('/CollegeCoAdmin/ScreeningQueuePartial', '#main-content-container', 'screening-queue');
+                }
+            },
+            error: function (xhr) {
+                $('#partial-loading-spinner').hide();
+                alert('فشل إسناد المحكمين: ' + xhr.responseText);
+            }
+        });
+
+        return false;
+    }
+</script>

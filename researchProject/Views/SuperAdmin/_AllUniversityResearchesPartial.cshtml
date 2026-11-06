@@ -1,0 +1,78 @@
+@model List<researchProject.Models.Entities.Research>
+@using researchProject.Models.Constants
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-journal-text text-primary"></i> كافة المقترحات البحثية في الجامعة
+            </h4>
+            <div class="text-muted small">متابعة مسار جميع الأبحاث المقدمة في مختلف الكليات وحالات سير العمل</div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>عنوان المقترح البحثي</th>
+                    <th>الكلية</th>
+                    <th>التصنيف والتخصص</th>
+                    <th>الباحث الرئيسي</th>
+                    <th>تاريخ التقديم</th>
+                    <th>حالة سير العمل</th>
+                    <th>التفاصيل</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var r in Model)
+                    {
+                        var mainAuthor = r.ResearcherResearchesBridges?.FirstOrDefault(b => b.IsMainAuthor)?.Researcher?.User?.FullName 
+                            ?? r.ResearcherResearchesBridges?.FirstOrDefault()?.Researcher?.User?.FullName ?? "غير محدد";
+
+                        string badgeClass = r.WorkflowStatus switch
+                        {
+                            ResearchStatusConstants.UnderFormalScreening => "status-screening",
+                            ResearchStatusConstants.AssignedToJudges => "status-assigned",
+                            ResearchStatusConstants.ModificationsRequired => "status-modifications",
+                            ResearchStatusConstants.Approved => "status-approved",
+                            ResearchStatusConstants.CertificateIssued => "status-issued",
+                            _ => "bg-secondary text-white"
+                        };
+
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold text-dark" style="max-width: 280px;">@r.Title</td>
+                            <td><span class="badge bg-light text-dark border">@r.College?.Name</span></td>
+                            <td>
+                                <div>@r.Category?.Name</div>
+                                <div class="text-muted small">@r.AcademicSpecialty</div>
+                            </td>
+                            <td><i class="bi bi-person me-1"></i>@mainAuthor</td>
+                            <td class="text-muted small">@r.SubmittedAt.ToString("yyyy/MM/dd")</td>
+                            <td>
+                                <span class="badge-status @badgeClass">@r.WorkflowStatus</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadPartial('/SuperAdmin/ResearchDetailsPartial/@r.Id', '#main-content-container', 'all-researches');">
+                                    <i class="bi bi-eye"></i> عرض
+                                </button>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">لا توجد مقترحات بحثية مسجلة بالنظام حتى الآن.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

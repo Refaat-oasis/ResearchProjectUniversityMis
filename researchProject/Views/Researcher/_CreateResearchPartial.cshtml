@@ -1,0 +1,121 @@
+@model researchProject.Models.DTOs.ResearchCreateDto
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-file-earmark-plus text-success"></i> تقديم مقترح بحثي جديد للجنة الأخلاقيات
+            </h4>
+            <div class="text-muted small">يرجى تعبئة بيانات المقترح ورفع المستندات الإلزامية الثلاثة (الموافقة المستنيرة، أدوات البحث، خطة البحث)</div>
+        </div>
+        <div>
+            <span class="badge bg-light text-dark border">
+                الكلية: <strong>@(ViewBag.ResearcherCollege?.Name ?? "غير محدد")</strong>
+            </span>
+        </div>
+    </div>
+
+    <form id="createResearchForm" action="/Researcher/CreateResearch" method="post" enctype="multipart/form-data" onsubmit="return handleAjaxFormSubmit(this, onResearchCreated);">
+        <input type="hidden" name="CollegeId" value="@(ViewBag.ResearcherCollege?.Id ?? 1)" />
+
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <label asp-for="Title" class="form-label"></label> <span class="text-danger">*</span>
+                <input asp-for="Title" class="form-control" required placeholder="العنوان الأكاديمي الدقيق للمقترح البحثي" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="CategoryId" class="form-label"></label> <span class="text-danger">*</span>
+                <select asp-for="CategoryId" id="categorySelect" class="form-select" required onchange="loadDynamicCategoryFields(this.value);">
+                    <option value="">-- اختر نوع وتصنيف البحث --</option>
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var cat in ViewBag.Categories)
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="AcademicSpecialty" class="form-label"></label> <span class="text-danger">*</span>
+                <input asp-for="AcademicSpecialty" class="form-control" required placeholder="مثال: العلوم الصيدلية / علم الأدوية السريري" />
+                <span asp-validation-for="AcademicSpecialty" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <!-- Dynamic Category Fields Container -->
+        <div id="dynamicFieldsContainer"></div>
+
+        <!-- Mandatory Attachments Card -->
+        <div class="card p-3 mb-4 border">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="bi bi-paperclip me-2 text-primary"></i>المستندات والوثائق الإلزامية (خارج المجلد العام)
+            </h6>
+
+            <div class="row g-3">
+                <!-- 1. Informed Consent -->
+                <div class="col-md-6">
+                    <label class="form-label">1. وثيقة الموافقة المستنيرة (Informed Consent) <span class="text-danger">*</span></label>
+                    <input type="file" name="InformedConsentFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                    <div class="form-text small">نموذج الإقرار والموافقة المستنيرة للمشاركين بالبحث (PDF, DOCX).</div>
+                </div>
+
+                <!-- 2. Research Tools -->
+                <div class="col-md-6">
+                    <label class="form-label">2. أدوات وأجهزة البحث (Research Tools) <span class="text-danger">*</span></label>
+                    <input type="file" name="ResearchToolsFile" class="form-control" required accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                    <div class="form-text small">الاستبيانات، استمارات المقابلات، أو بروتوكول التجارب المعملية.</div>
+                </div>
+
+                <!-- 3. Research Proposal Plan -->
+                <div class="col-md-6">
+                    <label class="form-label">3. خطة المقترح البحثي الكاملة (Research Proposal) <span class="text-danger">*</span></label>
+                    <input type="file" name="ResearchProposalFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                    <div class="form-text small">الخطة البحثية المتضمنة الأهداف والمنهجية العلمية والاعتبارات الأخلاقية.</div>
+                </div>
+
+                <!-- 4. Additional Documents (Optional) -->
+                <div class="col-md-6">
+                    <label class="form-label">4. مستندات وملاحق إضافية (اختياري)</label>
+                    <input type="file" name="AdditionalDocumentFile" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                    <div class="form-text small">موافقات جهات خارجية، مذكرات تعاون، أو ملاحق تكميلية.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="text-muted small">
+                <i class="bi bi-shield-check me-1"></i> عند التقديم سيتم إدراج المقترح آلياً في طابور الفحص الشكلي (خلال 24-48 ساعة).
+            </div>
+            <button type="submit" class="btn btn-accent-custom px-4 py-2 fs-6">
+                <i class="bi bi-send-check-fill me-1"></i> تقديم المقترح البحثي واعتماد الرفع
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function loadDynamicCategoryFields(categoryId) {
+        if (!categoryId) {
+            $('#dynamicFieldsContainer').empty();
+            return;
+        }
+
+        $.get('/Researcher/DynamicCategoryFieldsPartial?categoryId=' + categoryId, function (html) {
+            $('#dynamicFieldsContainer').html(html);
+        });
+    }
+
+    function onResearchCreated(res) {
+        alert(res.message);
+        if (res.success && res.researchId) {
+            loadPartial('/Researcher/ResearchStatusTrackerPartial/' + res.researchId, '#main-content-container', 'my-researches');
+        } else {
+            loadPartial('/Researcher/MyResearchesPartial', '#main-content-container', 'my-researches');
+        }
+    }
+</script>

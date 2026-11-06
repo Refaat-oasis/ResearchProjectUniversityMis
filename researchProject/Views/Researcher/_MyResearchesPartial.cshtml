@@ -1,0 +1,90 @@
+@model List<researchProject.Models.Entities.Research>
+@using researchProject.Models.Constants
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-folder2-open text-primary"></i> مقترحاتي البحثية ومتابعة الحالات
+            </h4>
+            <div class="text-muted small">تتبع مسار كافة الأبحاث المقدمة منكم للجنان الأخلاقيات بالجامعة</div>
+        </div>
+        <button class="btn btn-accent-custom btn-sm" onclick="loadPartial('/Researcher/CreateResearchPartial', '#main-content-container', 'create-research');">
+            <i class="bi bi-plus-lg me-1"></i> تقديم مقترح جديد
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>عنوان المقترح البحثي</th>
+                    <th>التصنيف والتخصص</th>
+                    <th>تاريخ التقديم</th>
+                    <th>الحالة الحالية</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var r in Model)
+                    {
+                        string badgeClass = r.WorkflowStatus switch
+                        {
+                            ResearchStatusConstants.UnderFormalScreening => "status-screening",
+                            ResearchStatusConstants.AssignedToJudges => "status-assigned",
+                            ResearchStatusConstants.ModificationsRequired => "status-modifications",
+                            ResearchStatusConstants.Approved => "status-approved",
+                            ResearchStatusConstants.CertificateIssued => "status-issued",
+                            _ => "bg-secondary text-white"
+                        };
+
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold" style="max-width: 280px;">@r.Title</td>
+                            <td>
+                                <div>@r.Category?.Name</div>
+                                <div class="text-muted small">@r.AcademicSpecialty</div>
+                            </td>
+                            <td class="text-muted small">@r.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td><span class="badge-status @badgeClass">@r.WorkflowStatus</span></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="loadPartial('/Researcher/ResearchStatusTrackerPartial/@r.Id', '#main-content-container', 'my-researches');">
+                                        <i class="bi bi-activity me-1"></i> تتبع المسار
+                                    </button>
+
+                                    @if (r.WorkflowStatus == ResearchStatusConstants.ModificationsRequired)
+                                    {
+                                        <button class="btn btn-sm btn-danger fw-bold" onclick="loadPartial('/Researcher/UploadModificationsPartial/@r.Id', '#main-content-container', 'my-researches');">
+                                            <i class="bi bi-upload me-1"></i> رفع التعديلات
+                                        </button>
+                                    }
+
+                                    @if (r.WorkflowStatus == ResearchStatusConstants.CertificateIssued)
+                                    {
+                                        <a href="/Researcher/DownloadCertificate?researchId=@r.Id" target="_blank" class="btn btn-sm btn-success">
+                                            <i class="bi bi-download me-1"></i> الشهادة
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            لم تقدم أي مقترحات بحثية حتى الآن. اضغط على "تقديم مقترح جديد" للبدء.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

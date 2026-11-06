@@ -1,0 +1,103 @@
+@model List<researchProject.Models.Entities.Evaluation>
+@using researchProject.Models.Constants
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-file-earmark-medical text-primary"></i> المقترحات البحثية المسندة للتحكيم الأخلاقي
+            </h4>
+            <div class="text-muted small">تقييم الجوانب الأخلاقية للمقترحات البحثية المسندة إليكم بصفتكم محكماً علمياً مستقلاً</div>
+        </div>
+        <span class="badge bg-primary fs-6">@(Model?.Count ?? 0) مهمة تحكيم</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>عنوان المقترح البحثي</th>
+                    <th>الكلية</th>
+                    <th>التصنيف والتخصص</th>
+                    <th>الجولة</th>
+                    <th>حالة التقييم</th>
+                    <th>التوقيع الرقمي</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var ev in Model)
+                    {
+                        bool isDone = ev.SubmittedAt.HasValue;
+
+                        <tr class="@(isDone ? "" : "table-warning-subtle")">
+                            <td>@index</td>
+                            <td class="fw-bold" style="max-width: 250px;">@ev.Research?.Title</td>
+                            <td><span class="badge bg-light text-dark border">@ev.Research?.College?.Name</span></td>
+                            <td>
+                                <div>@ev.Research?.Category?.Name</div>
+                                <div class="text-muted small">@ev.Research?.AcademicSpecialty</div>
+                            </td>
+                            <td><span class="badge bg-secondary">الجولة @ev.RoundNumber</span></td>
+                            <td>
+                                @if (isDone)
+                                {
+                                    @if (ev.Decision == EvaluationDecisionConstants.Approved)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>موافق</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-circle me-1"></i>طلب تعديلات</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>قيد التقييم</span>
+                                }
+                            </td>
+                            <td>
+                                @if (ev.IsDigitallySigned)
+                                {
+                                    <span class="badge bg-primary-subtle text-primary"><i class="bi bi-check2-circle me-1"></i>موقع</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!isDone)
+                                {
+                                    <button class="btn btn-sm btn-primary-custom" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');">
+                                        <i class="bi bi-pencil-square me-1"></i> تعبئة نموذج التقييم
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');">
+                                        <i class="bi bi-eye me-1"></i> استعراض التقييم
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-check-circle text-success fs-3 d-block mb-2"></i>
+                            لا توجد أبحاث جديدة مسندة إليكم حالياً للتحكيم.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

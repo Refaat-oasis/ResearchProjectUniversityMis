@@ -1,0 +1,11 @@
+@model researchProject.Models.DTOs.SystemStatisticsDto
+@{
+    ViewData["Title"] = "لوحة تحكم مدير النظام العام";
+}
+
+<div class="app-container">
+    <partial name="_RightSidebarPartial" />
+    <main id="main-content-container" class="main-content">
+        <partial name="_OverviewDashboardPartial" model="Model" />
+    </main>
+</div>

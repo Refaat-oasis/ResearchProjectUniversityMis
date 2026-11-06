@@ -1,0 +1,154 @@
+@using researchProject.Models.Constants
+
+<aside class="right-sidebar">
+    <!-- User Portal Badge -->
+    <div class="px-2 pb-2 border-bottom">
+        <div class="small text-muted fw-bold mb-1">الأدوار الممنوحة للحساب:</div>
+        <div class="d-flex flex-wrap gap-1">
+            @if (User.IsInRole(RoleConstants.SuperAdmin))
+            {
+                <span class="badge bg-danger">مدير النظام العام</span>
+            }
+            @if (User.IsInRole(RoleConstants.CollegeCoAdmin))
+            {
+                <span class="badge bg-primary">مدير اللجنة الفرعية</span>
+            }
+            @if (User.IsInRole(RoleConstants.Judge))
+            {
+                <span class="badge bg-info text-dark">محكم علمي</span>
+            }
+            @if (User.IsInRole(RoleConstants.Researcher))
+            {
+                <span class="badge bg-success">باحث أكاديمي</span>
+            }
+        </div>
+    </div>
+
+    <!-- 1. Super Admin Section -->
+    @if (User.IsInRole(RoleConstants.SuperAdmin))
+    {
+        <div>
+            <div class="sidebar-heading">
+                <i class="bi bi-shield-lock-fill text-danger me-1"></i> بوابة الإدارة العليا
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="#overview" data-hash="overview" data-url="/SuperAdmin/OverviewDashboardPartial" class="active">
+                        <i class="bi bi-speedometer2"></i> لوحة المؤشرات المركزية
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#colleges" data-hash="colleges" data-url="/SuperAdmin/ManageCollegesPartial">
+                        <i class="bi bi-buildings"></i> إدارة كليات الجامعة
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#categories" data-hash="categories" data-url="/SuperAdmin/ManageCategoriesPartial">
+                        <i class="bi bi-sliders"></i> تصنيفات الأبحاث ونماذجها
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#coadmins" data-hash="coadmins" data-url="/SuperAdmin/ManageCoAdminsPartial">
+                        <i class="bi bi-person-badge"></i> مديرو اللجان الفرعية
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#judges" data-hash="judges" data-url="/SuperAdmin/ManageJudgesPartial">
+                        <i class="bi bi-mortarboard"></i> هيئة المحكمين والدعوات
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#all-researches" data-hash="all-researches" data-url="/SuperAdmin/AllUniversityResearchesPartial">
+                        <i class="bi bi-journal-text"></i> كافة مقترحات الجامعة
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#reports" data-hash="reports" data-url="/SuperAdmin/ReportsPartial">
+                        <i class="bi bi-graph-up-arrow"></i> تقارير الجودة والاعتماد
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#archive" data-hash="archive" data-url="/SuperAdmin/CertificatesArchivePartial">
+                        <i class="bi bi-archive"></i> أرشيف الشهادات الأخلاقية
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+
+    <!-- 2. College Co-Admin Section -->
+    @if (User.IsInRole(RoleConstants.CollegeCoAdmin))
+    {
+        <div>
+            <div class="sidebar-heading">
+                <i class="bi bi-person-workspace text-primary me-1"></i> إدارة اللجنة الفرعية بالكلية
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="#screening-queue" data-hash="screening-queue" data-url="/CollegeCoAdmin/ScreeningQueuePartial">
+                        <i class="bi bi-hourglass-split text-warning"></i> طابور الفحص الشكلي (24-48h)
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#invite-judge" data-hash="invite-judge" data-url="/CollegeCoAdmin/InviteJudgePartial">
+                        <i class="bi bi-envelope-plus text-info"></i> دعوة محكم علمي
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#final-approval" data-hash="final-approval" data-url="/CollegeCoAdmin/FinalApprovalPartial">
+                        <i class="bi bi-award text-success"></i> اعتماد وإصدار الشهادات
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#college-reports" data-hash="college-reports" data-url="/CollegeCoAdmin/CollegeReportsPartial">
+                        <i class="bi bi-pie-chart"></i> إحصائيات وتقارير الكلية
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+
+    <!-- 3. Judge Section -->
+    @if (User.IsInRole(RoleConstants.Judge))
+    {
+        <div>
+            <div class="sidebar-heading">
+                <i class="bi bi-clipboard2-check text-info me-1"></i> بوابة المحكمين
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="#assigned-researches" data-hash="assigned-researches" data-url="/Judge/AssignedResearchesPartial">
+                        <i class="bi bi-file-earmark-medical"></i> الأبحاث المسندة للتحكيم
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+
+    <!-- 4. Researcher Section -->
+    @if (User.IsInRole(RoleConstants.Researcher))
+    {
+        <div>
+            <div class="sidebar-heading">
+                <i class="bi bi-pencil-square text-success me-1"></i> بوابة الباحثين
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="#create-research" data-hash="create-research" data-url="/Researcher/CreateResearchPartial">
+                        <i class="bi bi-file-earmark-plus text-success"></i> تقديم مقترح بحثي جديد
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#my-researches" data-hash="my-researches" data-url="/Researcher/MyResearchesPartial">
+                        <i class="bi bi-folder2-open text-primary"></i> مقترحاتي ومتابعة الحالات
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#my-certificates" data-hash="my-certificates" data-url="/Researcher/MyCertificatesPartial">
+                        <i class="bi bi-patch-check-fill text-success"></i> شهاداتي الأخلاقية المعتمدة
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+</aside>
