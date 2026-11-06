@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -23,19 +26,22 @@ namespace researchProject.Repositories.Implementations
         private readonly IEmailSender _emailSender;
         private readonly IConfiguration _configuration;
         private readonly ILogger<CollegeCoAdminRepository> _logger;
+        private readonly IWebHostEnvironment? _env;
 
         public CollegeCoAdminRepository(
             ApplicationDbContext db,
             ICertificateService certificateService,
             IEmailSender emailSender,
             IConfiguration configuration,
-            ILogger<CollegeCoAdminRepository> logger)
+            ILogger<CollegeCoAdminRepository> logger,
+            IWebHostEnvironment? env = null)
         {
             _db = db;
             _certificateService = certificateService;
             _emailSender = emailSender;
             _configuration = configuration;
             _logger = logger;
+            _env = env;
         }
 
         public async Task<CollegeCoAdmin?> GetProfileByUserIdAsync(string userId)
@@ -51,7 +57,7 @@ namespace researchProject.Repositories.Implementations
             return await _db.Researches
                 .Include(r => r.Category)
                 .Include(r => r.ResearcherResearchesBridges).ThenInclude(b => b.Researcher).ThenInclude(res => res.User)
-                .Where(r => r.CollegeId == collegeId && r.WorkflowStatus == ResearchStatusConstants.UnderFormalScreening)
+                .Where(r => (collegeId == 0 || r.CollegeId == collegeId) && r.WorkflowStatus == ResearchStatusConstants.UnderFormalScreening)
                 .OrderBy(r => r.ScreeningDueAt)
                 .ToListAsync();
         }
@@ -132,9 +138,10 @@ namespace researchProject.Repositories.Implementations
             if (research == null) return (false, "المقترح البحثي غير موجود أو يتبع كلية أخرى.");
 
             if (research.WorkflowStatus != ResearchStatusConstants.UnderFormalScreening &&
-                research.WorkflowStatus != ResearchStatusConstants.ModificationsRequired)
+                research.WorkflowStatus != ResearchStatusConstants.ModificationsRequired &&
+                research.WorkflowStatus != ResearchStatusConstants.AssignedToJudges)
             {
-                return (false, "لا يمكن إسناد المحكمين إلا للأبحاث التي هي قيد المراجعة الشكلية أو تم تسليم تعديلاتها.");
+                return (false, "لا يمكن إسناد المحكمين إلا للأبحاث التي هي قيد المراجعة الشكلية، أو تم تسليم تعديلاتها، أو المسندة لإعادة التوزيع.");
             }
 
             // Conflict of Interest strict check: None of the judges can be an author
@@ -252,7 +259,7 @@ namespace researchProject.Repositories.Implementations
                 .Include(r => r.College)
                 .Include(r => r.ResearcherResearchesBridges).ThenInclude(b => b.Researcher).ThenInclude(res => res.User)
                 .Include(r => r.Evaluations).ThenInclude(e => e.Judge).ThenInclude(j => j.User)
-                .Where(r => r.CollegeId == collegeId && r.WorkflowStatus == ResearchStatusConstants.Approved)
+                .Where(r => (collegeId == 0 || r.CollegeId == collegeId) && r.WorkflowStatus == ResearchStatusConstants.Approved)
                 .OrderByDescending(r => r.SubmittedAt)
                 .ToListAsync();
         }
@@ -368,11 +375,40 @@ namespace researchProject.Repositories.Implementations
             return (true, null);
         }
 
+        public async Task<(bool Succeeded, string? ErrorMessage)> UploadSignatureFileAsync(string coAdminUserId, IFormFile signatureFile)
+        {
+            if (signatureFile == null || signatureFile.Length == 0)
+            {
+                return (false, "يرجى اختيار ملف صورة التوقيع.");
+            }
+
+            var ext = Path.GetExtension(signatureFile.FileName).ToLowerInvariant();
+            if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+            {
+                return (false, "صيغة التوقيع يجب أن تكون صورة (PNG, JPG).");
+            }
+
+            var webRoot = _env?.WebRootPath ?? Path.Combine(_env?.ContentRootPath ?? Directory.GetCurrentDirectory(), "wwwroot");
+            var uploadsFolder = Path.Combine(webRoot, "uploads", "signatures");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"sig_{coAdminUserId}_{Guid.NewGuid():N}{ext}";
+            var fullPath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await signatureFile.CopyToAsync(stream);
+            }
+
+            var relativePath = $"~/uploads/signatures/{fileName}";
+            return await UploadSignatureImageAsync(coAdminUserId, relativePath);
+        }
+
         public async Task<SystemStatisticsDto> GetCollegeStatisticsAsync(int collegeId)
         {
             var researches = await _db.Researches
                 .Include(r => r.Category)
-                .Where(r => r.CollegeId == collegeId)
+                .Where(r => collegeId == 0 || r.CollegeId == collegeId)
                 .ToListAsync();
 
             var total = researches.Count;
@@ -382,11 +418,67 @@ namespace researchProject.Repositories.Implementations
             var approved = researches.Count(r => r.WorkflowStatus == ResearchStatusConstants.Approved);
             var issued = researches.Count(r => r.WorkflowStatus == ResearchStatusConstants.CertificateIssued);
 
-            var totalResearchers = await _db.Researchers.CountAsync(r => r.CollegeId == collegeId);
+            var totalResearchers = await _db.Researchers.CountAsync(r => collegeId == 0 || r.CollegeId == collegeId);
 
             var byCategory = researches
                 .GroupBy(r => r.Category.Name)
                 .ToDictionary(g => g.Key, g => g.Count());
+
+            // Dynamic SLA calculation from ResearchStatusHistories
+            var researchIds = researches.Select(r => r.Id).ToList();
+            var slaHours = _configuration.GetValue<int>("Screening:SlaHours", 48);
+
+            var histories = await _db.ResearchStatusHistories
+                .Where(h => h.OldStatus == ResearchStatusConstants.UnderFormalScreening && researchIds.Contains(h.ResearchId))
+                .ToListAsync();
+
+            var compliantCount = 0;
+            var totalScreened = histories.Count;
+            double totalScreeningHours = 0;
+
+            foreach (var h in histories)
+            {
+                var r = researches.FirstOrDefault(x => x.Id == h.ResearchId);
+                if (r != null)
+                {
+                    var hours = (h.ChangedAt - r.SubmittedAt).TotalHours;
+                    totalScreeningHours += Math.Max(0, hours);
+                    if (hours <= slaHours) compliantCount++;
+                }
+            }
+
+            var avgScreeningHours = totalScreened > 0 ? totalScreeningHours / totalScreened : 0.0;
+            var slaCompliance = totalScreened > 0 ? (compliantCount * 100.0 / totalScreened) : 100.0;
+
+            // Dynamic judging time calculation
+            var judgingHistories = await _db.ResearchStatusHistories
+                .Where(h => h.OldStatus == ResearchStatusConstants.AssignedToJudges &&
+                            (h.NewStatus == ResearchStatusConstants.Approved || h.NewStatus == ResearchStatusConstants.ModificationsRequired) &&
+                            researchIds.Contains(h.ResearchId))
+                .ToListAsync();
+
+            var assignedHistories = await _db.ResearchStatusHistories
+                .Where(h => h.NewStatus == ResearchStatusConstants.AssignedToJudges && researchIds.Contains(h.ResearchId))
+                .ToListAsync();
+
+            double totalJudgingDays = 0;
+            int closedRoundsCount = 0;
+            foreach (var jh in judgingHistories)
+            {
+                var r = researches.FirstOrDefault(x => x.Id == jh.ResearchId);
+                if (r != null)
+                {
+                    var assignTime = assignedHistories
+                        .Where(a => a.ResearchId == jh.ResearchId && a.ChangedAt <= jh.ChangedAt)
+                        .OrderByDescending(a => a.ChangedAt)
+                        .FirstOrDefault()?.ChangedAt ?? r.SubmittedAt;
+
+                    var days = (jh.ChangedAt - assignTime).TotalDays;
+                    totalJudgingDays += Math.Max(0, days);
+                    closedRoundsCount++;
+                }
+            }
+            var avgJudgingDays = closedRoundsCount > 0 ? totalJudgingDays / closedRoundsCount : 0.0;
 
             return new SystemStatisticsDto
             {
@@ -398,8 +490,9 @@ namespace researchProject.Repositories.Implementations
                 CertificatesIssuedCount = issued,
                 TotalResearchers = totalResearchers,
                 ResearchesByCategory = byCategory,
-                AverageScreeningHours = 18.5,
-                SlaCompliancePercentage = 95.0
+                AverageScreeningHours = Math.Round(avgScreeningHours, 1),
+                AverageJudgingDays = Math.Round(avgJudgingDays, 1),
+                SlaCompliancePercentage = Math.Round(slaCompliance, 1)
             };
         }
     }

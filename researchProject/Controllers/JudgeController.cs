@@ -8,7 +8,7 @@ using researchProject.Repositories.Interfaces;
 
 namespace researchProject.Controllers
 {
-    [Authorize(Roles = $"{RoleConstants.Judge},{RoleConstants.SuperAdmin}")]
+    [Authorize(Policy = "JudgeOrSuperAdmin")]
     public class JudgeController : Controller
     {
         private readonly IJudgeRepository _judgeRepo;
@@ -23,6 +23,8 @@ namespace researchProject.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             var profile = await _judgeRepo.GetProfileByUserIdAsync(userId);
+            ViewBag.Profile = profile;
+            ViewBag.InitialEvaluations = await _judgeRepo.GetAssignedEvaluationsAsync(userId);
             return View(profile);
         }
 

@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +12,7 @@ using researchProject.Services;
 
 namespace researchProject.Controllers
 {
-    [Authorize(Roles = RoleConstants.SuperAdmin)]
+    [Authorize(Policy = "SuperAdminOnly")]
     public class SuperAdminController : Controller
     {
         private readonly ISuperAdminRepository _superAdminRepo;
@@ -199,6 +201,49 @@ namespace researchProject.Controllers
         {
             var stats = await _superAdminRepo.GetSystemStatisticsAsync();
             return PartialView("_ReportsPartial", stats);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportReportsToCsv()
+        {
+            var stats = await _superAdminRepo.GetSystemStatisticsAsync();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("المؤشر,القيمة");
+            sb.AppendLine($"إجمالي المقترحات بالجامعة,{stats.TotalResearches}");
+            sb.AppendLine($"قيد الفحص الشكلي,{stats.UnderScreeningCount}");
+            sb.AppendLine($"مسند للمحكمين,{stats.AssignedToJudgesCount}");
+            sb.AppendLine($"تعديلات مطلوبة,{stats.ModificationsRequiredCount}");
+            sb.AppendLine($"معتمد,{stats.ApprovedCount}");
+            sb.AppendLine($"صادر الشهادة,{stats.CertificatesIssuedCount}");
+            sb.AppendLine($"عدد الكليات,{stats.TotalColleges}");
+            sb.AppendLine($"عدد المحكمين النشطين,{stats.TotalJudges}");
+            sb.AppendLine($"إجمالي الباحثين المسجلين,{stats.TotalResearchers}");
+            sb.AppendLine($"متوسط ساعات الفحص الشكلي,{stats.AverageScreeningHours}");
+            sb.AppendLine($"متوسط أيام التحكيم الأخلاقي,{stats.AverageJudgingDays}");
+            sb.AppendLine($"نسبة الالتزام بالمهلة النظامية,{stats.SlaCompliancePercentage}%");
+
+            if (stats.ResearchesByCollege != null && stats.ResearchesByCollege.Any())
+            {
+                sb.AppendLine("\nالكلية,عدد المقترحات");
+                foreach (var c in stats.ResearchesByCollege)
+                {
+                    sb.AppendLine($"\"{c.Key}\",{c.Value}");
+                }
+            }
+
+            if (stats.ResearchesByCategory != null && stats.ResearchesByCategory.Any())
+            {
+                sb.AppendLine("\nتصنيف البحث,عدد المقترحات");
+                foreach (var cat in stats.ResearchesByCategory)
+                {
+                    sb.AppendLine($"\"{cat.Key}\",{cat.Value}");
+                }
+            }
+
+            var preamble = Encoding.UTF8.GetPreamble();
+            var bytes = preamble.Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv; charset=utf-8", $"University_Ethics_Report_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
         [HttpGet]

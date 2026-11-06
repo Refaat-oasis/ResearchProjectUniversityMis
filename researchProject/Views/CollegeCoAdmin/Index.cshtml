@@ -1,38 +1,12 @@
 @model researchProject.Models.Entities.CollegeCoAdmin
 @{
     ViewData["Title"] = "لوحة إدارة اللجنة الفرعية بالكلية";
+    var initialQueue = ViewBag.InitialQueue as List<researchProject.Models.Entities.Research> ?? new List<researchProject.Models.Entities.Research>();
 }
 
 <div class="app-container">
     <partial name="_RightSidebarPartial" />
     <main id="main-content-container" class="main-content">
-        <div class="card card-custom">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h3 class="fw-bold text-primary mb-1">مرحباً، د. @(Model?.User?.FullName ?? User.Identity?.Name)</h3>
-                    <div class="text-muted">مدير اللجنة الفرعية لأخلاقيات البحث العلمي - @(Model?.College?.Name ?? "الكلية")</div>
-                </div>
-                <div>
-                    @if (string.IsNullOrEmpty(Model?.SignatureImagePath))
-                    {
-                        <div class="alert alert-warning py-2 px-3 mb-0 small">
-                            <i class="bi bi-exclamation-triangle-fill me-1"></i> تنبيه: لم يتم رفع التوقيع الرقمي المعتمد بعد (إلزامي لإصدار الشهادات).
-                        </div>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success py-2 px-3"><i class="bi bi-check-circle me-1"></i> التوقيع الرقمي معتمد ومسجل</span>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div id="coadmin-initial-load">
-            <script>
-                $(document).ready(function() {
-                    loadPartial('/CollegeCoAdmin/ScreeningQueuePartial', '#main-content-container', 'screening-queue');
-                });
-            </script>
-        </div>
+        <partial name="_ScreeningQueuePartial" model="initialQueue" />
     </main>
 </div>

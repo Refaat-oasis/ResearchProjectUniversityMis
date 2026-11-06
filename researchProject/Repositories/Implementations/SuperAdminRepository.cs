@@ -403,6 +403,35 @@ namespace researchProject.Repositories.Implementations
             var avgScreeningHours = totalScreened > 0 ? totalHours / totalScreened : 0;
             var slaCompliance = totalScreened > 0 ? (compliantCount * 100.0 / totalScreened) : 100.0;
 
+            // Judging days calculation
+            var judgingHistories = await _db.ResearchStatusHistories
+                .Where(h => h.OldStatus == ResearchStatusConstants.AssignedToJudges &&
+                            (h.NewStatus == ResearchStatusConstants.Approved || h.NewStatus == ResearchStatusConstants.ModificationsRequired))
+                .ToListAsync();
+
+            var assignedHistories = await _db.ResearchStatusHistories
+                .Where(h => h.NewStatus == ResearchStatusConstants.AssignedToJudges)
+                .ToListAsync();
+
+            double totalJudgingDays = 0;
+            int closedRoundsCount = 0;
+            foreach (var jh in judgingHistories)
+            {
+                var r = researches.FirstOrDefault(x => x.Id == jh.ResearchId);
+                if (r != null)
+                {
+                    var assignTime = assignedHistories
+                        .Where(a => a.ResearchId == jh.ResearchId && a.ChangedAt <= jh.ChangedAt)
+                        .OrderByDescending(a => a.ChangedAt)
+                        .FirstOrDefault()?.ChangedAt ?? r.SubmittedAt;
+
+                    var days = (jh.ChangedAt - assignTime).TotalDays;
+                    totalJudgingDays += Math.Max(0, days);
+                    closedRoundsCount++;
+                }
+            }
+            var avgJudgingDays = closedRoundsCount > 0 ? totalJudgingDays / closedRoundsCount : 0.0;
+
             return new SystemStatisticsDto
             {
                 TotalResearches = total,
@@ -415,7 +444,7 @@ namespace researchProject.Repositories.Implementations
                 TotalJudges = totalJudges,
                 TotalResearchers = totalResearchers,
                 AverageScreeningHours = Math.Round(avgScreeningHours, 1),
-                AverageJudgingDays = 3.5,
+                AverageJudgingDays = Math.Round(avgJudgingDays, 1),
                 SlaCompliancePercentage = Math.Round(slaCompliance, 1),
                 ResearchesByCollege = byCollege,
                 ResearchesByCategory = byCategory

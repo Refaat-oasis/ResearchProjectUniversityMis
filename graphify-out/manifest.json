@@ -1,10 +1,4 @@
 {
-  ".vs/researchProject.slnx/v18/DocumentLayout.json": {
-    "mtime": 1794004764.6226149,
-    "seen": 1794007115.829896,
-    "ast_hash": "f934809f5d79bd2d02105fe9379fd72d",
-    "semantic_hash": ""
-  },
   "researchProject.Tests/EntityAndDatabaseRulesTests.cs": {
     "mtime": 1794006764.8764863,
     "seen": 1794007115.829896,
@@ -36,9 +30,9 @@
     "semantic_hash": ""
   },
   "researchProject/Controllers/CollegeCoAdminController.cs": {
-    "mtime": 1794006074.3430254,
-    "seen": 1794007115.829896,
-    "ast_hash": "fe61b9ec2eedecb9d3c0e108ff549a81",
+    "mtime": 1794008305.410831,
+    "seen": 1794008596.6840508,
+    "ast_hash": "9a40531b2f44aa2a7ed9bc8144a2962c",
     "semantic_hash": ""
   },
   "researchProject/Controllers/HomeController.cs": {
@@ -48,9 +42,9 @@
     "semantic_hash": ""
   },
   "researchProject/Controllers/JudgeController.cs": {
-    "mtime": 1794006083.2765937,
-    "seen": 1794007115.829896,
-    "ast_hash": "4ee8707067cb4dcb9ec1e877a31c1cb5",
+    "mtime": 1794008326.9065466,
+    "seen": 1794008596.6840508,
+    "ast_hash": "a208d3fa0db2c0fcbe636a475706f669",
     "semantic_hash": ""
   },
   "researchProject/Controllers/PublicController.cs": {
@@ -60,15 +54,15 @@
     "semantic_hash": ""
   },
   "researchProject/Controllers/ResearcherController.cs": {
-    "mtime": 1794006097.8606486,
-    "seen": 1794007115.829896,
-    "ast_hash": "c033578c6c0c3532e3cd881ff77924d2",
+    "mtime": 1794008344.1432848,
+    "seen": 1794008596.6840508,
+    "ast_hash": "1706c468499dd4a7365ebb473394c467",
     "semantic_hash": ""
   },
   "researchProject/Controllers/SuperAdminController.cs": {
-    "mtime": 1794006058.207806,
-    "seen": 1794007115.829896,
-    "ast_hash": "c30baf8fd2186d6c015d3022a86ee5ae",
+    "mtime": 1794008228.4357667,
+    "seen": 1794008596.6840508,
+    "ast_hash": "053fb20d6c28224af9eed65f8621052f",
     "semantic_hash": ""
   },
   "researchProject/Data/ApplicationDbContext.cs": {
@@ -78,9 +72,9 @@
     "semantic_hash": ""
   },
   "researchProject/Data/DbSeeder.cs": {
-    "mtime": 1794005727.930849,
-    "seen": 1794007115.829896,
-    "ast_hash": "997bf19b9ba5cff69614597e87614bec",
+    "mtime": 1794007932.8165107,
+    "seen": 1794008596.6840508,
+    "ast_hash": "d0289a263741cab83d6f542bc42c8127",
     "semantic_hash": ""
   },
   "researchProject/Models/Constants/ResearchStatusConstants.cs": {
@@ -174,9 +168,9 @@
     "semantic_hash": ""
   },
   "researchProject/Program.cs": {
-    "mtime": 1794006130.5521417,
-    "seen": 1794007115.829896,
-    "ast_hash": "afa29f681cafe59313f4e1295a554ef2",
+    "mtime": 1794007922.861791,
+    "seen": 1794008596.6840508,
+    "ast_hash": "0544e264262c25f55d88f97904f7e431",
     "semantic_hash": ""
   },
   "researchProject/Properties/launchSettings.json": {
@@ -192,9 +186,9 @@
     "semantic_hash": ""
   },
   "researchProject/Repositories/Implementations/CollegeCoAdminRepository.cs": {
-    "mtime": 1794005939.604512,
-    "seen": 1794007115.829896,
-    "ast_hash": "1002dc9b9989d4fc343f8dfa8f75d616",
+    "mtime": 1794008149.530651,
+    "seen": 1794008596.6840508,
+    "ast_hash": "a8cae9e226208a4e8978dfe49e292328",
     "semantic_hash": ""
   },
   "researchProject/Repositories/Implementations/JudgeRepository.cs": {
@@ -210,15 +204,15 @@
     "semantic_hash": ""
   },
   "researchProject/Repositories/Implementations/ResearcherRepository.cs": {
-    "mtime": 1794005987.2059996,
-    "seen": 1794007115.829896,
-    "ast_hash": "279cdc5b688539a05d3b21fe4b3e610b",
+    "mtime": 1794008014.978447,
+    "seen": 1794008596.6840508,
+    "ast_hash": "a2e5c5d72fbdf3d862211e260cc1c945",
     "semantic_hash": ""
   },
   "researchProject/Repositories/Implementations/SuperAdminRepository.cs": {
-    "mtime": 1794006010.4799433,
-    "seen": 1794007115.829896,
-    "ast_hash": "c27e524faa8908d3787135f7630822e1",
+    "mtime": 1794008164.716101,
+    "seen": 1794008596.6840508,
+    "ast_hash": "cc3d4e4d2b65ff2fd183d851d2d4e761",
     "semantic_hash": ""
   },
   "researchProject/Repositories/Interfaces/IAccountRepository.cs": {
@@ -228,9 +222,9 @@
     "semantic_hash": ""
   },
   "researchProject/Repositories/Interfaces/ICollegeCoAdminRepository.cs": {
-    "mtime": 1794005837.8451095,
-    "seen": 1794007115.829896,
-    "ast_hash": "c7f4b98afae616d3dc93a4015dc44b45",
+    "mtime": 1794008059.7631526,
+    "seen": 1794008596.6840508,
+    "ast_hash": "835a718b073c809eacfbc5cefeacd032",
     "semantic_hash": ""
   },
   "researchProject/Repositories/Interfaces/IJudgeRepository.cs": {
@@ -246,9 +240,9 @@
     "semantic_hash": ""
   },
   "researchProject/Repositories/Interfaces/IResearcherRepository.cs": {
-    "mtime": 1794005851.8064187,
-    "seen": 1794007115.829896,
-    "ast_hash": "d44cad332bfdb12849ec4378e0502814",
+    "mtime": 1794007987.8833418,
+    "seen": 1794008596.6840508,
+    "ast_hash": "2361f14430024899c18c159bc88639c6",
     "semantic_hash": ""
   },
   "researchProject/Repositories/Interfaces/ISuperAdminRepository.cs": {
@@ -258,9 +252,9 @@
     "semantic_hash": ""
   },
   "researchProject/Services/CertificateService.cs": {
-    "mtime": 1794005790.1407974,
-    "seen": 1794007115.829896,
-    "ast_hash": "9ccf3078b0bec16c57c6101dac6ad772",
+    "mtime": 1794007973.247856,
+    "seen": 1794008596.6840508,
+    "ast_hash": "c7019e293aa01e6bbbe155ce60806885",
     "semantic_hash": ""
   },
   "researchProject/Services/EmailSender.cs": {
@@ -276,9 +270,9 @@
     "semantic_hash": ""
   },
   "researchProject/Services/ICertificateService.cs": {
-    "mtime": 1794005769.5663357,
-    "seen": 1794007115.829896,
-    "ast_hash": "a1134bb4e810ca768c7ef04c81c0eba7",
+    "mtime": 1794007943.9420223,
+    "seen": 1794008596.6840508,
+    "ast_hash": "55168cd3aeb6a0b6e3e1d892865235bc",
     "semantic_hash": ""
   },
   "researchProject/Services/IEmailSender.cs": {
@@ -318,15 +312,15 @@
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/Index.cshtml": {
-    "mtime": 1794006313.6036677,
-    "seen": 1794007115.829896,
-    "ast_hash": "972cfa80cf630cf2fc9c6f683b05bda5",
+    "mtime": 1794008312.8715465,
+    "seen": 1794008596.6840508,
+    "ast_hash": "336dbc5aa398c7c7811433956e05bfb3",
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/_CollegeReportsPartial.cshtml": {
-    "mtime": 1794006552.5004928,
-    "seen": 1794007115.829896,
-    "ast_hash": "1a2b45b8b1438b7b3b6ad89edec42288",
+    "mtime": 1794008259.9488108,
+    "seen": 1794008596.6840508,
+    "ast_hash": "559b6e4cd54f9a5a951b40470fc950aa",
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/_FinalApprovalPartial.cshtml": {
@@ -366,9 +360,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Judge/Index.cshtml": {
-    "mtime": 1794006320.2171323,
-    "seen": 1794007115.829896,
-    "ast_hash": "3988700b3ee850262e0be0fa4d745566",
+    "mtime": 1794008333.1943934,
+    "seen": 1794008596.6840508,
+    "ast_hash": "7bb6a1942c293eeccd6dc6154c697fb8",
     "semantic_hash": ""
   },
   "researchProject/Views/Judge/_AssignedResearchesPartial.cshtml": {
@@ -390,9 +384,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Researcher/Index.cshtml": {
-    "mtime": 1794006327.1924205,
-    "seen": 1794007115.829896,
-    "ast_hash": "49f8129c253921af62ee42de2e699ba6",
+    "mtime": 1794008353.3134224,
+    "seen": 1794008596.6840508,
+    "ast_hash": "89e6ebcc995023dc5e8fb58cd83a6efe",
     "semantic_hash": ""
   },
   "researchProject/Views/Researcher/_CreateResearchPartial.cshtml": {
@@ -420,9 +414,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Researcher/_ResearchStatusTrackerPartial.cshtml": {
-    "mtime": 1794006634.816552,
-    "seen": 1794007115.829896,
-    "ast_hash": "faf60e427f2ae97274c82fd9945b462a",
+    "mtime": 1794008272.6330662,
+    "seen": 1794008596.6840508,
+    "ast_hash": "6480f4f5a0219961a4947a61a483ce9f",
     "semantic_hash": ""
   },
   "researchProject/Views/Researcher/_UploadModificationsPartial.cshtml": {
@@ -474,9 +468,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/_ManageCategoriesPartial.cshtml": {
-    "mtime": 1794006378.7310917,
-    "seen": 1794007115.829896,
-    "ast_hash": "c9a5f953bdd1048f46647679ed3d541f",
+    "mtime": 1794008283.2864275,
+    "seen": 1794008596.6840508,
+    "ast_hash": "361b899e2bebe4dc6c05268909057f94",
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/_ManageCoAdminsPartial.cshtml": {
@@ -504,9 +498,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/_ReportsPartial.cshtml": {
-    "mtime": 1794006462.9492955,
-    "seen": 1794007115.829896,
-    "ast_hash": "b77bbd3cf1bf70f4f8573246ae2c5744",
+    "mtime": 1794008246.880635,
+    "seen": 1794008596.6840508,
+    "ast_hash": "b3c572854ff576a53ef9c8c78e9fad60",
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/_ResearchDetailsPartial.cshtml": {
@@ -585,6 +579,36 @@
     "mtime": 1794004754.2471511,
     "seen": 1794007115.829896,
     "ast_hash": "f661402a551136dbe74282edc5bea28d",
+    "semantic_hash": ""
+  },
+  "researchProject.Tests/ExtendedWorkflowAndEdgeCaseTests.cs": {
+    "mtime": 1794008566.1859293,
+    "seen": 1794008596.6840508,
+    "ast_hash": "a0f4c35ee11e74c26adb4a9c287a0e00",
+    "semantic_hash": ""
+  },
+  "researchProject/Migrations/20261106233041_InitialCreate.Designer.cs": {
+    "mtime": 1794007841.145714,
+    "seen": 1794008596.6840508,
+    "ast_hash": "aba4af12485519f0372aaa79ad329b59",
+    "semantic_hash": ""
+  },
+  "researchProject/Migrations/20261106233041_InitialCreate.cs": {
+    "mtime": 1794007841.1443443,
+    "seen": 1794008596.6840508,
+    "ast_hash": "4502a5ad18f1fd66c340e7ae6be0a654",
+    "semantic_hash": ""
+  },
+  "researchProject/Migrations/ApplicationDbContextModelSnapshot.cs": {
+    "mtime": 1794007841.147714,
+    "seen": 1794008596.6840508,
+    "ast_hash": "ae3434f134ae23032ed56e106ca4bbe9",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1794007193.4447882,
+    "seen": 1794008596.6840508,
+    "ast_hash": "be9da76ec5e65021288e6340ff91ad3d",
     "semantic_hash": ""
   }
 }

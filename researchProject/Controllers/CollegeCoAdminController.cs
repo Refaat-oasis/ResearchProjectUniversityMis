@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using researchProject.Models.Constants;
@@ -13,21 +13,18 @@ using researchProject.Services;
 
 namespace researchProject.Controllers
 {
-    [Authorize(Roles = $"{RoleConstants.CollegeCoAdmin},{RoleConstants.SuperAdmin}")]
+    [Authorize(Policy = "CoAdminOrSuperAdmin")]
     public class CollegeCoAdminController : Controller
     {
         private readonly ICollegeCoAdminRepository _coAdminRepo;
         private readonly IEmailSender _emailSender;
-        private readonly IWebHostEnvironment _env;
 
         public CollegeCoAdminController(
             ICollegeCoAdminRepository coAdminRepo,
-            IEmailSender emailSender,
-            IWebHostEnvironment env)
+            IEmailSender emailSender)
         {
             _coAdminRepo = coAdminRepo;
             _emailSender = emailSender;
-            _env = env;
         }
 
         [HttpGet]
@@ -35,6 +32,9 @@ namespace researchProject.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             var profile = await _coAdminRepo.GetProfileByUserIdAsync(userId);
+            ViewBag.Profile = profile;
+            var collegeId = profile?.CollegeId ?? 0;
+            ViewBag.InitialQueue = await _coAdminRepo.GetScreeningQueueAsync(collegeId);
             return View(profile);
         }
 
@@ -120,7 +120,7 @@ namespace researchProject.Controllers
 
         // Exclusive to CollegeCoAdmin ONLY (Blocked for SuperAdmin per Rule Section 4 & 8)
         [HttpPost]
-        [Authorize(Roles = RoleConstants.CollegeCoAdmin)]
+        [Authorize(Policy = "CollegeCoAdminOnly")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> IssueCertificate(int researchId)
         {
@@ -136,35 +136,12 @@ namespace researchProject.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = RoleConstants.CollegeCoAdmin)]
+        [Authorize(Policy = "CollegeCoAdminOnly")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UploadSignature(IFormFile signatureFile)
         {
-            if (signatureFile == null || signatureFile.Length == 0)
-            {
-                return Json(new { success = false, message = "يرجى اختيار ملف صورة التوقيع." });
-            }
-
-            var ext = Path.GetExtension(signatureFile.FileName).ToLowerInvariant();
-            if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
-            {
-                return Json(new { success = false, message = "صيغة التوقيع يجب أن تكون صورة (PNG, JPG)." });
-            }
-
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "signatures");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-            var fileName = $"sig_{userId}_{Guid.NewGuid():N}{ext}";
-            var fullPath = Path.Combine(uploadsFolder, fileName);
-
-            using (var stream = new FileStream(fullPath, FileMode.Create))
-            {
-                await signatureFile.CopyToAsync(stream);
-            }
-
-            var relativePath = $"~/uploads/signatures/{fileName}";
-            var (succeeded, errorMessage) = await _coAdminRepo.UploadSignatureImageAsync(userId, relativePath);
+            var (succeeded, errorMessage) = await _coAdminRepo.UploadSignatureFileAsync(userId, signatureFile);
 
             return Json(new { success = succeeded, message = errorMessage ?? "تم رفع وتحديث صورة توقيع مدير اللجنة بنجاح." });
         }
@@ -175,6 +152,39 @@ namespace researchProject.Controllers
             var collegeId = await GetCurrentCollegeIdAsync();
             var stats = await _coAdminRepo.GetCollegeStatisticsAsync(collegeId);
             return PartialView("_CollegeReportsPartial", stats);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportReportsToCsv()
+        {
+            var collegeId = await GetCurrentCollegeIdAsync();
+            var stats = await _coAdminRepo.GetCollegeStatisticsAsync(collegeId);
+
+            var sb = new StringBuilder();
+            sb.AppendLine("المؤشر,القيمة");
+            sb.AppendLine($"إجمالي المقترحات,{stats.TotalResearches}");
+            sb.AppendLine($"قيد الفحص الشكلي,{stats.UnderScreeningCount}");
+            sb.AppendLine($"مسند للمحكمين,{stats.AssignedToJudgesCount}");
+            sb.AppendLine($"تعديلات مطلوبة,{stats.ModificationsRequiredCount}");
+            sb.AppendLine($"معتمد,{stats.ApprovedCount}");
+            sb.AppendLine($"صادر الشهادة,{stats.CertificatesIssuedCount}");
+            sb.AppendLine($"إجمالي الباحثين بالكلية,{stats.TotalResearchers}");
+            sb.AppendLine($"متوسط ساعات الفحص,{stats.AverageScreeningHours}");
+            sb.AppendLine($"متوسط أيام التحكيم,{stats.AverageJudgingDays}");
+            sb.AppendLine($"نسبة الالتزام بالمهلة النظامية,{stats.SlaCompliancePercentage}%");
+
+            if (stats.ResearchesByCategory != null && stats.ResearchesByCategory.Any())
+            {
+                sb.AppendLine("\nتصنيف البحث,العدد");
+                foreach (var cat in stats.ResearchesByCategory)
+                {
+                    sb.AppendLine($"\"{cat.Key}\",{cat.Value}");
+                }
+            }
+
+            var preamble = Encoding.UTF8.GetPreamble();
+            var bytes = preamble.Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv; charset=utf-8", $"College_Ethics_Report_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
         private async Task<int> GetCurrentCollegeIdAsync()

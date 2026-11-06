@@ -1,27 +1,12 @@
 @model researchProject.Models.Entities.Judge
 @{
     ViewData["Title"] = "بوابة المحكم العلمي";
+    var initialEvaluations = ViewBag.InitialEvaluations as List<researchProject.Models.Entities.Evaluation> ?? new List<researchProject.Models.Entities.Evaluation>();
 }
 
 <div class="app-container">
     <partial name="_RightSidebarPartial" />
     <main id="main-content-container" class="main-content">
-        <div class="card card-custom">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h3 class="fw-bold text-primary mb-1">أهلاً بك، @(Model?.AcademicTitle ?? "سعادة الدكتور") / @(Model?.User?.FullName ?? User.Identity?.Name)</h3>
-                    <div class="text-muted">هيئة المحكمين المعتمدين - التخصص: <strong>@(Model?.Specialty ?? "عام")</strong></div>
-                </div>
-                <div>
-                    <span class="badge bg-primary py-2 px-3"><i class="bi bi-shield-shaded me-1"></i> جلسة تحكيم مشفرة ومستقلة</span>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            $(document).ready(function() {
-                loadPartial('/Judge/AssignedResearchesPartial', '#main-content-container', 'assigned-researches');
-            });
-        </script>
+        <partial name="_AssignedResearchesPartial" model="initialEvaluations" />
     </main>
 </div>

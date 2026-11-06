@@ -130,8 +130,11 @@
 </div>
 
 <script>
-    // Polling every 30 seconds per Rule Section 5.5
-    var trackerPollInterval = setInterval(function () {
+    // Polling every 30 seconds per Rule Section 5.5 (prevent interval timer leak)
+    if (window.trackerPollInterval) {
+        clearInterval(window.trackerPollInterval);
+    }
+    window.trackerPollInterval = setInterval(function () {
         var $tracker = $('#trackerCardContainer');
         if ($tracker.length && $tracker.is(':visible')) {
             var researchId = $tracker.data('research-id');
@@ -141,7 +144,8 @@
                 });
             }
         } else {
-            clearInterval(trackerPollInterval);
+            clearInterval(window.trackerPollInterval);
+            window.trackerPollInterval = null;
         }
     }, 30000);
 </script>

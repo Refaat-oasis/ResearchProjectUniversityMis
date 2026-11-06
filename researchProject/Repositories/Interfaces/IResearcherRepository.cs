@@ -15,5 +15,6 @@ namespace researchProject.Repositories.Interfaces
         Task<(bool Succeeded, string? ErrorMessage, int? ResearchId)> CreateResearchWithAttachmentsAsync(ResearchCreateDto dto, string researcherUserId);
         Task<(bool Succeeded, string? ErrorMessage)> SubmitModifiedAttachmentsAsync(ResearchModificationDto dto, string researcherUserId);
         Task<List<Research>> GetMyCertificatesAsync(string researcherUserId);
+        Task<(byte[]? FileBytes, string? SerialNumber)> GetCertificateDownloadAsync(int researchId, string researcherUserId);
     }
 }

@@ -1,14 +1,19 @@
 # Graph Report - researchProject  (2026-11-07)
 
 ## Corpus Check
-- 96 files · ~34,753 words
+- 100 files · ~41,718 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 12 file(s) not represented in the graph (top: .vsidx 5, (none) 2, .css 2)
+- Unclassified: 5 file(s) not represented in the graph (top: (none) 2, .css 2, .ico 1)
 
 ## Summary
-- 733 nodes · 1919 edges · 51 communities (24 shown, 27 thin omitted)
-- Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 352 edges (avg confidence: 0.88)
+- 808 nodes · 2076 edges · 63 communities (27 shown, 36 thin omitted)
+- Extraction: 83% EXTRACTED · 17% INFERRED · 0% AMBIGUOUS · INFERRED: 356 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `4e9eb5fe`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Task
@@ -16,7 +21,7 @@
 - Research
 - SystemStatisticsDto
 - Evaluation
-- College
+- CollegeCoAdminRepository
 - SuperAdminRepository
 - 4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository)
 - ResearchStatusHistory
@@ -32,10 +37,10 @@
 - ResearcherSignUpDto
 - ResearcherResearchesBridge
 - HomeController
-- AI Agent Instructions & Project Rules (`AGENTS.md`)
+- ApplicationUser
 - 1. Entity & Database Rules (ERD Compliance)
-- AcceptInvitationDto
-- LoginDto
+- Task
+- ResearcherRepository
 - _DynamicCategoryFieldsPartial.cshtml
 - List<researchProject.Models.Entities.College>
 - List<researchProject.Models.Entities.CollegeCoAdmin>
@@ -46,78 +51,83 @@
 - researchProject.Models.DTOs.ResearchCreateDto
 - researchProject.Models.DTOs.ResearchModificationDto
 - _CollegeReportsPartial.cshtml
-- CollegeCoAdmin/Index.cshtml
-- Judge/Index.cshtml
-- Researcher/Index.cshtml
+- researchProject.Models.Entities.CollegeCoAdmin
+- researchProject.Models.Entities.Judge
+- researchProject.Models.Entities.Researcher
 - _MyCertificatesPartial.cshtml
 - _CertificatesArchivePartial.cshtml
 - SuperAdmin/Index.cshtml
 - _ReportsPartial.cshtml
+- JudgeRepository
+- ICertificateService
+- خطة التنفيذ المرحلية للمنصة (Multi-Phase Implementation & Testing Plan)
+- AccountRepository
+- ResearchAttachment
+- ApplicationDbContext.OnModelCreating
+- 20261106233041_InitialCreate.Designer.cs
+- المنصة الإلكترونية للجان الفرعية للنزاهة الأكاديمية وأخلاقيات البحث العلمي
+- InitialCreate
 
 ## God Nodes (most connected - your core abstractions)
-1. `Research` - 62 edges
-2. `College` - 40 edges
-3. `ApplicationDbContext` - 39 edges
-4. `Judge` - 38 edges
-5. `Evaluation` - 37 edges
-6. `researchProject.Models.Entities` - 32 edges
-7. `ResearchCategory` - 32 edges
-8. `SuperAdminRepository` - 32 edges
-9. `Researcher` - 31 edges
-10. `CollegeCoAdmin` - 30 edges
+1. `Research` - 44 edges
+2. `Evaluation` - 38 edges
+3. `CollegeCoAdminRepository` - 37 edges
+4. `ApplicationDbContext` - 34 edges
+5. `SuperAdminRepository` - 33 edges
+6. `Judge` - 33 edges
+7. `College` - 33 edges
+8. `Researcher` - 29 edges
+9. `ResearchStatusHistory` - 29 edges
+10. `SuperAdminController` - 26 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `1. مهام التنفيذ` --references--> `ApplicationUser`  [INFERRED]
-  multi_phase_implementation_testing_plan.md → researchProject/Models/Entities/ApplicationUser.cs
 - `7. Evaluation (Review) & Round Closing` --references--> `JudgeRepository`  [INFERRED]
   ai_agent_instructions_architecture_rules.md → researchProject/Repositories/Implementations/JudgeRepository.cs
-- `4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository)` --references--> `AccountController`  [INFERRED]
-  ai_agent_instructions_architecture_rules.md → researchProject/Controllers/AccountController.cs
-- `1. مهام التنفيذ` --references--> `AccountController`  [INFERRED]
-  multi_phase_implementation_testing_plan.md → researchProject/Controllers/AccountController.cs
+- `1. مهام التنفيذ` --references--> `ApplicationUser`  [INFERRED]
+  multi_phase_implementation_testing_plan.md → researchProject/Models/Entities/ApplicationUser.cs
 - `4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository)` --references--> `CollegeCoAdminController`  [INFERRED]
   ai_agent_instructions_architecture_rules.md → researchProject/Controllers/CollegeCoAdminController.cs
+- `4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository)` --references--> `JudgeController`  [INFERRED]
+  ai_agent_instructions_architecture_rules.md → researchProject/Controllers/JudgeController.cs
+- `4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository)` --references--> `ResearcherController`  [INFERRED]
+  ai_agent_instructions_architecture_rules.md → researchProject/Controllers/ResearcherController.cs
 
 ## Import Cycles
 - None detected.
 
-## Communities (51 total, 27 thin omitted)
+## Communities (63 total, 36 thin omitted)
 
 ### Community 0 - "Task"
-Cohesion: 0.05
-Nodes (8): AccountController, CollegeCoAdminController, JudgeController, ResearcherController, SuperAdminController, IAccountRepository, ICollegeCoAdminRepository, ISuperAdminRepository
+Cohesion: 0.07
+Nodes (16): AccountController, CollegeCoAdminController, HomeController, JudgeController, SuperAdminController, AcceptInvitationDto, AcademicTitle, ConfirmPassword (+8 more)
 
 ### Community 1 - "researchProject.Models.Entities"
 Cohesion: 0.06
-Nodes (25): researchProject.Services, researchProject.Data, researchProject.Tests, researchProject.Repositories.Interfaces, researchProject.Controllers, researchProject.Models.DTOs, researchProject, researchProject.Models.Constants (+17 more)
+Nodes (26): researchProject.Services, researchProject.Data, researchProject.Tests, researchProject.Repositories.Interfaces, researchProject.Controllers, researchProject.Models.DTOs, researchProject, researchProject.Models.Constants (+18 more)
 
 ### Community 2 - "Research"
-Cohesion: 0.05
-Nodes (41): Research, AcademicSpecialty, Category, CategoryId, CertificateFilePath, CertificateIssuedAt, CertificateQrCodeUrl, CertificateSerialNumber (+33 more)
+Cohesion: 0.10
+Nodes (21): Research, AcademicSpecialty, Category, CategoryId, CertificateFilePath, CertificateIssuedAt, CertificateQrCodeUrl, CertificateSerialNumber (+13 more)
 
 ### Community 3 - "SystemStatisticsDto"
-Cohesion: 0.05
-Nodes (32): ResearchCreateDto, AcademicSpecialty, AdditionalDocumentFile, CategoryId, CollegeId, DynamicAnswers, InformedConsentFile, ResearchProposalFile (+24 more)
+Cohesion: 0.08
+Nodes (25): ResearchCreateDto, AcademicSpecialty, AdditionalDocumentFile, CategoryId, CollegeId, DynamicAnswers, InformedConsentFile, ResearchProposalFile (+17 more)
 
 ### Community 4 - "Evaluation"
-Cohesion: 0.07
-Nodes (32): 1. مهام التنفيذ, 1. مهام التنفيذ, 2. اختبارات المرحلة الخامسة, 2. اختبارات المرحلة السادسة, المرحلة الخامسة (Phase 5): موديول مدير اللجنة الفرعية (الفحص الشكلي، التوزيع، الإسناد), المرحلة السادسة (Phase 6): موديول المحكم العلمي (التقييم، التعديلات، الاعتماد), EvaluationSubmitDto, Decision (+24 more)
+Cohesion: 0.09
+Nodes (19): 1. مهام التنفيذ, 2. اختبارات المرحلة الخامسة, المرحلة الخامسة (Phase 5): موديول مدير اللجنة الفرعية (الفحص الشكلي، التوزيع، الإسناد), Evaluation, Decision, Id, InformedConsentRating, IsDigitallySigned (+11 more)
 
-### Community 5 - "College"
-Cohesion: 0.13
-Nodes (12): College, Code, CollegeCoAdmins, Id, Name, ResearchCategories, Researchers, Researches (+4 more)
-
-### Community 6 - "SuperAdminRepository"
-Cohesion: 0.11
-Nodes (7): 9. Reports & Statistics, ApplicationUser, FullName, Program, AccountRepository, SuperAdminRepository, ApplicationUser
+### Community 5 - "CollegeCoAdminRepository"
+Cohesion: 0.08
+Nodes (21): College, Code, CollegeCoAdmins, Id, Name, ResearchCategories, Researchers, Researches (+13 more)
 
 ### Community 7 - "4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository)"
-Cohesion: 0.14
-Nodes (14): 4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository), 8. Certificate, Digital Signature & Archive, 1. مهام التنفيذ, PublicController, CertificateVerificationResultDto, CollegeName, IssueDate, IsValid (+6 more)
+Cohesion: 0.21
+Nodes (11): 4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository), 1. مهام التنفيذ, PublicController, CertificateVerificationResultDto, CollegeName, IssueDate, IsValid, Message (+3 more)
 
 ### Community 8 - "ResearchStatusHistory"
-Cohesion: 0.10
-Nodes (21): 6. Research Status Workflow (Strict), 1. مهام التنفيذ, 1. مهام التنفيذ, 2. اختبارات المرحلة الثامنة, 2. اختبارات المرحلة الرابعة, 2. اختبارات المرحلة السابعة, المرحلة الثامنة (Phase 8): التقارير والأرشيف والتحسينات والنشر, المرحلة الرابعة (Phase 4): بوابة الباحث وتقديم البحث (+13 more)
+Cohesion: 0.17
+Nodes (12): 2. اختبارات المرحلة السابعة, المرحلة السابعة (Phase 7): الاعتماد النهائي وإصدار الشهادة والتحقق, ResearchStatusHistory, ChangedAt, ChangedByUser, ChangedByUserId, Id, NewStatus (+4 more)
 
 ### Community 9 - "researchProject.Tests"
 Cohesion: 0.12
@@ -135,16 +145,20 @@ Nodes (14): 1. مهام التنفيذ, 2. اختبارات المرحلة ال�
 Cohesion: 0.13
 Nodes (15): ASPNETCORE_ENVIRONMENT, applicationUrl, commandName, dotnetRunMessages, environmentVariables, launchBrowser, applicationUrl, commandName (+7 more)
 
+### Community 13 - "IEmailSender"
+Cohesion: 0.08
+Nodes (10): 2. Authentication Rules (ASP.NET Core Identity, Single Login, Single Sign-Up), ResearchModificationDto, ModifiedProposalFile, ModifiedToolsFile, ResearcherNotes, ResearchId, EmailSender, FileStorageService (+2 more)
+
 ### Community 14 - "Judge"
-Cohesion: 0.16
-Nodes (11): 1. مهام التنفيذ, 2. اختبارات المرحلة الأولى, المرحلة الأولى (Phase 1): Identity والكلاسات وقاعدة البيانات, Judge, AcademicTitle, Evaluations, Id, IsActive (+3 more)
+Cohesion: 0.14
+Nodes (13): 11. Seeding & Configuration, 1. مهام التنفيذ, 2. اختبارات المرحلة الأولى, المرحلة الأولى (Phase 1): Identity والكلاسات وقاعدة البيانات, DbSeeder, Judge, AcademicTitle, Evaluations (+5 more)
 
 ### Community 15 - "ApplicationDbContext"
 Cohesion: 0.14
 Nodes (12): ApplicationDbContext, CollegeCoAdmins, Colleges, Evaluations, JudgeInvitations, Judges, ResearchAttachments, ResearchCategories (+4 more)
 
 ### Community 16 - "JudgeInvitation"
-Cohesion: 0.17
+Cohesion: 0.18
 Nodes (11): JudgeInvitation, AcceptedAt, CreatedAt, Email, ExpiresAt, Id, InvitedByUser, InvitedByUserId (+3 more)
 
 ### Community 17 - "CollegeCoAdmin"
@@ -152,52 +166,64 @@ Cohesion: 0.20
 Nodes (10): 1. مهام التنفيذ, 2. اختبارات المرحلة الثالثة, المرحلة الثالثة (Phase 3): موديول مدير النظام العام (الكليات، التصنيفات وحقولها، الـ Co-Admins، دعوات المحكمين), CollegeCoAdmin, College, CollegeId, Id, SignatureImagePath (+2 more)
 
 ### Community 18 - "ResearcherSignUpDto"
-Cohesion: 0.18
+Cohesion: 0.17
 Nodes (11): ResearcherSignUpDto, AcademicDegree, CollegeId, ConfirmPassword, Department, Email, FullName, NationalId (+3 more)
 
 ### Community 19 - "ResearcherResearchesBridge"
-Cohesion: 0.20
-Nodes (8): 3. Judges: Dual Role, Invitations, Scope, Conflict of Interest, Distribution, ResearcherResearchesBridge, Id, IsMainAuthor, Research, Researcher, ResearcherId, ResearchId
+Cohesion: 0.13
+Nodes (15): 10. Security & Data Isolation, 3. Judges: Dual Role, Invitations, Scope, Conflict of Interest, Distribution, 5. UI/UX, RTL, Right Sidebar & Partial Views, 6. Research Status Workflow (Strict), 7. Evaluation (Review) & Round Closing, 8. Certificate, Digital Signature & Archive, 9. Reports & Statistics, AI Agent Instructions & Project Rules (`AGENTS.md`) (+7 more)
 
 ### Community 20 - "HomeController"
-Cohesion: 0.20
-Nodes (5): researchProject.Models, HomeController, ErrorViewModel, RequestId, ShowRequestId
+Cohesion: 0.33
+Nodes (4): researchProject.Models, ErrorViewModel, RequestId, ShowRequestId
 
-### Community 21 - "AI Agent Instructions & Project Rules (`AGENTS.md`)"
-Cohesion: 0.22
-Nodes (8): 0. Identity Model Summary (READ FIRST), 10. Security & Data Isolation, 11. Seeding & Configuration, 2. Authentication Rules (ASP.NET Core Identity, Single Login, Single Sign-Up), 5. UI/UX, RTL, Right Sidebar & Partial Views, 7. Evaluation (Review) & Round Closing, AI Agent Instructions & Project Rules (`AGENTS.md`), DbSeeder
+### Community 21 - "ApplicationUser"
+Cohesion: 0.32
+Nodes (3): 0. Identity Model Summary (READ FIRST), ApplicationUser, FullName
 
 ### Community 22 - "1. Entity & Database Rules (ERD Compliance)"
 Cohesion: 0.39
 Nodes (8): 1. Entity & Database Rules (ERD Compliance), AttachmentTypeConstants, EthicsRatingConstants, EvaluationDecisionConstants, InvitationStatusConstants, ResearcherTypeConstants, ResearchStatusConstants, RoleConstants
 
-### Community 23 - "AcceptInvitationDto"
-Cohesion: 0.33
-Nodes (6): AcceptInvitationDto, AcademicTitle, ConfirmPassword, FullName, Password, Token
+### Community 24 - "ResearcherRepository"
+Cohesion: 0.16
+Nodes (3): ResearcherController, ResearcherRepository, IResearcherRepository
 
-### Community 24 - "LoginDto"
-Cohesion: 0.50
-Nodes (4): LoginDto, Email, Password, RememberMe
+### Community 52 - "JudgeRepository"
+Cohesion: 0.19
+Nodes (11): 1. مهام التنفيذ, EvaluationSubmitDto, Decision, EvaluationId, InformedConsentRating, ModificationNotes, PrivacyProtectionRating, Recommendations (+3 more)
+
+### Community 54 - "خطة التنفيذ المرحلية للمنصة (Multi-Phase Implementation & Testing Plan)"
+Cohesion: 0.18
+Nodes (10): 1. مهام التنفيذ, 1. مهام التنفيذ, 2. اختبارات المرحلة الثامنة, 2. اختبارات المرحلة الرابعة, 2. اختبارات المرحلة السادسة, المرحلة الثامنة (Phase 8): التقارير والأرشيف والتحسينات والنشر, المرحلة الرابعة (Phase 4): بوابة الباحث وتقديم البحث, المرحلة السادسة (Phase 6): موديول المحكم العلمي (التقييم، التعديلات، الاعتماد) (+2 more)
+
+### Community 56 - "ResearchAttachment"
+Cohesion: 0.20
+Nodes (10): ResearchAttachment, AttachmentType, FileSize, Id, OriginalFileName, Research, ResearchId, StoredFileName (+2 more)
+
+### Community 59 - "المنصة الإلكترونية للجان الفرعية للنزاهة الأكاديمية وأخلاقيات البحث العلمي"
+Cohesion: 0.25
+Nodes (7): ResearchProjectUniversityMis, 🏛️ البوابات الرئيسية وأدوار النظام الأربعة, 🧪 التحقق والاختبارات الآلية, 🚀 التشغيل المحلي, 🛠️ التقنيات والمعايير المستخدمة, المنصة الإلكترونية للجان الفرعية للنزاهة الأكاديمية وأخلاقيات البحث العلمي, 🔄 مسار دورة العمل الرقمية (Workflow Statuses)
 
 ## Knowledge Gaps
-- **226 isolated node(s):** `net9.0`, `coverlet.collector (6.0.4)`, `Microsoft.NET.Test.Sdk (17.14.1)`, `xunit (2.9.3)`, `xunit.runner.visualstudio (3.1.4)` (+221 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 296 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **226 isolated node(s):** `researchProject.Models.Entities.CollegeCoAdmin`, `researchProject.Models.DTOs.SystemStatisticsDto`, `researchProject.Models.Entities.Judge`, `researchProject.Models.Entities.Researcher`, `researchProject.Models.Entities.Research` (+221 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 311 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **36 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `researchProject.Models.Constants` connect `researchProject.Models.Entities` to `1. Entity & Database Rules (ERD Compliance)`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
-- **Are the 11 inferred relationships involving `Research` (e.g. with `1. Entity & Database Rules (ERD Compliance)` and `1. مهام التنفيذ`) actually correct?**
-  _`Research` has 11 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `net9.0`, `coverlet.collector (6.0.4)`, `Microsoft.NET.Test.Sdk (17.14.1)` to the rest of the system?**
+  _High betweenness centrality (0.061) - this node is a cross-community bridge._
+- **Are the 10 inferred relationships involving `Research` (e.g. with `1. Entity & Database Rules (ERD Compliance)` and `1. مهام التنفيذ`) actually correct?**
+  _`Research` has 10 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `researchProject.Models.Entities.CollegeCoAdmin`, `researchProject.Models.DTOs.SystemStatisticsDto`, `researchProject.Models.Entities.Judge` to the rest of the system?**
   _226 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Task` be split into smaller, more focused modules?**
-  _Cohesion score 0.05212903225806451 - nodes in this community are weakly interconnected._
-- **Why does `Research` connect `Research` to `Task`, `researchProject.Models.Entities`, `SystemStatisticsDto`, `Evaluation`, `College`, `4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository)`, `ResearchStatusHistory`, `Judge`, `ApplicationDbContext`, `ResearcherResearchesBridge`, `1. Entity & Database Rules (ERD Compliance)`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
-- **Are the 13 inferred relationships involving `College` (e.g. with `1. Entity & Database Rules (ERD Compliance)` and `2. Authentication Rules (ASP.NET Core Identity, Single Login, Single Sign-Up)`) actually correct?**
-  _`College` has 13 INFERRED edges - model-reasoned connections that need verification._
+  _Cohesion score 0.0669753086419753 - nodes in this community are weakly interconnected._
+- **Why does `ApplicationDbContext` connect `ApplicationDbContext` to `researchProject.Models.Entities`, `Research`, `Evaluation`, `CollegeCoAdminRepository`, `4. Architecture: Dedicated Controller & Repository Per Actor (NO Generic Repository)`, `ResearchStatusHistory`, `Researcher`, `Judge`, `JudgeInvitation`, `CollegeCoAdmin`, `ResearcherResearchesBridge`, `JudgeRepository`, `ApplicationUser`, `1. Entity & Database Rules (ERD Compliance)`, `AccountRepository`, `ResearchAttachment`, `ApplicationDbContext.OnModelCreating`?**
+  _High betweenness centrality (0.058) - this node is a cross-community bridge._
+- **Are the 13 inferred relationships involving `Evaluation` (e.g. with `1. Entity & Database Rules (ERD Compliance)` and `3. Judges: Dual Role, Invitations, Scope, Conflict of Interest, Distribution`) actually correct?**
+  _`Evaluation` has 13 INFERRED edges - model-reasoned connections that need verification._
 - **Should `researchProject.Models.Entities` be split into smaller, more focused modules?**
-  _Cohesion score 0.05862584017923824 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.059882312218760815 - nodes in this community are weakly interconnected._

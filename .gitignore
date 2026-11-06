@@ -18,7 +18,9 @@ TestResults/
 *.coverage
 *.coveragexml
 
-## Database and local uploads
+## Graphify temporary cache
+graphify-out/cache/
+graphify-out/.graphify_build_state.json
 *.mdf
 *.ldf
 App_Data/UploadedFiles/*

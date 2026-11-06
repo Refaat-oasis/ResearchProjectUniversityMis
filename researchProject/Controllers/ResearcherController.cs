@@ -14,21 +14,14 @@ using researchProject.Services;
 
 namespace researchProject.Controllers
 {
-    [Authorize(Roles = $"{RoleConstants.Researcher},{RoleConstants.SuperAdmin}")]
+    [Authorize(Policy = "ResearcherOrSuperAdmin")]
     public class ResearcherController : Controller
     {
         private readonly IResearcherRepository _researcherRepo;
-        private readonly IFileStorageService _fileStorage;
-        private readonly IWebHostEnvironment _env;
 
-        public ResearcherController(
-            IResearcherRepository researcherRepo,
-            IFileStorageService fileStorage,
-            IWebHostEnvironment env)
+        public ResearcherController(IResearcherRepository researcherRepo)
         {
             _researcherRepo = researcherRepo;
-            _fileStorage = fileStorage;
-            _env = env;
         }
 
         [HttpGet]
@@ -36,6 +29,8 @@ namespace researchProject.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             var profile = await _researcherRepo.GetProfileByUserIdAsync(userId);
+            ViewBag.Profile = profile;
+            ViewBag.InitialResearches = await _researcherRepo.GetMyResearchesAsync(userId);
             return View(profile);
         }
 
@@ -157,22 +152,13 @@ namespace researchProject.Controllers
         public async Task<IActionResult> DownloadCertificate(int researchId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            var research = await _researcherRepo.GetResearchDetailsAsync(researchId, userId);
-            if (research == null || string.IsNullOrEmpty(research.CertificateFilePath))
+            var (fileBytes, serialNumber) = await _researcherRepo.GetCertificateDownloadAsync(researchId, userId);
+            if (fileBytes == null || fileBytes.Length == 0)
             {
                 return NotFound("ملف الشهادة غير موجود أو غير مصرح بتحميله.");
             }
 
-            var certDir = Path.Combine(_env.ContentRootPath, "App_Data", "Certificates");
-            var fullPath = Path.Combine(certDir, research.CertificateFilePath);
-
-            if (!System.IO.File.Exists(fullPath))
-            {
-                return NotFound("الملف غير متوفر في الخادم.");
-            }
-
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
-            return File(fileBytes, "text/html", $"Certificate_{research.CertificateSerialNumber}.html");
+            return File(fileBytes, "text/html", $"Certificate_{serialNumber}.html");
         }
     }
 }

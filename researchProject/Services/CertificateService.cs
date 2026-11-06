@@ -54,7 +54,8 @@ namespace researchProject.Services
             string signatureHtml = "<div style='font-style:italic; color:#757575;'>[ختم وتوقيع إلكتروني موثق من اللجنة]</div>";
             if (!string.IsNullOrEmpty(issuingCoAdmin.SignatureImagePath))
             {
-                var sigFullPath = Path.Combine(_env.WebRootPath, issuingCoAdmin.SignatureImagePath.TrimStart('~', '/', '\\'));
+                var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath ?? Directory.GetCurrentDirectory(), "wwwroot");
+                var sigFullPath = Path.Combine(webRoot, issuingCoAdmin.SignatureImagePath.TrimStart('~', '/', '\\'));
                 if (File.Exists(sigFullPath))
                 {
                     var sigBytes = await File.ReadAllBytesAsync(sigFullPath);
@@ -244,6 +245,19 @@ namespace researchProject.Services
 
             await File.WriteAllTextAsync(filePath, htmlContent, Encoding.UTF8);
             return fileName;
+        }
+
+        public async Task<byte[]?> GetCertificateFileBytesAsync(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return null;
+
+            var contentRoot = _env.ContentRootPath ?? Directory.GetCurrentDirectory();
+            var certDir = Path.Combine(contentRoot, "App_Data", "Certificates");
+            var fullPath = Path.Combine(certDir, fileName);
+
+            if (!File.Exists(fullPath)) return null;
+
+            return await File.ReadAllBytesAsync(fullPath);
         }
     }
 }

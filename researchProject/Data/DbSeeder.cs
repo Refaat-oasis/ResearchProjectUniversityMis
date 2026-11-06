@@ -14,8 +14,15 @@ namespace researchProject.Data
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            // Ensure database is created
-            await context.Database.EnsureCreatedAsync();
+            // Ensure database is created and migrations applied
+            if (context.Database.IsRelational())
+            {
+                await context.Database.MigrateAsync();
+            }
+            else
+            {
+                await context.Database.EnsureCreatedAsync();
+            }
 
             // 1. Seed Roles
             string[] roles = 

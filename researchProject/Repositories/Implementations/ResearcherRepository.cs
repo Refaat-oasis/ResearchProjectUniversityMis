@@ -20,17 +20,20 @@ namespace researchProject.Repositories.Implementations
         private readonly IFileStorageService _fileStorage;
         private readonly IEmailSender _emailSender;
         private readonly IConfiguration _configuration;
+        private readonly ICertificateService? _certificateService;
 
         public ResearcherRepository(
             ApplicationDbContext db,
             IFileStorageService fileStorage,
             IEmailSender emailSender,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ICertificateService? certificateService = null)
         {
             _db = db;
             _fileStorage = fileStorage;
             _emailSender = emailSender;
             _configuration = configuration;
+            _certificateService = certificateService;
         }
 
         public async Task<Researcher?> GetProfileByUserIdAsync(string userId)
@@ -388,6 +391,23 @@ namespace researchProject.Repositories.Implementations
                             r.ResearcherResearchesBridges.Any(b => b.Researcher.UserId == researcherUserId))
                 .OrderByDescending(r => r.CertificateIssuedAt)
                 .ToListAsync();
+        }
+
+        public async Task<(byte[]? FileBytes, string? SerialNumber)> GetCertificateDownloadAsync(int researchId, string researcherUserId)
+        {
+            var research = await GetResearchDetailsAsync(researchId, researcherUserId);
+            if (research == null || string.IsNullOrEmpty(research.CertificateFilePath))
+            {
+                return (null, null);
+            }
+
+            if (_certificateService != null)
+            {
+                var bytes = await _certificateService.GetCertificateFileBytesAsync(research.CertificateFilePath);
+                return (bytes, research.CertificateSerialNumber);
+            }
+
+            return (null, research.CertificateSerialNumber);
         }
     }
 }

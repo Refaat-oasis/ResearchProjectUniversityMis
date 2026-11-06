@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using researchProject.Data;
+using researchProject.Models.Constants;
 using researchProject.Models.Entities;
 using researchProject.Repositories.Implementations;
 using researchProject.Repositories.Interfaces;
@@ -46,7 +47,19 @@ namespace researchProject
                 options.SlidingExpiration = true;
             });
 
-            // 3. Shared Domain Services
+            // 3. Policy-Based Authorization (User Rule 2)
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("SuperAdminOnly", policy => policy.RequireRole(RoleConstants.SuperAdmin));
+                options.AddPolicy("CollegeCoAdminOnly", policy => policy.RequireRole(RoleConstants.CollegeCoAdmin));
+                options.AddPolicy("JudgeOnly", policy => policy.RequireRole(RoleConstants.Judge));
+                options.AddPolicy("ResearcherOnly", policy => policy.RequireRole(RoleConstants.Researcher));
+                options.AddPolicy("CoAdminOrSuperAdmin", policy => policy.RequireRole(RoleConstants.CollegeCoAdmin, RoleConstants.SuperAdmin));
+                options.AddPolicy("JudgeOrSuperAdmin", policy => policy.RequireRole(RoleConstants.Judge, RoleConstants.SuperAdmin));
+                options.AddPolicy("ResearcherOrSuperAdmin", policy => policy.RequireRole(RoleConstants.Researcher, RoleConstants.SuperAdmin));
+            });
+
+            // 4. Shared Domain Services
             builder.Services.AddScoped<IEmailSender, EmailSender>();
             builder.Services.AddScoped<IFileStorageService, FileStorageService>();
             builder.Services.AddScoped<ICertificateService, CertificateService>();
