@@ -3,7 +3,7 @@
 <div class="card card-custom">
     <div class="card-header-custom">
         <h4 class="card-title-custom">
-            <i class="bi bi-buildings text-primary"></i> إدارة كليات الجامعة ولجانها الفرعية
+            <i class="bi bi-buildings text-primary"></i> إدارة كليات الجامعة ولجانها الفرعية والأقسام الأكاديمية
         </h4>
         <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCollegeModal">
             <i class="bi bi-plus-lg me-1"></i> إضافة كلية جديدة
@@ -18,6 +18,7 @@
                     <th>اسم الكلية</th>
                     <th>رمز الكلية</th>
                     <th>مدير اللجنة الفرعية</th>
+                    <th>الأقسام الأكاديمية</th>
                     <th>عدد التصنيفات</th>
                     <th>الإجراءات</th>
                 </tr>
@@ -29,6 +30,7 @@
                     foreach (var c in Model)
                     {
                         var coAdmin = c.CollegeCoAdmins?.FirstOrDefault()?.User?.FullName ?? "لم يُعين بعد";
+                        var deptsCount = c.Departments?.Count ?? 0;
                         <tr>
                             <td>@index</td>
                             <td class="fw-bold text-dark">@c.Name</td>
@@ -43,8 +45,14 @@
                                     <span class="text-danger small"><i class="bi bi-exclamation-circle me-1"></i>لا يوجد مدير لجنة</span>
                                 }
                             </td>
+                            <td>
+                                <span class="badge bg-info-subtle text-info border">@deptsCount قسم</span>
+                            </td>
                             <td>@(c.ResearchCategories?.Count ?? 0) تصنيف</td>
                             <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="manageDepartments(@c.Id, '@c.Name')">
+                                    <i class="bi bi-diagram-3 me-1"></i> الأقسام (@deptsCount)
+                                </button>
                                 <button class="btn btn-sm btn-outline-secondary" onclick="editCollege(@c.Id, '@c.Name', '@c.Code')">
                                     <i class="bi bi-pencil"></i> تعديل
                                 </button>
@@ -56,7 +64,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">لا توجد كليات مسجلة حالياً.</td>
+                        <td colspan="7" class="text-center py-4 text-muted">لا توجد كليات مسجلة حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -92,7 +100,63 @@
     </div>
 </div>
 
+<!-- Modal Manage Departments (Requirement 3) -->
+<div class="modal fade" id="departmentsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-diagram-3-fill text-primary me-2"></i>
+                    إدارة الأقسام الأكاديمية - <span id="deptCollegeName" class="text-primary"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Add Department Form -->
+                <form id="addDeptForm" class="mb-4 p-3 border rounded bg-light">
+                    <input type="hidden" id="deptTargetCollegeId" name="collegeId" />
+                    <input type="hidden" id="deptEditingId" name="id" />
+                    <label class="form-label fw-bold mb-1" id="deptFormLabel">إضافة قسم أكاديمي جديد للكلية:</label>
+                    <div class="input-group">
+                        <input type="text" id="deptNameInput" name="name" class="form-control" placeholder="اكتب اسم القسم الأكاديمي..." required />
+                        <button type="submit" class="btn btn-primary-custom px-4" id="deptSaveBtn">
+                            <i class="bi bi-plus-lg me-1"></i> حفظ القسم
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="deptCancelEditBtn" style="display:none;" onclick="cancelEditDept()">
+                            إلغاء التعديل
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Departments List -->
+                <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-list-check me-1"></i> الأقسام الأكاديمية المسجلة بالكلية:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>اسم القسم الأكاديمي</th>
+                                <th style="width: 140px;">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentsTableBody">
+                            <tr>
+                                <td colspan="3" class="text-center py-3 text-muted">جاري تحميل الأقسام...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    var currentCollegeId = 0;
+
     function onCollegeSaved(res) {
         $('#addCollegeModal').modal('hide');
         $('.modal-backdrop').remove();
@@ -109,6 +173,98 @@
             alert(res.message);
             if (res.success) {
                 loadPartial('/SuperAdmin/ManageCollegesPartial', '#main-content-container', 'colleges');
+            }
+        });
+    }
+
+    function manageDepartments(collegeId, collegeName) {
+        currentCollegeId = collegeId;
+        $('#deptTargetCollegeId').val(collegeId);
+        $('#deptCollegeName').text(collegeName);
+        cancelEditDept();
+        loadDepartmentsList(collegeId);
+        new bootstrap.Modal(document.getElementById('departmentsModal')).show();
+    }
+
+    function loadDepartmentsList(collegeId) {
+        $('#departmentsTableBody').html('<tr><td colspan="3" class="text-center py-3 text-muted">جاري التحميل...</td></tr>');
+        $.get('/SuperAdmin/GetDepartments?collegeId=' + collegeId, function (data) {
+            var tbody = $('#departmentsTableBody');
+            tbody.empty();
+            if (!data || data.length === 0) {
+                tbody.append('<tr><td colspan="3" class="text-center py-3 text-muted">لا توجد أقسام مسجلة لهذه الكلية بعد. يمكنك إضافة قسم جديد أعلاه.</td></tr>');
+                return;
+            }
+            $.each(data, function (i, item) {
+                var tr = $('<tr>');
+                tr.append($('<td>').text(i + 1));
+                tr.append($('<td class="fw-bold">').text(item.name));
+                var actions = $('<td>');
+                actions.append('<button class="btn btn-xs btn-outline-primary btn-sm py-0 px-2 me-1" onclick="startEditDept(' + item.id + ', \'' + item.name.replace(/'/g, "\\'") + '\')"><i class="bi bi-pencil"></i> تعديل</button>');
+                actions.append('<button class="btn btn-xs btn-outline-danger btn-sm py-0 px-2" onclick="deleteDept(' + item.id + ')"><i class="bi bi-trash"></i> حذف</button>');
+                tr.append(actions);
+                tbody.append(tr);
+            });
+        });
+    }
+
+    function startEditDept(id, name) {
+        $('#deptEditingId').val(id);
+        $('#deptNameInput').val(name).focus();
+        $('#deptFormLabel').text('تعديل اسم القسم الأكاديمي:');
+        $('#deptSaveBtn').html('<i class="bi bi-check-lg me-1"></i> حفظ التعديل');
+        $('#deptCancelEditBtn').show();
+    }
+
+    function cancelEditDept() {
+        $('#deptEditingId').val('');
+        $('#deptNameInput').val('');
+        $('#deptFormLabel').text('إضافة قسم أكاديمي جديد للكلية:');
+        $('#deptSaveBtn').html('<i class="bi bi-plus-lg me-1"></i> حفظ القسم');
+        $('#deptCancelEditBtn').hide();
+    }
+
+    $('#addDeptForm').off('submit').on('submit', function (e) {
+        e.preventDefault();
+        var id = $('#deptEditingId').val();
+        var name = $('#deptNameInput').val();
+        var collegeId = $('#deptTargetCollegeId').val();
+
+        $.ajax({
+            url: '/SuperAdmin/SaveDepartment',
+            type: 'POST',
+            data: {
+                id: id ? parseInt(id) : null,
+                name: name,
+                collegeId: parseInt(collegeId)
+            },
+            success: function (res) {
+                alert(res.message);
+                if (res.success) {
+                    cancelEditDept();
+                    loadDepartmentsList(collegeId);
+                }
+            },
+            error: function (xhr) {
+                alert(xhr.responseText || 'حدث خطأ.');
+            }
+        });
+    });
+
+    function deleteDept(id) {
+        if (!confirm('هل أنت متأكد من رغبتك في حذف هذا القسم الأكاديمي؟')) return;
+        $.ajax({
+            url: '/SuperAdmin/DeleteDepartment',
+            type: 'POST',
+            data: { id: id },
+            success: function (res) {
+                alert(res.message);
+                if (res.success) {
+                    loadDepartmentsList(currentCollegeId);
+                }
+            },
+            error: function (xhr) {
+                alert(xhr.responseText || 'حدث خطأ.');
             }
         });
     }

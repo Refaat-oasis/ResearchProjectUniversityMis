@@ -1,5 +1,6 @@
 @model researchProject.Models.DTOs.ResearcherSignUpDto
 @using researchProject.Models.Constants
+@using researchProject.Models.Enums
 @{
     ViewData["Title"] = "تسجيل باحث جديد - المنصة الإلكترونية";
 }
@@ -11,7 +12,7 @@
                 <div class="card-header-custom">
                     <div>
                         <h4 class="fw-bold text-primary mb-1">تسجيل باحث أكاديمي جديد</h4>
-                        <div class="text-muted small">يرجى إدخال البيانات الأكاديمية بدقة باستخدام البريد المؤسسي الرسمي للجامعة</div>
+                        <div class="text-muted small">يرجى إدخال البيانات بدقة. التسجيل متاح بكافة عناوين البريد الإلكتروني (Gmail، Yahoo، مؤسسي، إلخ)</div>
                     </div>
                     <div class="badge bg-success-subtle text-success p-2 rounded-pill">
                         <i class="bi bi-person-check fs-6 me-1"></i> بوابة الباحثين
@@ -24,76 +25,107 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label asp-for="FullName" class="form-label"></label>
-                            <input asp-for="FullName" class="form-control" placeholder="الاسم رباعياً باللغة العربية" />
+                            <input asp-for="FullName" class="form-control" placeholder="الاسم رباعياً باللغة العربية" required />
                             <span asp-validation-for="FullName" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" placeholder="example@univ.edu.eg" dir="ltr" />
+                            <input asp-for="Email" type="email" class="form-control" placeholder="example@gmail.com أو بريدك المؤسسي" dir="ltr" required />
                             <span asp-validation-for="Email" class="text-danger small"></span>
-                            <div class="form-text small text-muted">يشترط البريد المؤسسي المعتمد (مثل: mis.edu.eg / univ.edu.eg).</div>
+                            <div class="form-text small text-muted">سيتم إرسال رمز الأمان ورابط التفعيل فوراً إلى هذا البريد.</div>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="Password" class="form-label"></label>
-                            <input asp-for="Password" class="form-control" dir="ltr" />
+                            <input asp-for="Password" class="form-control" dir="ltr" required />
                             <span asp-validation-for="Password" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="ConfirmPassword" class="form-label"></label>
-                            <input asp-for="ConfirmPassword" class="form-control" dir="ltr" />
+                            <input asp-for="ConfirmPassword" class="form-control" dir="ltr" required />
                             <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                         </div>
 
+                        <!-- College Selection via Datalist -->
                         <div class="col-md-6">
-                            <label asp-for="CollegeId" class="form-label"></label>
-                            <select asp-for="CollegeId" class="form-select">
-                                <option value="">-- اختر الكلية التابع لها --</option>
+                            <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
+                            <input type="hidden" asp-for="CollegeId" id="CollegeId" />
+                            @{
+                                string initialCollegeName = "";
+                                var collegeList = ViewBag.Colleges as IEnumerable<researchProject.Models.Entities.College>;
+                                if (Model?.CollegeId > 0 && collegeList != null)
+                                {
+                                    var matched = collegeList.FirstOrDefault(c => c.Id == Model.CollegeId);
+                                    if (matched != null)
+                                    {
+                                        initialCollegeName = matched.Name;
+                                    }
+                                }
+                            }
+                            <input type="text" id="collegeDisplayInput" list="collegesList" class="form-control" placeholder="ابحث أو اختر الكلية..." autocomplete="off" value="@initialCollegeName" required />
+                            <datalist id="collegesList">
                                 @if (ViewBag.Colleges != null)
                                 {
                                     foreach (var c in ViewBag.Colleges)
                                     {
-                                        <option value="@c.Id">@c.Name (@c.Code)</option>
+                                        <option value="@c.Name" data-id="@c.Id">@c.Code</option>
                                     }
                                 }
-                            </select>
+                            </datalist>
                             <span asp-validation-for="CollegeId" class="text-danger small"></span>
                         </div>
 
+                        <!-- Researcher Type via Datalist -->
                         <div class="col-md-6">
                             <label asp-for="ResearcherType" class="form-label"></label>
-                            <select asp-for="ResearcherType" class="form-select">
-                                <option value="">-- اختر فئة الباحث --</option>
-                                <option value="@ResearcherTypeConstants.FacultyMember">@ResearcherTypeConstants.FacultyMember</option>
-                                <option value="@ResearcherTypeConstants.Researcher">@ResearcherTypeConstants.Researcher</option>
-                                <option value="@ResearcherTypeConstants.PostgraduateStudent">@ResearcherTypeConstants.PostgraduateStudent</option>
-                            </select>
+                            <input asp-for="ResearcherType" list="researcherTypesList" class="form-control" placeholder="ابحث أو اختر فئة الباحث..." autocomplete="off" required />
+                            <datalist id="researcherTypesList">
+                                <option value="عضو هيئة تدريس"></option>
+                                <option value="باحث"></option>
+                                <option value="طالب دراسات عليا"></option>
+                            </datalist>
                             <span asp-validation-for="ResearcherType" class="text-danger small"></span>
                         </div>
 
+                        <!-- Academic Degree via Datalist (Requirement 2 & 6) -->
                         <div class="col-md-6">
                             <label asp-for="AcademicDegree" class="form-label"></label>
-                            <input asp-for="AcademicDegree" class="form-control" placeholder="مثال: أستاذ مساعد / باحث دكتوراه" />
+                            <input asp-for="AcademicDegree" list="degreesList" class="form-control" placeholder="ابحث أو اختر الدرجة العلمية..." autocomplete="off" required />
+                            <datalist id="degreesList">
+                                <option value="بكالوريوس / ليسانس"></option>
+                                <option value="دبلوم دراسات عليا"></option>
+                                <option value="ماجستير"></option>
+                                <option value="دكتوراه"></option>
+                                <option value="أستاذ مساعد"></option>
+                                <option value="أستاذ دكتور"></option>
+                                <option value="باحث ما بعد الدكتوراه"></option>
+                                <option value="استشاري / زمالة"></option>
+                            </datalist>
                             <span asp-validation-for="AcademicDegree" class="text-danger small"></span>
                         </div>
 
+                        <!-- Academic Department via Datalist (Requirement 3 & 6) -->
                         <div class="col-md-6">
                             <label asp-for="Department" class="form-label"></label>
-                            <input asp-for="Department" class="form-control" placeholder="القسم العلمي التابع له" />
+                            <input asp-for="Department" list="departmentsList" class="form-control" placeholder="اختر أو اكتب القسم الأكاديمي..." autocomplete="off" required />
+                            <datalist id="departmentsList">
+                                <!-- Populated dynamically when college is selected or user can type -->
+                            </datalist>
                             <span asp-validation-for="Department" class="text-danger small"></span>
+                            <div class="form-text small text-muted">تُعرض أقسام الكلية المختارة تلقائياً ويمكنك الكتابة مباشرة.</div>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="NationalId" class="form-label"></label>
-                            <input asp-for="NationalId" class="form-control" maxlength="14" placeholder="14 رقماً قومياً" dir="ltr" />
+                            <input asp-for="NationalId" class="form-control" maxlength="14" placeholder="14 رقماً قومياً" dir="ltr" required />
                             <span asp-validation-for="NationalId" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="PhoneNumber" class="form-label"></label>
-                            <input asp-for="PhoneNumber" class="form-control" placeholder="01xxxxxxxxx" dir="ltr" />
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="01xxxxxxxxx" dir="ltr" required />
                             <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                         </div>
                     </div>
@@ -103,7 +135,7 @@
                             <i class="bi bi-arrow-right me-1"></i> لديك حساب بالفعل؟ تسجيل الدخول
                         </a>
                         <button type="submit" class="btn btn-accent-custom px-4 py-2">
-                            <i class="bi bi-check-lg me-1"></i> إتمام التسجيل وتأكيد البريد
+                            <i class="bi bi-check-lg me-1"></i> إتمام التسجيل وإرسال رمز التحقق
                         </button>
                     </div>
                 </form>
@@ -114,4 +146,56 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            var existingCollegeId = $('#CollegeId').val();
+            if (existingCollegeId) {
+                loadDepartmentsForCollege(existingCollegeId);
+            }
+
+            // College Datalist mapping to hidden CollegeId
+            $('#collegeDisplayInput').on('input change', function () {
+                var selectedVal = $(this).val();
+                var matchedOption = $('#collegesList option').filter(function () {
+                    return this.value === selectedVal;
+                });
+
+                if (matchedOption.length > 0) {
+                    var collegeId = matchedOption.data('id');
+                    $('#CollegeId').val(collegeId);
+                    loadDepartmentsForCollege(collegeId);
+                } else {
+                    $('#CollegeId').val('');
+                }
+            });
+
+            function loadDepartmentsForCollege(collegeId) {
+                if (!collegeId) return;
+                $.ajax({
+                    url: '/Account/GetDepartmentsByCollege?collegeId=' + collegeId,
+                    type: 'GET',
+                    success: function (data) {
+                        var $deptList = $('#departmentsList');
+                        $deptList.empty();
+                        if (data && data.length > 0) {
+                            $.each(data, function (index, item) {
+                                $deptList.append($('<option>').attr('value', item.name));
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Sync on submit
+            $('#signUpForm').on('submit', function () {
+                var selectedVal = $('#collegeDisplayInput').val();
+                var matchedOption = $('#collegesList option').filter(function () {
+                    return this.value === selectedVal;
+                });
+                if (matchedOption.length > 0) {
+                    $('#CollegeId').val(matchedOption.data('id'));
+                }
+            });
+        });
+    </script>
 }

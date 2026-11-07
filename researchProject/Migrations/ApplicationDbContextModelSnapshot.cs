@@ -277,6 +277,29 @@ namespace researchProject.Migrations
                     b.ToTable("CollegeCoAdmins");
                 });
 
+            modelBuilder.Entity("researchProject.Models.Entities.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CollegeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CollegeId");
+
+                    b.ToTable("Departments");
+                });
+
             modelBuilder.Entity("researchProject.Models.Entities.Evaluation", b =>
                 {
                     b.Property<int>("Id")
@@ -787,6 +810,17 @@ namespace researchProject.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("researchProject.Models.Entities.Department", b =>
+                {
+                    b.HasOne("researchProject.Models.Entities.College", "College")
+                        .WithMany("Departments")
+                        .HasForeignKey("CollegeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("College");
+                });
+
             modelBuilder.Entity("researchProject.Models.Entities.Evaluation", b =>
                 {
                     b.HasOne("researchProject.Models.Entities.Judge", "Judge")
@@ -940,6 +974,8 @@ namespace researchProject.Migrations
             modelBuilder.Entity("researchProject.Models.Entities.College", b =>
                 {
                     b.Navigation("CollegeCoAdmins");
+
+                    b.Navigation("Departments");
 
                     b.Navigation("ResearchCategories");
 

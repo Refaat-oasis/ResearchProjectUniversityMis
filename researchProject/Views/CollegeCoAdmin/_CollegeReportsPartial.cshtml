@@ -19,9 +19,9 @@
     </div>
 
     <!-- Stat Summary Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="stat-card">
+    <div class="row g-3 mb-4 align-items-stretch">
+        <div class="col-md-3 d-flex">
+            <div class="stat-card w-100 h-100 d-flex justify-content-between align-items-center">
                 <div>
                     <div class="stat-label">أبحاث الكلية الإجمالية</div>
                     <div class="stat-number text-primary">@Model.TotalResearches</div>
@@ -32,8 +32,8 @@
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="stat-card">
+        <div class="col-md-3 d-flex">
+            <div class="stat-card w-100 h-100 d-flex justify-content-between align-items-center">
                 <div>
                     <div class="stat-label">قيد الفحص الشكلي</div>
                     <div class="stat-number text-warning">@Model.UnderScreeningCount</div>
@@ -44,8 +44,8 @@
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="stat-card">
+        <div class="col-md-3 d-flex">
+            <div class="stat-card w-100 h-100 d-flex justify-content-between align-items-center">
                 <div>
                     <div class="stat-label">مسندة للتحكيم</div>
                     <div class="stat-number text-info">@Model.AssignedToJudgesCount</div>
@@ -56,8 +56,8 @@
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="stat-card">
+        <div class="col-md-3 d-flex">
+            <div class="stat-card w-100 h-100 d-flex justify-content-between align-items-center">
                 <div>
                     <div class="stat-label">شهادات صادرة</div>
                     <div class="stat-number text-success">@Model.CertificatesIssuedCount</div>

@@ -40,6 +40,7 @@ namespace researchProject.Repositories.Implementations
             return await _db.Colleges
                 .Include(c => c.CollegeCoAdmins).ThenInclude(a => a.User)
                 .Include(c => c.ResearchCategories)
+                .Include(c => c.Departments)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
         }
@@ -49,7 +50,77 @@ namespace researchProject.Repositories.Implementations
             return await _db.Colleges
                 .Include(c => c.CollegeCoAdmins).ThenInclude(a => a.User)
                 .Include(c => c.ResearchCategories)
+                .Include(c => c.Departments)
                 .FirstOrDefaultAsync(c => c.Id == collegeId);
+        }
+
+        public async Task<List<Department>> GetDepartmentsByCollegeAsync(int collegeId)
+        {
+            return await _db.Departments
+                .Where(d => d.CollegeId == collegeId)
+                .OrderBy(d => d.Name)
+                .ToListAsync();
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> SaveDepartmentAsync(int? id, string name, int collegeId)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return (false, "اسم القسم مطلوب.");
+            }
+
+            var collegeExists = await _db.Colleges.AnyAsync(c => c.Id == collegeId);
+            if (!collegeExists)
+            {
+                return (false, "الكلية المحددة غير موجودة.");
+            }
+
+            if (id.HasValue && id.Value > 0)
+            {
+                var existing = await _db.Departments.FirstOrDefaultAsync(d => d.Id == id.Value && d.CollegeId == collegeId);
+                if (existing == null)
+                {
+                    return (false, "القسم الأكاديمي غير موجود.");
+                }
+
+                if (await _db.Departments.AnyAsync(d => d.Id != id.Value && d.CollegeId == collegeId && d.Name == name.Trim()))
+                {
+                    return (false, "يوجد قسم أكاديمي بنفس الاسم في هذه الكلية بالفعل.");
+                }
+
+                existing.Name = name.Trim();
+                await _db.SaveChangesAsync();
+                return (true, null);
+            }
+            else
+            {
+                if (await _db.Departments.AnyAsync(d => d.CollegeId == collegeId && d.Name == name.Trim()))
+                {
+                    return (false, "يوجد قسم أكاديمي بنفس الاسم في هذه الكلية بالفعل.");
+                }
+
+                var dept = new Department
+                {
+                    Name = name.Trim(),
+                    CollegeId = collegeId
+                };
+                await _db.Departments.AddAsync(dept);
+                await _db.SaveChangesAsync();
+                return (true, null);
+            }
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> DeleteDepartmentAsync(int id)
+        {
+            var dept = await _db.Departments.FindAsync(id);
+            if (dept == null)
+            {
+                return (false, "القسم الأكاديمي غير موجود.");
+            }
+
+            _db.Departments.Remove(dept);
+            await _db.SaveChangesAsync();
+            return (true, null);
         }
 
         public async Task<(bool Succeeded, string? ErrorMessage)> CreateCollegeAsync(College college)
@@ -249,6 +320,26 @@ namespace researchProject.Repositories.Implementations
                 .Include(i => i.InvitedByUser)
                 .OrderByDescending(i => i.CreatedAt)
                 .ToListAsync();
+        }
+
+        public async Task<List<UserSummaryViewModel>> GetAssignableUsersForInvitationAsync()
+        {
+            var users = await _userManager.Users
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
+
+            var list = new List<UserSummaryViewModel>();
+            foreach (var u in users)
+            {
+                var roles = await _userManager.GetRolesAsync(u);
+                list.Add(new UserSummaryViewModel
+                {
+                    Email = u.Email ?? string.Empty,
+                    FullName = string.IsNullOrWhiteSpace(u.FullName) ? (u.UserName ?? u.Email ?? "") : u.FullName,
+                    RoleName = roles.FirstOrDefault() ?? "مستخدم"
+                });
+            }
+            return list;
         }
 
         public async Task<(bool Succeeded, string? ErrorMessage, string? RawToken)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId)

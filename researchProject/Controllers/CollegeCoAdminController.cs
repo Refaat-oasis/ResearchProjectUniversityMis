@@ -62,8 +62,9 @@ namespace researchProject.Controllers
         }
 
         [HttpGet]
-        public IActionResult InviteJudge()
+        public async Task<IActionResult> InviteJudge()
         {
+            ViewBag.SystemUsers = await _coAdminRepo.GetAssignableUsersForInvitationAsync();
             return View();
         }
 
@@ -116,8 +117,9 @@ namespace researchProject.Controllers
         }
 
         [HttpGet]
-        public IActionResult InviteJudgePartial()
+        public async Task<IActionResult> InviteJudgePartial()
         {
+            ViewBag.SystemUsers = await _coAdminRepo.GetAssignableUsersForInvitationAsync();
             return PartialView("_InviteJudgePartial");
         }
 

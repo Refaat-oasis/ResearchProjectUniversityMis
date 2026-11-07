@@ -22,5 +22,6 @@ namespace researchProject.Models.Entities
         public virtual ICollection<Researcher> Researchers { get; set; } = new List<Researcher>();
         public virtual ICollection<ResearchCategory> ResearchCategories { get; set; } = new List<ResearchCategory>();
         public virtual ICollection<Research> Researches { get; set; } = new List<Research>();
+        public virtual ICollection<Department> Departments { get; set; } = new List<Department>();
     }
 }

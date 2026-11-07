@@ -275,6 +275,35 @@ namespace researchProject.Repositories.Implementations
             }
         }
 
+        public async Task<List<UserSummaryViewModel>> GetAssignableUsersForInvitationAsync()
+        {
+            var users = await _db.Users
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
+
+            var userIds = users.Select(u => u.Id).ToList();
+            var userRoles = await _db.UserRoles
+                .Where(ur => userIds.Contains(ur.UserId))
+                .Join(_db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, RoleName = r.Name })
+                .ToListAsync();
+
+            var roleLookup = userRoles.GroupBy(ur => ur.UserId)
+                .ToDictionary(g => g.Key, g => g.First().RoleName);
+
+            var list = new List<UserSummaryViewModel>();
+            foreach (var u in users)
+            {
+                roleLookup.TryGetValue(u.Id, out var roleName);
+                list.Add(new UserSummaryViewModel
+                {
+                    Email = u.Email ?? string.Empty,
+                    FullName = string.IsNullOrWhiteSpace(u.FullName) ? (u.UserName ?? u.Email ?? "") : u.FullName,
+                    RoleName = roleName ?? "مستخدم"
+                });
+            }
+            return list;
+        }
+
         public async Task<(bool Succeeded, string? ErrorMessage, string? RawToken)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId)
         {
             var rawTokenBytes = new byte[32];
@@ -322,12 +351,6 @@ namespace researchProject.Repositories.Implementations
             if (coAdmin == null)
             {
                 return (false, "تعذر التحقق من بيانات مدير اللجنة المصدر.", null);
-            }
-
-            // Digital signature requirement check
-            if (string.IsNullOrWhiteSpace(coAdmin.SignatureImagePath))
-            {
-                return (false, "لا يمكن إصدار الشهادة قبل رفع صورة التوقيع الرقمي المعتمد لمدير اللجنة في ملفك الشخصي.", null);
             }
 
             var research = await _db.Researches

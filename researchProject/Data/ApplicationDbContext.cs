@@ -12,6 +12,7 @@ namespace researchProject.Data
         }
 
         public DbSet<College> Colleges => Set<College>();
+        public DbSet<Department> Departments => Set<Department>();
         public DbSet<CollegeCoAdmin> CollegeCoAdmins => Set<CollegeCoAdmin>();
         public DbSet<Researcher> Researchers => Set<Researcher>();
         public DbSet<ResearchCategory> ResearchCategories => Set<ResearchCategory>();
@@ -79,6 +80,12 @@ namespace researchProject.Data
                 .WithOne(res => res.College)
                 .HasForeignKey(res => res.CollegeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<College>()
+                .HasMany(c => c.Departments)
+                .WithOne(d => d.College)
+                .HasForeignKey(d => d.CollegeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // 5. ResearchCategory relationship
             builder.Entity<ResearchCategory>()

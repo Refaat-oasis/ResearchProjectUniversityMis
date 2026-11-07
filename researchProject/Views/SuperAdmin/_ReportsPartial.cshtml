@@ -90,33 +90,41 @@
 
     <!-- Key Performance Indicators (KPIs) -->
     <h6 class="fw-bold text-dark mb-3"><i class="bi bi-speedometer text-primary me-2"></i>مؤشرات قياس الأداء الرئيسية (KPIs)</h6>
-    <div class="row g-3">
-        <div class="col-md-3">
-            <div class="p-3 border rounded bg-white text-center">
-                <div class="text-muted small">متوسط زمن الفحص الشكلي</div>
-                <div class="fs-3 fw-bold text-primary mt-1">@Model.AverageScreeningHours</div>
-                <div class="text-muted small">ساعة (الحد الأقصى: 48 ساعة)</div>
+    <div class="row g-3 align-items-stretch">
+        <div class="col-md-3 d-flex">
+            <div class="p-3 border rounded bg-white text-center w-100 h-100 d-flex flex-column justify-content-between">
+                <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
+                    <i class="bi bi-stopwatch text-primary me-1"></i>متوسط زمن الفحص الشكلي
+                </div>
+                <div class="fs-3 fw-bold text-primary my-auto">@Model.AverageScreeningHours</div>
+                <div class="text-muted small mt-1">ساعة (الحد الأقصى: 48 ساعة)</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="p-3 border rounded bg-white text-center">
-                <div class="text-muted small">متوسط زمن التحكيم الأخلاقي</div>
-                <div class="fs-3 fw-bold text-info mt-1">@Model.AverageJudgingDays</div>
-                <div class="text-muted small">أيام عمل لكل مقترح</div>
+        <div class="col-md-3 d-flex">
+            <div class="p-3 border rounded bg-white text-center w-100 h-100 d-flex flex-column justify-content-between">
+                <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
+                    <i class="bi bi-calendar-check text-info me-1"></i>متوسط زمن التحكيم الأخلاقي
+                </div>
+                <div class="fs-3 fw-bold text-info my-auto">@Model.AverageJudgingDays</div>
+                <div class="text-muted small mt-1">أيام عمل لكل مقترح</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="p-3 border rounded bg-white text-center">
-                <div class="text-muted small">الامتثال لاتفاقية مستوى الخدمة</div>
-                <div class="fs-3 fw-bold text-success mt-1">@Model.SlaCompliancePercentage%</div>
-                <div class="text-muted small">أبحاث فُحصت خلال المهلة</div>
+        <div class="col-md-3 d-flex">
+            <div class="p-3 border rounded bg-white text-center w-100 h-100 d-flex flex-column justify-content-between">
+                <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
+                    <i class="bi bi-shield-check text-success me-1"></i>الامتثال لاتفاقية مستوى الخدمة
+                </div>
+                <div class="fs-3 fw-bold text-success my-auto">@Model.SlaCompliancePercentage%</div>
+                <div class="text-muted small mt-1">أبحاث فُحصت خلال المهلة</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="p-3 border rounded bg-white text-center">
-                <div class="text-muted small">إجمالي الشهادات المصدرة</div>
-                <div class="fs-3 fw-bold text-dark mt-1">@Model.CertificatesIssuedCount</div>
-                <div class="text-muted small">شهادة أخلاقية رقمية</div>
+        <div class="col-md-3 d-flex">
+            <div class="p-3 border rounded bg-white text-center w-100 h-100 d-flex flex-column justify-content-between">
+                <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
+                    <i class="bi bi-patch-check text-warning me-1"></i>إجمالي الشهادات المعتمدة الصادرة
+                </div>
+                <div class="fs-3 fw-bold text-dark my-auto">@Model.CertificatesIssuedCount</div>
+                <div class="text-muted small mt-1">شهادة أخلاقية رقمية</div>
             </div>
         </div>
     </div>

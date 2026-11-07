@@ -179,7 +179,17 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control" required placeholder="judge@university.edu.eg" dir="ltr" />
+                        <input list="superAdminSystemUsersList" type="email" name="email" class="form-control" required placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." dir="ltr" autocomplete="off" />
+                        <datalist id="superAdminSystemUsersList">
+                            @if (ViewBag.SystemUsers != null)
+                            {
+                                foreach (var u in ViewBag.SystemUsers)
+                                {
+                                    <option value="@u.Email">@u.FullName (@u.RoleName)</option>
+                                }
+                            }
+                        </datalist>
+                        <div class="form-text small">يمكنك اختيار مستخدم مسجل بالنظام أو كتابة أي بريد جديد وسيتم إرسال رابط الدعوة الرسمية إليه مباشرة.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">التخصص الأكاديمي الدقيق المطلوب للتحكيم</label>

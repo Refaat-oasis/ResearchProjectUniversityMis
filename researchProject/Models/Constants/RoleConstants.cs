@@ -1,11 +1,13 @@
+using researchProject.Models.Enums;
+
 namespace researchProject.Models.Constants
 {
     public static class RoleConstants
     {
-        public const string SuperAdmin = "SuperAdmin";
-        public const string CollegeCoAdmin = "CollegeCoAdmin";
-        public const string Judge = "Judge";
-        public const string Researcher = "Researcher";
+        public const string SuperAdmin = nameof(UserRole.SuperAdmin);
+        public const string CollegeCoAdmin = nameof(UserRole.CollegeCoAdmin);
+        public const string Judge = nameof(UserRole.Judge);
+        public const string Researcher = nameof(UserRole.Researcher);
     }
 }
 

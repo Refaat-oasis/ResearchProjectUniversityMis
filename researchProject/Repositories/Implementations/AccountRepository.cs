@@ -77,24 +77,14 @@ namespace researchProject.Repositories.Implementations
 
         public async Task<(bool Succeeded, string? ErrorMessage, string? ConfirmationToken, string? UserId)> SignUpResearcherAsync(ResearcherSignUpDto dto)
         {
-            // 1. Institutional Domain Verification
-            var allowedDomains = _configuration.GetSection("Auth:AllowedEmailDomains").Get<string[]>() ?? new[] { "univ.edu.eg", "mis.edu.eg" };
-            var emailDomain = dto.Email.Split('@').LastOrDefault()?.ToLowerInvariant();
-
-            if (string.IsNullOrEmpty(emailDomain) || !allowedDomains.Any(d => d.Equals(emailDomain, StringComparison.OrdinalIgnoreCase)))
-            {
-                var formattedDomains = string.Join("، ", allowedDomains.Select(d => $"@{d}"));
-                return (false, $"التسجيل متاح فقط بالبريد الإلكتروني الأكاديمي والمؤسسي المعتمد للجامعة ({formattedDomains}).", null, null);
-            }
-
-            // 2. Check existing user
+            // 1. Check existing user
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
             if (existingUser != null)
             {
                 return (false, "البريد الإلكتروني مسجل مسبقاً في النظام.", null, null);
             }
 
-            // 3. Check College exists
+            // 2. Check College exists
             var collegeExists = await _db.Colleges.AnyAsync(c => c.Id == dto.CollegeId);
             if (!collegeExists)
             {
@@ -316,6 +306,80 @@ namespace researchProject.Repositories.Implementations
         public async Task<List<College>> GetActiveCollegesAsync()
         {
             return await _db.Colleges.OrderBy(c => c.Name).ToListAsync();
+        }
+
+        public async Task<List<Department>> GetDepartmentsByCollegeAsync(int collegeId)
+        {
+            return await _db.Departments
+                .Where(d => d.CollegeId == collegeId)
+                .OrderBy(d => d.Name)
+                .ToListAsync();
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage, string? ResetToken, string? UserId)> GeneratePasswordResetTokenAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return (false, "البريد الإلكتروني غير مسجل بالنظام.", null, null);
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            return (true, null, token, user.Id);
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> ResetPasswordWithTokenAsync(string email, string token, string newPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return (false, "البريد الإلكتروني غير مسجل بالنظام.");
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            if (result.Succeeded)
+            {
+                return (true, null);
+            }
+
+            var errors = string.Join("، ", result.Errors.Select(e => e.Description));
+            return (false, $"فشل إعادة تعيين كلمة المرور: {errors}");
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> ConfirmEmailWithTokenOrCodeAsync(string emailOrUserId, string token)
+        {
+            if (string.IsNullOrWhiteSpace(emailOrUserId) || string.IsNullOrWhiteSpace(token))
+            {
+                return (false, "البيانات المدخلة غير مكتملة.");
+            }
+
+            ApplicationUser? user = null;
+            if (emailOrUserId.Contains('@'))
+            {
+                user = await _userManager.FindByEmailAsync(emailOrUserId);
+            }
+            else
+            {
+                user = await _userManager.FindByIdAsync(emailOrUserId);
+            }
+
+            if (user == null)
+            {
+                return (false, "تعذر العثور على حساب المستخدم.");
+            }
+
+            if (user.EmailConfirmed)
+            {
+                return (true, null);
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token.Trim());
+            if (result.Succeeded)
+            {
+                return (true, null);
+            }
+
+            return (false, "رمز التحقق غير صالح أو منتهي الصلاحية.");
         }
 
         private static string HashToken(string token)

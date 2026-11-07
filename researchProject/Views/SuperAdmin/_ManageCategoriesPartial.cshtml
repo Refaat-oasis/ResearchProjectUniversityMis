@@ -82,16 +82,17 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label">الكلية <span class="text-danger">*</span></label>
-                            <select name="CollegeId" id="catCollegeId" class="form-select" required>
-                                <option value="">-- اختر الكلية --</option>
+                            <input type="hidden" name="CollegeId" id="catCollegeId" />
+                            <input type="text" id="catCollegeInput" list="partialCatCollegesList" class="form-control" placeholder="ابحث أو اختر الكلية..." required autocomplete="off" />
+                            <datalist id="partialCatCollegesList">
                                 @if (ViewBag.Colleges != null)
                                 {
                                     foreach (var c in ViewBag.Colleges)
                                     {
-                                        <option value="@c.Id">@c.Name</option>
+                                        <option value="@c.Name" data-id="@c.Id">@c.Code</option>
                                     }
                                 }
-                            </select>
+                            </datalist>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">اسم تصنيف البحث <span class="text-danger">*</span></label>
@@ -130,9 +131,29 @@
 <script>
     var currentFields = [];
 
+    $('#catCollegeInput').on('input change', function () {
+        var selectedVal = $(this).val();
+        var match = $('#partialCatCollegesList option').filter(function () {
+            return this.value === selectedVal;
+        });
+        if (match.length > 0) {
+            $('#catCollegeId').val(match.data('id'));
+        } else {
+            $('#catCollegeId').val('');
+        }
+    });
+
     function openFieldsBuilder(id, collegeId, name, desc, fieldsJson) {
         $('#catId').val(id);
         $('#catCollegeId').val(collegeId);
+        var matchedOpt = $('#partialCatCollegesList option').filter(function () {
+            return $(this).data('id') == collegeId;
+        });
+        if (matchedOpt.length > 0) {
+            $('#catCollegeInput').val(matchedOpt.val());
+        } else {
+            $('#catCollegeInput').val('');
+        }
         $('#catName').val(name);
         $('#catDesc').val(desc);
 

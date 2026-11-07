@@ -21,7 +21,6 @@
                     <th>الاسم الكامل</th>
                     <th>البريد الإلكتروني</th>
                     <th>الكلية المسندة</th>
-                    <th>حالة التوقيع الرقمي</th>
                     <th>تاريخ التسجيل</th>
                 </tr>
             </thead>
@@ -36,16 +35,6 @@
                             <td class="fw-bold text-dark">@a.User?.FullName</td>
                             <td dir="ltr" class="text-end font-monospace small">@a.User?.Email</td>
                             <td><span class="badge bg-primary-subtle text-primary fs-6">@a.College?.Name</span></td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(a.SignatureImagePath))
-                                {
-                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>تم رفع التوقيع</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>بانتظار رفع التوقيع</span>
-                                }
-                            </td>
                             <td class="text-muted small">@DateTime.UtcNow.ToString("yyyy/MM/dd")</td>
                         </tr>
                         index++;
@@ -54,7 +43,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
+                        <td colspan="5" class="text-center py-4 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -70,20 +59,21 @@
                 <h5 class="modal-title fw-bold" id="addCoAdminModalLabel"><i class="bi bi-person-plus me-2 text-primary"></i>تعيين مدير لجنة فرعية لكلية</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="createCoAdminForm" action="/SuperAdmin/CreateCoAdminNewUser" method="post" onsubmit="return handleAjaxFormSubmit(this, onCoAdminSaved);">
+            <form id="createCoAdminForm" action="/SuperAdmin/CreateCoAdminNewUser" method="post" onsubmit="return handleCoAdminSubmit(this);">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
-                        <select name="collegeId" class="form-select" required>
-                            <option value="">-- اختر الكلية --</option>
+                        <input type="hidden" name="collegeId" id="partialCoAdminCollegeId" />
+                        <input type="text" list="partialCoAdminCollegesList" id="partialCoAdminCollegeInput" class="form-control" placeholder="ابحث أو اختر الكلية..." required autocomplete="off" />
+                        <datalist id="partialCoAdminCollegesList">
                             @if (ViewBag.Colleges != null)
                             {
                                 foreach (var c in ViewBag.Colleges)
                                 {
-                                    <option value="@c.Id">@c.Name</option>
+                                    <option value="@c.Name" data-id="@c.Id">@c.Code</option>
                                 }
                             }
-                        </select>
+                        </datalist>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
@@ -91,7 +81,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control" required placeholder="coadmin@univ.edu.eg" dir="ltr" />
+                        <input type="email" name="email" class="form-control" required placeholder="coadmin@domain.com" dir="ltr" />
                         <div class="form-text small">سيقوم النظام بإنشاء كلمة مرور مؤقتة وإرسالها إلى بريده مباشرة.</div>
                     </div>
                 </div>
@@ -105,10 +95,36 @@
 </div>
 
 <script>
+    $('#partialCoAdminCollegeInput').on('input change', function () {
+        var selectedVal = $(this).val();
+        var match = $('#partialCoAdminCollegesList option').filter(function () {
+            return this.value === selectedVal;
+        });
+        if (match.length > 0) {
+            $('#partialCoAdminCollegeId').val(match.data('id'));
+        } else {
+            $('#partialCoAdminCollegeId').val('');
+        }
+    });
+
+    function handleCoAdminSubmit(form) {
+        var selectedVal = $('#partialCoAdminCollegeInput').val();
+        var match = $('#partialCoAdminCollegesList option').filter(function () {
+            return this.value === selectedVal;
+        });
+        if (match.length > 0) {
+            $('#partialCoAdminCollegeId').val(match.data('id'));
+        }
+        if (!$('#partialCoAdminCollegeId').val()) {
+            alert('يرجى اختيار الكلية من القائمة.');
+            return false;
+        }
+        return handleAjaxFormSubmit(form, onCoAdminSaved);
+    }
+
     function onCoAdminSaved(res) {
         $('#addCoAdminModal').modal('hide');
         $('.modal-backdrop').remove();
-        alert(res.message);
         loadPartial('/SuperAdmin/ManageCoAdminsPartial', '#main-content-container', 'coadmins');
     }
 </script>

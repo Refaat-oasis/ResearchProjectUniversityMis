@@ -46,7 +46,11 @@
                             <td>
                                 @if (isDone)
                                 {
-                                    @if (ev.Decision == EvaluationDecisionConstants.Approved)
+                                    @if (ev.Decision == EvaluationDecisionConstants.ClosedDueToOtherJudge || ev.Decision == "مغلق لاكتمال التحكيم")
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-lock me-1"></i>مغلق (تم التحكيم بواسطة محكم آخر)</span>
+                                    }
+                                    else if (ev.Decision == EvaluationDecisionConstants.Approved)
                                     {
                                         <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>موافق</span>
                                     }
@@ -71,7 +75,13 @@
                                 }
                             </td>
                             <td>
-                                @if (!isDone)
+                                @if (ev.Decision == EvaluationDecisionConstants.ClosedDueToOtherJudge || ev.Decision == "مغلق لاكتمال التحكيم")
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');">
+                                        <i class="bi bi-eye me-1"></i> استعراض (مغلق)
+                                    </button>
+                                }
+                                else if (!isDone)
                                 {
                                     <button class="btn btn-sm btn-primary-custom" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');">
                                         <i class="bi bi-pencil-square me-1"></i> تعبئة نموذج التقييم

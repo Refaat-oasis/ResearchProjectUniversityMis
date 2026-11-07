@@ -91,12 +91,6 @@ namespace researchProject.Repositories.Implementations
                 .AnyAsync(b => b.ResearchId == evaluation.ResearchId && b.Researcher.UserId == judgeUserId);
             if (isAuthor) return (false, "لا يمكن تحكيم بحث أنت أحد مؤلفيه لوجود تعارض مصالح صريح.");
 
-            // Already submitted check
-            if (evaluation.SubmittedAt.HasValue)
-            {
-                return (false, "تم تقديم هذا التقييم وتوقيعه رقمياً مسبقاً ولا يمكن تعديله.");
-            }
-
             // Current round check
             var currentMaxRound = await _db.Evaluations
                 .Where(e => e.ResearchId == evaluation.ResearchId)
@@ -105,6 +99,31 @@ namespace researchProject.Repositories.Implementations
             if (evaluation.RoundNumber != currentMaxRound)
             {
                 return (false, "لا يمكن تقديم التقييم لجولة تحكيمية سابقة منتهية.");
+            }
+
+            // Check if closed due to other judge
+            if (evaluation.Decision == EvaluationDecisionConstants.ClosedDueToOtherJudge)
+            {
+                return (false, "تم إغلاق التحكيم لهذا المقترح نظراً لاعتماد تقييم محكم آخر.");
+            }
+
+            // Check if round is already closed by another judge's evaluation
+            var otherAlreadySubmitted = await _db.Evaluations.AnyAsync(e =>
+                e.ResearchId == evaluation.ResearchId &&
+                e.RoundNumber == currentMaxRound &&
+                e.Id != evaluation.Id &&
+                e.SubmittedAt.HasValue &&
+                e.Decision != EvaluationDecisionConstants.ClosedDueToOtherJudge);
+
+            if (otherAlreadySubmitted)
+            {
+                return (false, "تم إغلاق التحكيم لهذا المقترح نظراً لاعتماد تقييم محكم آخر.");
+            }
+
+            // Already submitted check
+            if (evaluation.SubmittedAt.HasValue)
+            {
+                return (false, "تم تقديم هذا التقييم وتوقيعه رقمياً مسبقاً ولا يمكن تعديله.");
             }
 
             // Validation for modifications
@@ -126,10 +145,22 @@ namespace researchProject.Repositories.Implementations
                 evaluation.SignedAt = DateTime.UtcNow;
                 evaluation.SubmittedAt = DateTime.UtcNow;
 
+                // Requirement 11: When more than one judge is assigned, if one made the evaluation, close it for others
+                var otherPendingEvaluations = await _db.Evaluations
+                    .Where(e => e.ResearchId == evaluation.ResearchId && e.RoundNumber == currentMaxRound && e.Id != evaluation.Id && !e.SubmittedAt.HasValue)
+                    .ToListAsync();
+
+                foreach (var other in otherPendingEvaluations)
+                {
+                    other.Decision = EvaluationDecisionConstants.ClosedDueToOtherJudge;
+                    other.ModificationNotes = "تم إغلاق التحكيم لهذا المقترح نظراً لاعتماد تقييم محكم آخر في هذه الجولة.";
+                    other.SubmittedAt = DateTime.UtcNow;
+                }
+
                 await _db.SaveChangesAsync();
 
-                // Check and close round inside the same transaction
-                await TryCloseRoundAsync(evaluation.ResearchId, currentMaxRound, judgeUserId);
+                // Close round immediately based on this judge's decision
+                await CloseRoundWithDecisionAsync(evaluation.ResearchId, currentMaxRound, dto.Decision, dto.ModificationNotes, judgeUserId);
 
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -143,19 +174,8 @@ namespace researchProject.Repositories.Implementations
             }
         }
 
-        private async Task TryCloseRoundAsync(int researchId, int roundNumber, string actingUserId)
+        private async Task CloseRoundWithDecisionAsync(int researchId, int roundNumber, string decision, string? modificationNotes, string actingUserId)
         {
-            var roundEvaluations = await _db.Evaluations
-                .Where(e => e.ResearchId == researchId && e.RoundNumber == roundNumber)
-                .ToListAsync();
-
-            // Check if all evaluations in current round are submitted
-            bool allSubmitted = roundEvaluations.All(e => e.SubmittedAt.HasValue);
-            if (!allSubmitted)
-            {
-                return; // Round remains open waiting for remaining judges
-            }
-
             var research = await _db.Researches
                 .Include(r => r.ResearcherResearchesBridges).ThenInclude(b => b.Researcher).ThenInclude(res => res.User)
                 .Include(r => r.College).ThenInclude(c => c.CollegeCoAdmins).ThenInclude(a => a.User)
@@ -165,10 +185,7 @@ namespace researchProject.Repositories.Implementations
 
             var oldStatus = research.WorkflowStatus;
 
-            // Strict decision logic: All approved -> Approved, otherwise -> ModificationsRequired
-            bool allApproved = roundEvaluations.All(e => e.Decision == EvaluationDecisionConstants.Approved);
-
-            if (allApproved)
+            if (decision == EvaluationDecisionConstants.Approved)
             {
                 research.WorkflowStatus = ResearchStatusConstants.Approved;
 
@@ -179,7 +196,7 @@ namespace researchProject.Repositories.Implementations
                     NewStatus = ResearchStatusConstants.Approved,
                     ChangedByUserId = actingUserId,
                     ChangedAt = DateTime.UtcNow,
-                    Reason = $"اكتمال الجولة التحكيمية رقم {roundNumber} بموافقة واعتماد جميع المحكمين."
+                    Reason = $"اعتماد المقترح بموافقة المحكم في الجولة التحكيمية رقم {roundNumber} وإغلاق التحكيم لبقية المحكمين."
                 };
                 await _db.ResearchStatusHistories.AddAsync(history);
 
@@ -193,7 +210,7 @@ namespace researchProject.Repositories.Implementations
                             research.Title,
                             oldStatus,
                             ResearchStatusConstants.Approved,
-                            "نهنئكم بموافقة جميع المحكمين واعتماد المقترح، وهو الآن بانتظار إصدار الشهادة من مدير اللجنة.");
+                            "نهنئكم بموافقة المحكم واعتماد المقترح، وهو الآن بانتظار إصدار الشهادة من مدير اللجنة.");
                     }
 
                     if (_notificationService != null && !string.IsNullOrEmpty(b.Researcher?.UserId))
@@ -201,7 +218,7 @@ namespace researchProject.Repositories.Implementations
                         await _notificationService.SendNotificationAsync(
                             b.Researcher.UserId,
                             "موافقة هيئة التحكيم على المقترح",
-                            $"نهنئكم بموافقة جميع المحكمين على المقترح '{research.Title}'، وهو بانتظار الاعتماد النهائي وإصدار الشهادة.",
+                            $"نهنئكم بموافقة المحكم على المقترح '{research.Title}'، وهو بانتظار الاعتماد النهائي وإصدار الشهادة.",
                             $"/Researcher/Tracker/{research.Id}",
                             "StatusChange",
                             "bi-check-all");
@@ -217,7 +234,7 @@ namespace researchProject.Repositories.Implementations
                             await _notificationService.SendNotificationAsync(
                                 coAdmin.UserId,
                                 "مقترح جاهز للاعتماد النهائي",
-                                $"تمت موافقة جميع المحكمين على المقترح '{research.Title}'، وأصبح جاهزاً للاعتماد وإصدار الشهادة الأخلاقية.",
+                                $"تمت موافقة المحكم على المقترح '{research.Title}'، وأصبح جاهزاً للاعتماد وإصدار الشهادة الأخلاقية.",
                                 "/CollegeCoAdmin/FinalApproval",
                                 "ReadyForApproval",
                                 "bi-award");
@@ -229,14 +246,6 @@ namespace researchProject.Repositories.Implementations
             {
                 research.WorkflowStatus = ResearchStatusConstants.ModificationsRequired;
 
-                // Merge anonymous modification notes
-                var notes = roundEvaluations
-                    .Where(e => !string.IsNullOrWhiteSpace(e.ModificationNotes))
-                    .Select(e => $"• {e.ModificationNotes}")
-                    .ToList();
-
-                var mergedNotes = string.Join("\n", notes);
-
                 var history = new ResearchStatusHistory
                 {
                     ResearchId = researchId,
@@ -244,11 +253,10 @@ namespace researchProject.Repositories.Implementations
                     NewStatus = ResearchStatusConstants.ModificationsRequired,
                     ChangedByUserId = actingUserId,
                     ChangedAt = DateTime.UtcNow,
-                    Reason = $"طلب تعديلات من قِبل المحكمين في الجولة {roundNumber}.\n{mergedNotes}"
+                    Reason = $"طلب تعديلات من قِبل المحكم في الجولة رقم {roundNumber}:\n{modificationNotes}"
                 };
                 await _db.ResearchStatusHistories.AddAsync(history);
 
-                // Notify researchers with anonymous notes
                 foreach (var b in research.ResearcherResearchesBridges)
                 {
                     if (!string.IsNullOrEmpty(b.Researcher?.User?.Email))
@@ -258,7 +266,7 @@ namespace researchProject.Repositories.Implementations
                             research.Title,
                             oldStatus,
                             ResearchStatusConstants.ModificationsRequired,
-                            $"ملاحظات التعديل المطلوبة من هيئة التحكيم (دون الإفصاح عن هوية المحكمين):\n{mergedNotes}");
+                            $"ملاحظات التعديل المطلوبة من هيئة التحكيم:\n{modificationNotes}");
                     }
 
                     if (_notificationService != null && !string.IsNullOrEmpty(b.Researcher?.UserId))
@@ -266,7 +274,7 @@ namespace researchProject.Repositories.Implementations
                         await _notificationService.SendNotificationAsync(
                             b.Researcher.UserId,
                             "مطلوب إجراء تعديلات على المقترح",
-                            $"قررت هيئة التحكيم طلب استيفاء تعديلات وملاحظات على مقترحكم '{research.Title}'.",
+                            $"طلب المحكم استيفاء تعديلات وملاحظات على مقترحكم '{research.Title}'.",
                             $"/Researcher/Modify/{research.Id}",
                             "ModificationRequired",
                             "bi-pencil-square");
@@ -282,7 +290,7 @@ namespace researchProject.Repositories.Implementations
                             await _notificationService.SendNotificationAsync(
                                 coAdmin.UserId,
                                 "طلب تعديلات على مقترح بحثي",
-                                $"قررت هيئة التحكيم طلب تعديلات على المقترح: '{research.Title}'. تم إخطار الباحث بذلك.",
+                                $"قرر المحكم طلب تعديلات على المقترح: '{research.Title}'. تم إخطار الباحث بذلك.",
                                 $"/CollegeCoAdmin/Review/{research.Id}",
                                 "StatusChange",
                                 "bi-exclamation-circle");

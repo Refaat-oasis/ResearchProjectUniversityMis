@@ -272,7 +272,7 @@ namespace researchProject.Tests
             await db.SaveChangesAsync();
 
             // Judge 1 submits Approved
-            await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
+            var res1 = await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
             {
                 EvaluationId = e1.Id,
                 PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
@@ -280,12 +280,19 @@ namespace researchProject.Tests
                 InformedConsentRating = EthicsRatingConstants.Appropriate,
                 Decision = EvaluationDecisionConstants.Approved
             }, u1.Id);
+            Assert.True(res1.Succeeded, res1.ErrorMessage);
 
+            // Per Requirement 11: First judge to submit evaluation closes round and immediately approves research
             var mid1 = await db.Researches.FindAsync(research.Id);
-            Assert.Equal(ResearchStatusConstants.AssignedToJudges, mid1?.WorkflowStatus); // Still waiting for other judges
+            Assert.Equal(ResearchStatusConstants.Approved, mid1?.WorkflowStatus);
 
-            // Judge 2 submits Approved
-            await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
+            var e2Db = await db.Evaluations.FindAsync(e2.Id);
+            var e3Db = await db.Evaluations.FindAsync(e3.Id);
+            Assert.Equal(EvaluationDecisionConstants.ClosedDueToOtherJudge, e2Db?.Decision);
+            Assert.Equal(EvaluationDecisionConstants.ClosedDueToOtherJudge, e3Db?.Decision);
+
+            // Judge 2 attempt to submit is rejected because round is closed
+            var res2 = await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
             {
                 EvaluationId = e2.Id,
                 PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
@@ -293,12 +300,11 @@ namespace researchProject.Tests
                 InformedConsentRating = EthicsRatingConstants.Appropriate,
                 Decision = EvaluationDecisionConstants.Approved
             }, u2.Id);
+            Assert.False(res2.Succeeded);
+            Assert.Contains("تم إغلاق التحكيم لهذا المقترح", res2.ErrorMessage);
 
-            var mid2 = await db.Researches.FindAsync(research.Id);
-            Assert.Equal(ResearchStatusConstants.AssignedToJudges, mid2?.WorkflowStatus); // Still waiting for judge 3
-
-            // Judge 3 submits Approved
-            await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
+            // Judge 3 attempt to submit is also rejected
+            var res3 = await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
             {
                 EvaluationId = e3.Id,
                 PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
@@ -306,13 +312,15 @@ namespace researchProject.Tests
                 InformedConsentRating = EthicsRatingConstants.Appropriate,
                 Decision = EvaluationDecisionConstants.Approved
             }, u3.Id);
+            Assert.False(res3.Succeeded);
+            Assert.Contains("تم إغلاق التحكيم لهذا المقترح", res3.ErrorMessage);
 
             var finalRes = await db.Researches.FindAsync(research.Id);
-            Assert.Equal(ResearchStatusConstants.Approved, finalRes?.WorkflowStatus); // All 3 approved -> Approved!
+            Assert.Equal(ResearchStatusConstants.Approved, finalRes?.WorkflowStatus);
 
             var history = await db.ResearchStatusHistories.FirstOrDefaultAsync(h => h.ResearchId == research.Id && h.NewStatus == ResearchStatusConstants.Approved);
             Assert.NotNull(history);
-            Assert.Contains("موافقة واعتماد جميع المحكمين", history.Reason);
+            Assert.Contains("إغلاق التحكيم لبقية المحكمين", history.Reason);
         }
 
         [Fact]
@@ -528,22 +536,13 @@ namespace researchProject.Tests
             r = await db.Researches.FindAsync(researchId.Value);
             Assert.Equal(ResearchStatusConstants.AssignedToJudges, r?.WorkflowStatus);
 
-            // 3. Round 1 Reviews: Judge 1 Approves, Judge 2 Requests Modifications -> Transitions to ModificationsRequired
+            // 3. Round 1 Reviews: Judge 2 requests modifications -> immediately transitions to ModificationsRequired and closes round
             var judgeRepo = new JudgeRepository(db, emailMock.Object);
             var round1Evals = await db.Evaluations.Where(e => e.ResearchId == researchId.Value && e.RoundNumber == 1).ToListAsync();
             var e1 = round1Evals.First(e => e.JudgeId == j1.Id);
             var e2 = round1Evals.First(e => e.JudgeId == j2.Id);
 
-            await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
-            {
-                EvaluationId = e1.Id,
-                PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
-                RiskLevel = EthicsRatingConstants.Appropriate,
-                InformedConsentRating = EthicsRatingConstants.Appropriate,
-                Decision = EvaluationDecisionConstants.Approved
-            }, j1User.Id);
-
-            await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
+            var resR1 = await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
             {
                 EvaluationId = e2.Id,
                 PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
@@ -552,9 +551,13 @@ namespace researchProject.Tests
                 Decision = EvaluationDecisionConstants.ModificationsRequired,
                 ModificationNotes = "يرجى توضيح منهجية التعقيم وحماية المشاركين."
             }, j2User.Id);
+            Assert.True(resR1.Succeeded, resR1.ErrorMessage);
 
             r = await db.Researches.FindAsync(researchId.Value);
             Assert.Equal(ResearchStatusConstants.ModificationsRequired, r?.WorkflowStatus);
+
+            var e1Db = await db.Evaluations.FindAsync(e1.Id);
+            Assert.Equal(EvaluationDecisionConstants.ClosedDueToOtherJudge, e1Db?.Decision);
 
             // 4. Researcher submits modified attachments -> Starts Round 2 & returns to AssignedToJudges
             var modProposalFile = new Mock<IFormFile>();
@@ -572,13 +575,13 @@ namespace researchProject.Tests
             r = await db.Researches.FindAsync(researchId.Value);
             Assert.Equal(ResearchStatusConstants.AssignedToJudges, r?.WorkflowStatus);
 
-            // 5. Round 2: Both Judges Approve -> Transitions to Approved
+            // 5. Round 2: Judge 1 Approves -> immediately transitions to Approved and closes round
             var round2Evals = await db.Evaluations.Where(e => e.ResearchId == researchId.Value && e.RoundNumber == 2).ToListAsync();
             Assert.Equal(2, round2Evals.Count);
             var e1_r2 = round2Evals.First(e => e.JudgeId == j1.Id);
             var e2_r2 = round2Evals.First(e => e.JudgeId == j2.Id);
 
-            await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
+            var resR2 = await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
             {
                 EvaluationId = e1_r2.Id,
                 PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
@@ -586,18 +589,13 @@ namespace researchProject.Tests
                 InformedConsentRating = EthicsRatingConstants.Appropriate,
                 Decision = EvaluationDecisionConstants.Approved
             }, j1User.Id);
-
-            await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
-            {
-                EvaluationId = e2_r2.Id,
-                PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
-                RiskLevel = EthicsRatingConstants.Appropriate,
-                InformedConsentRating = EthicsRatingConstants.Appropriate,
-                Decision = EvaluationDecisionConstants.Approved
-            }, j2User.Id);
+            Assert.True(resR2.Succeeded, resR2.ErrorMessage);
 
             r = await db.Researches.FindAsync(researchId.Value);
             Assert.Equal(ResearchStatusConstants.Approved, r?.WorkflowStatus);
+
+            var e2_r2Db = await db.Evaluations.FindAsync(e2_r2.Id);
+            Assert.Equal(EvaluationDecisionConstants.ClosedDueToOtherJudge, e2_r2Db?.Decision);
 
             // 6. Co-Admin Issues Certificate -> Transitions to CertificateIssued
             var (issueSucc, issueErr, serialNum) = await coAdminRepo.IssueEthicalCertificateAsync(researchId.Value, coAdminUser.Id, "http://localhost");

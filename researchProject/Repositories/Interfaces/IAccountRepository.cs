@@ -17,5 +17,9 @@ namespace researchProject.Repositories.Interfaces
         Task<ApplicationUser?> FindByIdAsync(string userId);
         Task<IList<string>> GetUserRolesAsync(ApplicationUser user);
         Task<List<College>> GetActiveCollegesAsync();
+        Task<List<Department>> GetDepartmentsByCollegeAsync(int collegeId);
+        Task<(bool Succeeded, string? ErrorMessage, string? ResetToken, string? UserId)> GeneratePasswordResetTokenAsync(string email);
+        Task<(bool Succeeded, string? ErrorMessage)> ResetPasswordWithTokenAsync(string email, string token, string newPassword);
+        Task<(bool Succeeded, string? ErrorMessage)> ConfirmEmailWithTokenOrCodeAsync(string emailOrUserId, string token);
     }
 }

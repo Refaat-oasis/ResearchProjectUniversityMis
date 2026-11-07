@@ -22,7 +22,6 @@
                     <th>الاسم الكامل</th>
                     <th>البريد الإلكتروني</th>
                     <th>الكلية المسندة</th>
-                    <th>حالة التوقيع الرقمي</th>
                     <th>تاريخ التسجيل</th>
                 </tr>
             </thead>
@@ -37,16 +36,6 @@
                             <td class="fw-bold text-dark">@a.User?.FullName</td>
                             <td dir="ltr" class="text-end font-monospace small">@a.User?.Email</td>
                             <td><span class="badge bg-primary-subtle text-primary fs-6">@a.College?.Name</span></td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(a.SignatureImagePath))
-                                {
-                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>تم رفع التوقيع</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>بانتظار رفع التوقيع</span>
-                                }
-                            </td>
                             <td class="text-muted small">@DateTime.UtcNow.ToString("yyyy/MM/dd")</td>
                         </tr>
                         index++;
@@ -55,7 +44,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
+                        <td colspan="5" class="text-center py-5 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -76,16 +65,17 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
-                        <select name="collegeId" class="form-select" required>
-                            <option value="">-- اختر الكلية --</option>
+                        <input type="hidden" name="collegeId" id="coAdminCollegeId" />
+                        <input type="text" list="coAdminCollegesList" id="coAdminCollegeInput" class="form-control" placeholder="ابحث أو اختر الكلية..." required autocomplete="off" />
+                        <datalist id="coAdminCollegesList">
                             @if (ViewBag.Colleges != null)
                             {
                                 foreach (var c in ViewBag.Colleges)
                                 {
-                                    <option value="@c.Id">@c.Name</option>
+                                    <option value="@c.Name" data-id="@c.Id">@c.Code</option>
                                 }
                             }
-                        </select>
+                        </datalist>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
@@ -108,8 +98,31 @@
 
 @section Scripts {
     <script>
+        $('#coAdminCollegeInput').on('input change', function () {
+            var selectedVal = $(this).val();
+            var match = $('#coAdminCollegesList option').filter(function () {
+                return this.value === selectedVal;
+            });
+            if (match.length > 0) {
+                $('#coAdminCollegeId').val(match.data('id'));
+            } else {
+                $('#coAdminCollegeId').val('');
+            }
+        });
+
         $('#createCoAdminForm').on('submit', function (e) {
             e.preventDefault();
+            var selectedVal = $('#coAdminCollegeInput').val();
+            var match = $('#coAdminCollegesList option').filter(function () {
+                return this.value === selectedVal;
+            });
+            if (match.length > 0) {
+                $('#coAdminCollegeId').val(match.data('id'));
+            }
+            if (!$('#coAdminCollegeId').val()) {
+                alert('يرجى اختيار الكلية من القائمة.');
+                return;
+            }
             const form = this;
             const data = $(form).serialize();
 

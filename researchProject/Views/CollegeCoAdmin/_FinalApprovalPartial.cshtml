@@ -9,15 +9,12 @@
             </h4>
             <div class="text-muted small">المقترحات التي نالت موافقة واكتمال جولات التحكيم (صلاحية حصرية لمدير اللجنة الفرعية بالكلية)</div>
         </div>
-        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadSigModal">
-            <i class="bi bi-pen me-1"></i> رفع / تحديث التوقيع الرقمي
-        </button>
     </div>
 
     <!-- Instructions Notice -->
-    <div class="alert alert-info small mb-4">
-        <i class="bi bi-info-circle-fill me-1"></i>
-        <strong>ملاحظة هامة:</strong> يتطلب إصدار الشهادة الأخلاقية وجود توقيع رقمي معتمد لمدير اللجنة ليتم ختمه تلقائياً على وثيقة الشهادة مع رمز الاستجابة السريعة (QR Code).
+    <div class="alert alert-success small mb-4">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        <strong>الاعتماد المباشر:</strong> تصدر الشهادة الأخلاقية الرسمية فوراً بختم واعتماد اللجنة ومزودة بالرقم المسلسل المعتمد ورمز الاستجابة السريعة (QR Code).
     </div>
 
     <div class="table-responsive">
@@ -52,7 +49,7 @@
                             <td>@mainAuthor</td>
                             <td>
                                 <span class="badge bg-success">
-                                    <i class="bi bi-check2-all me-1"></i> موافقة @approvedJudges محكمين
+                                    <i class="bi bi-check2-all me-1"></i> اعتماد المحكم
                                 </span>
                             </td>
                             <td><span class="badge-status status-approved">@r.WorkflowStatus</span></td>
@@ -78,63 +75,28 @@
     </div>
 </div>
 
-<!-- Modal Upload Signature -->
-<div class="modal fade" id="uploadSigModal" tabindex="-1" aria-labelledby="uploadSigModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="uploadSigModalLabel"><i class="bi bi-pen me-2 text-primary"></i>رفع صورة التوقيع الرقمي المعتمد</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="uploadSignatureForm" action="/CollegeCoAdmin/UploadSignature" method="post" enctype="multipart/form-data" onsubmit="return handleAjaxFormSubmit(this, onSignatureUploaded);">
-                <div class="modal-body">
-                    <p class="text-muted small mb-3">
-                        يرجى رفع صورة واضحة ومفرغة (PNG بخلفية شفافة) لتوقيع سعادتكم لاعتمادها وختمها على الشهادات الصادرة.
-                    </p>
-                    <div class="mb-3">
-                        <label class="form-label">ملف صورة التوقيع (PNG, JPG) <span class="text-danger">*</span></label>
-                        <input type="file" name="signatureFile" class="form-control" accept="image/png,image/jpeg" required />
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary-custom">حفظ التوقيع</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-    function onSignatureUploaded(res) {
-        $('#uploadSigModal').modal('hide');
-        $('.modal-backdrop').remove();
-        alert(res.message);
-    }
-
     function issueCertificate(researchId, title) {
-        if (!confirm('هل تؤكد اعتماد المقترح البحثي «' + title + '» وإصدار الشهادة الأخلاقية الرسمية رقمياً وختم توقيعكم عليها؟')) {
-            return;
-        }
+        if (!confirm(`هل أنت متأكد من اعتماد المقترح:\n« ${title} »\nوإصدار الشهادة الأخلاقية الرقمية؟`)) return;
 
         $('#partial-loading-spinner').css('display', 'flex');
 
         $.ajax({
-            url: '/CollegeCoAdmin/IssueCertificate?researchId=' + researchId,
+            url: '/CollegeCoAdmin/IssueCertificate',
             type: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
-            },
+            data: { researchId: researchId },
             success: function (res) {
                 $('#partial-loading-spinner').hide();
-                alert(res.message);
                 if (res.success) {
-                    loadPartial('/CollegeCoAdmin/FinalApprovalPartial', '#main-content-container', 'final-approval');
+                    alert(res.message + '\nالرقم المسلسل: ' + res.serialNumber);
+                    loadPartial('/CollegeCoAdmin/FinalApprovalPartial', '#main-content-container', 'finalApproval');
+                } else {
+                    alert(res.message);
                 }
             },
             error: function (xhr) {
                 $('#partial-loading-spinner').hide();
-                alert('فشل إصدار الشهادة: ' + xhr.responseText);
+                alert(xhr.responseText || 'حدث خطأ أثناء إصدار الشهادة.');
             }
         });
     }

@@ -58,6 +58,7 @@ namespace researchProject.Controllers
         public async Task<IActionResult> Judges()
         {
             ViewBag.Invitations = await _superAdminRepo.GetAllJudgeInvitationsAsync();
+            ViewBag.SystemUsers = await _superAdminRepo.GetAssignableUsersForInvitationAsync();
             var judges = await _superAdminRepo.GetAllJudgesAsync();
             return View(judges);
         }
@@ -195,8 +196,40 @@ namespace researchProject.Controllers
         public async Task<IActionResult> ManageJudgesPartial()
         {
             ViewBag.Invitations = await _superAdminRepo.GetAllJudgeInvitationsAsync();
+            ViewBag.SystemUsers = await _superAdminRepo.GetAssignableUsersForInvitationAsync();
             var judges = await _superAdminRepo.GetAllJudgesAsync();
             return PartialView("_ManageJudgesPartial", judges);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDepartments(int collegeId)
+        {
+            var departments = await _superAdminRepo.GetDepartmentsByCollegeAsync(collegeId);
+            return Json(departments.Select(d => new { id = d.Id, name = d.Name, collegeId = d.CollegeId }));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveDepartment(int? id, string name, int collegeId)
+        {
+            var (succeeded, errorMessage) = await _superAdminRepo.SaveDepartmentAsync(id, name, collegeId);
+            if (!succeeded)
+            {
+                return Json(new { success = false, message = errorMessage ?? "فشل حفظ القسم الأكاديمي." });
+            }
+            return Json(new { success = true, message = "تم حفظ القسم الأكاديمي بنجاح." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteDepartment(int id)
+        {
+            var (succeeded, errorMessage) = await _superAdminRepo.DeleteDepartmentAsync(id);
+            if (!succeeded)
+            {
+                return Json(new { success = false, message = errorMessage ?? "فشل حذف القسم الأكاديمي." });
+            }
+            return Json(new { success = true, message = "تم حذف القسم الأكاديمي بنجاح." });
         }
 
         [HttpPost]

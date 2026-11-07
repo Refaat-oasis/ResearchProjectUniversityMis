@@ -13,6 +13,9 @@ namespace researchProject.Repositories.Interfaces
         Task<College?> GetCollegeByIdAsync(int collegeId);
         Task<(bool Succeeded, string? ErrorMessage)> CreateCollegeAsync(College college);
         Task<(bool Succeeded, string? ErrorMessage)> UpdateCollegeAsync(College college);
+        Task<List<Department>> GetDepartmentsByCollegeAsync(int collegeId);
+        Task<(bool Succeeded, string? ErrorMessage)> SaveDepartmentAsync(int? id, string name, int collegeId);
+        Task<(bool Succeeded, string? ErrorMessage)> DeleteDepartmentAsync(int id);
 
         Task<List<ResearchCategory>> GetAllCategoriesAsync();
         Task<ResearchCategory?> GetCategoryByIdAsync(int categoryId);
@@ -25,6 +28,7 @@ namespace researchProject.Repositories.Interfaces
 
         Task<List<Judge>> GetAllJudgesAsync();
         Task<List<JudgeInvitation>> GetAllJudgeInvitationsAsync();
+        Task<List<UserSummaryViewModel>> GetAssignableUsersForInvitationAsync();
         Task<(bool Succeeded, string? ErrorMessage, string? RawToken)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId);
         Task<(bool Succeeded, string? ErrorMessage)> SetJudgeActiveStatusAsync(int judgeId, bool isActive);
         Task<(bool Succeeded, string? ErrorMessage)> RevokeInvitationAsync(int invitationId);

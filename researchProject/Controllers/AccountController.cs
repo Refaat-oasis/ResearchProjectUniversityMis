@@ -107,12 +107,133 @@ namespace researchProject.Controllers
                 new { userId = userId, token = confirmationToken }, 
                 Request.Scheme);
 
-            if (!string.IsNullOrEmpty(confirmationLink))
+            if (!string.IsNullOrEmpty(confirmationLink) && !string.IsNullOrEmpty(confirmationToken))
             {
-                await _emailSender.SendEmailConfirmationAsync(dto.Email, confirmationLink);
+                await _emailSender.SendRegistrationTokenAsync(dto.Email, confirmationToken, confirmationLink);
             }
 
-            TempData["SuccessMessage"] = "تم إنشاء الحساب بنجاح! تم إرسال رابط تأكيد الحساب إلى بريدك الإلكتروني المؤسسي. يرجى فتح البريد وتأكيد الحساب قبل تسجيل الدخول.";
+            TempData["SuccessMessage"] = "تم إنشاء الحساب بنجاح! تم إرسال رمز ورابط تأكيد الحساب إلى بريدك الإلكتروني. يرجى فتح البريد وتأكيد الحساب قبل تسجيل الدخول.";
+            return RedirectToAction(nameof(VerifyEmailToken), new { email = dto.Email, userId = userId });
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetDepartmentsByCollege(int collegeId)
+        {
+            var departments = await _accountRepository.GetDepartmentsByCollegeAsync(collegeId);
+            return Json(departments.Select(d => new { id = d.Id, name = d.Name }));
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordDto());
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(dto);
+            }
+
+            var (succeeded, errorMessage, resetToken, userId) = await _accountRepository.GeneratePasswordResetTokenAsync(dto.Email);
+            if (succeeded && !string.IsNullOrEmpty(resetToken))
+            {
+                var resetLink = Url.Action(nameof(ResetPassword), "Account", new { email = dto.Email, token = resetToken }, Request.Scheme);
+                if (!string.IsNullOrEmpty(resetLink))
+                {
+                    await _emailSender.SendPasswordResetTokenAsync(dto.Email, resetToken, resetLink);
+                }
+            }
+
+            TempData["SuccessMessage"] = "إذا كان بريدك الإلكتروني مسجلاً في النظام، فقد تم إرسال رمز ورابط استعادة كلمة المرور إليه.";
+            return RedirectToAction(nameof(ResetPassword), new { email = dto.Email });
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string? email = null, string? token = null)
+        {
+            var model = new ResetPasswordDto
+            {
+                Email = email ?? string.Empty,
+                Token = token ?? string.Empty
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(dto);
+            }
+
+            var (succeeded, errorMessage) = await _accountRepository.ResetPasswordWithTokenAsync(dto.Email, dto.Token, dto.NewPassword);
+            if (!succeeded)
+            {
+                ModelState.AddModelError(string.Empty, errorMessage ?? "فشل إعادة تعيين كلمة المرور.");
+                return View(dto);
+            }
+
+            TempData["SuccessMessage"] = "تم تغيير كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmailToken(string? email = null, string? userId = null, string? token = null)
+        {
+            var identifier = !string.IsNullOrEmpty(email) ? email : userId;
+
+            if (!string.IsNullOrEmpty(identifier) && !string.IsNullOrEmpty(token))
+            {
+                var (succeeded, errorMessage) = await _accountRepository.ConfirmEmailWithTokenOrCodeAsync(identifier, token);
+                if (succeeded)
+                {
+                    TempData["SuccessMessage"] = "تم تأكيد بريدك الإلكتروني بنجاح! يمكنك الآن تسجيل الدخول إلى المنصة.";
+                    return RedirectToAction(nameof(Login));
+                }
+                else
+                {
+                    ViewBag.ErrorMessage = errorMessage;
+                }
+            }
+
+            var model = new VerifyEmailDto
+            {
+                EmailOrUserId = identifier ?? string.Empty,
+                Token = token ?? string.Empty
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyEmailToken(VerifyEmailDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(dto);
+            }
+
+            var (succeeded, errorMessage) = await _accountRepository.ConfirmEmailWithTokenOrCodeAsync(dto.EmailOrUserId, dto.Token);
+            if (!succeeded)
+            {
+                ModelState.AddModelError(string.Empty, errorMessage ?? "رمز التحقق غير صالح.");
+                return View(dto);
+            }
+
+            TempData["SuccessMessage"] = "تم تأكيد بريدك الإلكتروني بنجاح! يمكنك الآن تسجيل الدخول إلى المنصة.";
             return RedirectToAction(nameof(Login));
         }
 

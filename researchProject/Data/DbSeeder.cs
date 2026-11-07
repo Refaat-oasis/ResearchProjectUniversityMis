@@ -118,6 +118,37 @@ namespace researchProject.Data
             var pharmCol = await context.Colleges.FirstOrDefaultAsync(c => c.Code == "PHARM") ?? medCol;
             var nurseCol = await context.Colleges.FirstOrDefaultAsync(c => c.Code == "NURSE") ?? medCol;
             var sciCol = await context.Colleges.FirstOrDefaultAsync(c => c.Code == "SCI") ?? medCol;
+            var engCol = await context.Colleges.FirstOrDefaultAsync(c => c.Code == "ENG") ?? medCol;
+
+            // Seed Academic Departments
+            if (!await context.Departments.AnyAsync())
+            {
+                var departments = new List<Department>
+                {
+                    new Department { Name = "قسم الباطنة العامة", CollegeId = medCol.Id },
+                    new Department { Name = "قسم الجراحة العامة", CollegeId = medCol.Id },
+                    new Department { Name = "قسم علم الأدوية السريري", CollegeId = medCol.Id },
+                    new Department { Name = "قسم طب الأطفال", CollegeId = medCol.Id },
+                    new Department { Name = "قسم الكيمياء الحيوية الطبية", CollegeId = medCol.Id },
+
+                    new Department { Name = "قسم الصيدلانيات والصيدلة الصناعية", CollegeId = pharmCol.Id },
+                    new Department { Name = "قسم الأدوية والسموم", CollegeId = pharmCol.Id },
+                    new Department { Name = "قسم الكيمياء الدوائية", CollegeId = pharmCol.Id },
+                    new Department { Name = "قسم العقاقير والنباتات الطبية", CollegeId = pharmCol.Id },
+
+                    new Department { Name = "قسم تمريض صحة المجتمع", CollegeId = nurseCol.Id },
+                    new Department { Name = "قسم تمريض الحالات الحرجة", CollegeId = nurseCol.Id },
+
+                    new Department { Name = "قسم الكيمياء", CollegeId = sciCol.Id },
+                    new Department { Name = "قسم النبات والميكروبيولوجي", CollegeId = sciCol.Id },
+                    new Department { Name = "قسم علم الحيوان", CollegeId = sciCol.Id },
+
+                    new Department { Name = "قسم هندسة الحاسبات ونظم التحكم", CollegeId = engCol.Id },
+                    new Department { Name = "قسم الهندسة الحيوية الطبية", CollegeId = engCol.Id }
+                };
+                await context.Departments.AddRangeAsync(departments);
+                await context.SaveChangesAsync();
+            }
 
             // 4. Seed Research Categories
             if (!await context.ResearchCategories.AnyAsync(c => c.CollegeId == medCol.Id))

@@ -16,6 +16,7 @@ namespace researchProject.Repositories.Interfaces
 
         Task<List<Judge>> SuggestJudgesAsync(int researchId, int collegeId);
         Task<List<Judge>> GetAvailableJudgesForCollegeAsync(int researchId);
+        Task<List<UserSummaryViewModel>> GetAssignableUsersForInvitationAsync();
         Task<(bool Succeeded, string? ErrorMessage)> AssignJudgesToResearchAsync(int researchId, int collegeId, List<int> judgeIds, string actingUserId);
 
         Task<(bool Succeeded, string? ErrorMessage, string? RawToken)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId);

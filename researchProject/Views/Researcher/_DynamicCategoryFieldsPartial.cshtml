@@ -43,24 +43,26 @@
                             }
                             else if (type == "yesno")
                             {
-                                <select name="DynamicFields[@name]" class="form-select" @(isReq ? "required" : "")>
-                                    <option value="">-- اختر --</option>
-                                    <option value="نعم">نعم</option>
-                                    <option value="لا">لا</option>
-                                </select>
+                                var listId = "yesNoList_" + name.Replace(" ", "_");
+                                <input list="@listId" name="DynamicFields[@name]" class="form-control" placeholder="-- اختر (نعم / لا) --" autocomplete="off" @(isReq ? "required" : "") />
+                                <datalist id="@listId">
+                                    <option value="نعم"></option>
+                                    <option value="لا"></option>
+                                </datalist>
                             }
                             else if (type == "dropdown")
                             {
-                                <select name="DynamicFields[@name]" class="form-select" @(isReq ? "required" : "")>
-                                    <option value="">-- اختر من القائمة --</option>
+                                var listId = "dropdownList_" + name.Replace(" ", "_");
+                                <input list="@listId" name="DynamicFields[@name]" class="form-control" placeholder="-- اختر من القائمة أو ابحث --" autocomplete="off" @(isReq ? "required" : "") />
+                                <datalist id="@listId">
                                     @if (element.TryGetProperty("Options", out var optsProp) && optsProp.ValueKind == JsonValueKind.Array)
                                     {
                                         foreach (var opt in optsProp.EnumerateArray())
                                         {
-                                            <option value="@opt.GetString()">@opt.GetString()</option>
+                                            <option value="@opt.GetString()"></option>
                                         }
                                     }
-                                </select>
+                                </datalist>
                             }
                             else
                             {

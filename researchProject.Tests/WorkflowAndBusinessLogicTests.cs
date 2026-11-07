@@ -51,16 +51,26 @@ namespace researchProject.Tests
         }
 
         [Fact]
-        public async Task ResearcherSignUp_DisallowedDomain_ReturnsArabicError()
+        public async Task ResearcherSignUp_AnyEmailDomain_AllowsRegistrationSuccessfully()
         {
-            var db = CreateInMemoryDb("SignUp_DisallowedDomain");
+            var db = CreateInMemoryDb("SignUp_AnyDomainAllowed");
             var config = CreateTestConfig();
             var emailSenderMock = new Mock<IEmailSender>();
 
+            var college = new College { Name = "كلية العلوم", Code = "SCI" };
+            db.Colleges.Add(college);
+            await db.SaveChangesAsync();
+
             var userStoreMock = new Mock<IUserStore<ApplicationUser>>();
             var userManagerMock = new Mock<UserManager<ApplicationUser>>(userStoreMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+            userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((ApplicationUser?)null);
+            userManagerMock.Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);
+            userManagerMock.Setup(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);
+            userManagerMock.Setup(u => u.GenerateEmailConfirmationTokenAsync(It.IsAny<ApplicationUser>())).ReturnsAsync("token-test-12345");
+
             var roleStoreMock = new Mock<IRoleStore<IdentityRole>>();
             var roleManagerMock = new Mock<RoleManager<IdentityRole>>(roleStoreMock.Object, null!, null!, null!, null!);
+            roleManagerMock.Setup(r => r.RoleExistsAsync(It.IsAny<string>())).ReturnsAsync(true);
 
             var contextAccessorMock = new Mock<IHttpContextAccessor>();
             var claimsFactoryMock = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
@@ -74,13 +84,14 @@ namespace researchProject.Tests
                 config,
                 emailSenderMock.Object);
 
+            // Per Requirement 8: Registration is open to any email (e.g. gmail.com)
             var dto = new ResearcherSignUpDto
             {
                 FullName = "د. باحث مصطفى",
                 Email = "researcher@gmail.com",
                 Password = "Password123!",
                 ConfirmPassword = "Password123!",
-                CollegeId = 1,
+                CollegeId = college.Id,
                 ResearcherType = ResearcherTypeConstants.FacultyMember,
                 AcademicDegree = "أستاذ مساعد",
                 Department = "الكيمياء",
@@ -88,10 +99,13 @@ namespace researchProject.Tests
                 PhoneNumber = "01012345678"
             };
 
-            var (succeeded, errorMessage, _, _) = await repo.SignUpResearcherAsync(dto);
+            var (succeeded, errorMessage, confirmationToken, userId) = await repo.SignUpResearcherAsync(dto);
 
-            Assert.False(succeeded);
-            Assert.Contains("التسجيل متاح فقط بالبريد الإلكتروني الأكاديمي والمؤسسي المعتمد", errorMessage);
+            Assert.True(succeeded, errorMessage);
+            Assert.NotNull(confirmationToken);
+            Assert.Equal("token-test-12345", confirmationToken);
+            var researcherInDb = await db.Researchers.FirstOrDefaultAsync(r => r.Department == "الكيمياء");
+            Assert.NotNull(researcherInDb);
         }
 
         [Fact]
@@ -298,9 +312,15 @@ namespace researchProject.Tests
             var res1 = await judgeRepo.SubmitEvaluationAsync(dto1, judge1User.Id);
             Assert.True(res1.Succeeded, res1.ErrorMessage);
 
-            var rMid = await db.Researches.FindAsync(research.Id);
-            Assert.Equal(ResearchStatusConstants.AssignedToJudges, rMid?.WorkflowStatus);
+            // Per Requirement 11: Judge 1's submission closes the round and immediately approves research
+            var rFinal = await db.Researches.FindAsync(research.Id);
+            Assert.Equal(ResearchStatusConstants.Approved, rFinal?.WorkflowStatus);
 
+            // Other judge's evaluation is marked as ClosedDueToOtherJudge
+            var eval2Db = await db.Evaluations.FindAsync(eval2.Id);
+            Assert.Equal(EvaluationDecisionConstants.ClosedDueToOtherJudge, eval2Db?.Decision);
+
+            // Subsequent submission by Judge 2 is rejected because round is closed
             var dto2 = new EvaluationSubmitDto
             {
                 EvaluationId = eval2.Id,
@@ -310,10 +330,8 @@ namespace researchProject.Tests
                 Decision = EvaluationDecisionConstants.Approved
             };
             var res2 = await judgeRepo.SubmitEvaluationAsync(dto2, judge2User.Id);
-            Assert.True(res2.Succeeded, res2.ErrorMessage);
-
-            var rFinal = await db.Researches.FindAsync(research.Id);
-            Assert.Equal(ResearchStatusConstants.Approved, rFinal?.WorkflowStatus);
+            Assert.False(res2.Succeeded);
+            Assert.Contains("تم إغلاق التحكيم لهذا المقترح", res2.ErrorMessage);
         }
 
         [Fact]
@@ -367,33 +385,39 @@ namespace researchProject.Tests
             db.Evaluations.AddRange(eval1, eval2);
             await db.SaveChangesAsync();
 
+            // Per Requirement 11: Judge 1 requires modifications -> closes round immediately
             var res1 = await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
             {
                 EvaluationId = eval1.Id,
-                PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
-                RiskLevel = EthicsRatingConstants.Appropriate,
-                InformedConsentRating = EthicsRatingConstants.Appropriate,
-                Decision = EvaluationDecisionConstants.Approved
-            }, judge1User.Id);
-            Assert.True(res1.Succeeded, res1.ErrorMessage);
-
-            var res2 = await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
-            {
-                EvaluationId = eval2.Id,
                 PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
                 RiskLevel = EthicsRatingConstants.NeedsModification,
                 InformedConsentRating = EthicsRatingConstants.NeedsModification,
                 Decision = EvaluationDecisionConstants.ModificationsRequired,
                 ModificationNotes = "يرجى تعديل صياغة الإقرار المستنير وتحديد المخاطر بدقة."
-            }, judge2User.Id);
-            Assert.True(res2.Succeeded, res2.ErrorMessage);
+            }, judge1User.Id);
+            Assert.True(res1.Succeeded, res1.ErrorMessage);
 
             var rFinal = await db.Researches.FindAsync(research.Id);
             Assert.Equal(ResearchStatusConstants.ModificationsRequired, rFinal?.WorkflowStatus);
+
+            var eval2Db = await db.Evaluations.FindAsync(eval2.Id);
+            Assert.Equal(EvaluationDecisionConstants.ClosedDueToOtherJudge, eval2Db?.Decision);
+
+            // Judge 2 attempt to evaluate is rejected
+            var res2 = await judgeRepo.SubmitEvaluationAsync(new EvaluationSubmitDto
+            {
+                EvaluationId = eval2.Id,
+                PrivacyProtectionRating = EthicsRatingConstants.Appropriate,
+                RiskLevel = EthicsRatingConstants.Appropriate,
+                InformedConsentRating = EthicsRatingConstants.Appropriate,
+                Decision = EvaluationDecisionConstants.Approved
+            }, judge2User.Id);
+            Assert.False(res2.Succeeded);
+            Assert.Contains("تم إغلاق التحكيم لهذا المقترح", res2.ErrorMessage);
         }
 
         [Fact]
-        public async Task IssueCertificate_WithoutSignature_RejectsWithArabicError()
+        public async Task IssueCertificate_WithoutSignature_SucceedsBecauseCoAdminSignatureNotRequired()
         {
             var db = CreateInMemoryDb("IssueCert_NoSignature");
             var certMock = new Mock<ICertificateService>();
@@ -404,10 +428,15 @@ namespace researchProject.Tests
             db.Colleges.Add(college);
             await db.SaveChangesAsync();
 
+            var category = new ResearchCategory { Name = "أبحاث التمريض", CollegeId = college.Id };
+            db.ResearchCategories.Add(category);
+            await db.SaveChangesAsync();
+
             var coAdminUser = new ApplicationUser { Id = "coadmin-nosig", FullName = "مدير الكلية" };
             db.Users.Add(coAdminUser);
             await db.SaveChangesAsync();
 
+            // Per Requirement 4: CoAdmin does not need to upload signature image
             var coAdmin = new CollegeCoAdmin
             {
                 UserId = coAdminUser.Id,
@@ -421,7 +450,7 @@ namespace researchProject.Tests
             {
                 Title = "بحث تمريض معتمد",
                 CollegeId = college.Id,
-                CategoryId = 1,
+                CategoryId = category.Id,
                 AcademicSpecialty = "تمريض",
                 WorkflowStatus = ResearchStatusConstants.Approved,
                 SubmittedAt = DateTime.UtcNow,
@@ -430,12 +459,17 @@ namespace researchProject.Tests
             db.Researches.Add(research);
             await db.SaveChangesAsync();
 
+            certMock.Setup(c => c.GenerateSerialNumber(It.IsAny<string>())).Returns("REC-NURSE-2026-0001");
+            certMock.Setup(c => c.GenerateCertificateFileAsync(It.IsAny<Research>(), It.IsAny<CollegeCoAdmin>(), It.IsAny<string>())).ReturnsAsync("cert_nurse.pdf");
+
             var repo = new CollegeCoAdminRepository(db, certMock.Object, emailMock.Object, CreateTestConfig(), loggerMock.Object);
 
-            var (succeeded, errorMessage, _) = await repo.IssueEthicalCertificateAsync(research.Id, coAdminUser.Id, "http://localhost");
+            var (succeeded, errorMessage, serialNumber) = await repo.IssueEthicalCertificateAsync(research.Id, coAdminUser.Id, "http://localhost");
 
-            Assert.False(succeeded);
-            Assert.Contains("لا يمكن إصدار الشهادة قبل رفع صورة التوقيع الرقمي", errorMessage);
+            Assert.True(succeeded, errorMessage);
+            Assert.Equal("REC-NURSE-2026-0001", serialNumber);
+            var updatedResearch = await db.Researches.FindAsync(research.Id);
+            Assert.Equal(ResearchStatusConstants.CertificateIssued, updatedResearch?.WorkflowStatus);
         }
 
         [Fact]

@@ -24,16 +24,17 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">الكلية</label>
-                    <select id="arcCollege" class="form-select form-select-sm">
-                        <option value="">-- كافة الكليات --</option>
+                    <input type="hidden" id="arcCollege" />
+                    <input type="text" list="arcCollegesList" id="arcCollegeInput" class="form-control form-control-sm" placeholder="ابحث أو اختر الكلية..." autocomplete="off" />
+                    <datalist id="arcCollegesList">
                         @if (ViewBag.Colleges != null)
                         {
                             foreach (var c in ViewBag.Colleges)
                             {
-                                <option value="@c.Id">@c.Name</option>
+                                <option value="@c.Name" data-id="@c.Id">@c.Code</option>
                             }
                         }
-                    </select>
+                    </datalist>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary-custom btn-sm w-100">
@@ -99,6 +100,18 @@
 </div>
 
 <script>
+    $('#arcCollegeInput').on('input change', function () {
+        var selectedVal = $(this).val();
+        var match = $('#arcCollegesList option').filter(function () {
+            return this.value === selectedVal;
+        });
+        if (match.length > 0) {
+            $('#arcCollege').val(match.data('id'));
+        } else {
+            $('#arcCollege').val('');
+        }
+    });
+
     function searchArchive(e) {
         e.preventDefault();
         var serial = $('#arcSerial').val();

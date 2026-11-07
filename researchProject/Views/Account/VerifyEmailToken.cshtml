@@ -1,0 +1,117 @@
+@model researchProject.Models.DTOs.VerifyEmailDto
+@{
+    ViewData["Title"] = "تأكيد وتفعيل البريد الإلكتروني - المنصة الإلكترونية";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card card-custom shadow-sm border-0">
+                <div class="text-center mb-4">
+                    <div class="bg-success-subtle text-success d-inline-flex p-3 rounded-circle shadow-sm mb-3">
+                        <i class="bi bi-patch-check-fill fs-2"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">تفعيل الحساب وتأكيد البريد</h4>
+                    <p class="text-muted small">أدخل بريدك الإلكتروني مع رمز الأمان المرسل إليك عبر Gmail</p>
+                </div>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success small p-3 mb-3">
+                        <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+                    </div>
+                }
+
+                @if (ViewBag.ErrorMessage != null)
+                {
+                    <div class="alert alert-danger small p-3 mb-3">
+                        <i class="bi bi-exclamation-triangle me-1"></i> @ViewBag.ErrorMessage
+                    </div>
+                }
+
+                <form asp-action="VerifyEmailToken" method="post" id="verifyEmailForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="EmailOrUserId" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="EmailOrUserId" class="form-control" placeholder="بريدك الإلكتروني المسجل" dir="ltr" required />
+                        </div>
+                        <span asp-validation-for="EmailOrUserId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label asp-for="Token" class="form-label mb-0"></label>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" id="copyTokenBtn" title="نسخ الرمز">
+                                    <i class="bi bi-clipboard me-1"></i> نسخ الرمز
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" id="pasteTokenBtn" title="لصق من الحافظة">
+                                    <i class="bi bi-clipboard-plus me-1"></i> لصق
+                                </button>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-shield-check"></i></span>
+                            <input asp-for="Token" id="tokenInput" class="form-control font-monospace" placeholder="الصق رمز التفعيل هنا" dir="ltr" required />
+                        </div>
+                        <span asp-validation-for="Token" class="text-danger small"></span>
+                        <div class="form-text small text-muted">تجد هذا الرمز داخل رسالة البريد الإلكتروني الترحيبية.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-2 fs-6 mb-3 shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> تأكيد الحساب والانتقال لتسجيل الدخول
+                    </button>
+                </form>
+
+                <div class="border-top pt-3 text-center">
+                    <a asp-action="Login" class="text-decoration-none small text-muted">
+                        <i class="bi bi-arrow-right me-1"></i> العودة لشاشة تسجيل الدخول
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            $('#copyTokenBtn').on('click', function () {
+                var tokenVal = $('#tokenInput').val();
+                if (!tokenVal) {
+                    alert('حقل الرمز فارغ.');
+                    return;
+                }
+                navigator.clipboard.writeText(tokenVal).then(function () {
+                    var $btn = $('#copyTokenBtn');
+                    var oldHtml = $btn.html();
+                    $btn.html('<i class="bi bi-check2 text-success me-1"></i> تم النسخ!');
+                    setTimeout(function () { $btn.html(oldHtml); }, 2000);
+                });
+            });
+
+            $('#pasteTokenBtn').on('click', function () {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    navigator.clipboard.readText().then(function (text) {
+                        if (text) {
+                            $('#tokenInput').val(text.trim());
+                            var $btn = $('#pasteTokenBtn');
+                            var oldHtml = $btn.html();
+                            $btn.html('<i class="bi bi-check2 text-success me-1"></i> تم اللصق!');
+                            setTimeout(function () { $btn.html(oldHtml); }, 2000);
+                        }
+                    }).catch(function () {
+                        alert('يرجى لصق الرمز يدوياً داخل الحقل (Ctrl+V).');
+                    });
+                } else {
+                    alert('يرجى لصق الرمز يدوياً داخل الحقل (Ctrl+V).');
+                }
+            });
+        });
+    </script>
+}

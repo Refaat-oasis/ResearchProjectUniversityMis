@@ -9,9 +9,9 @@ namespace researchProject.Models.DTOs
         [StringLength(150, ErrorMessage = "الاسم يجب ألا يتجاوز 150 حرفاً")]
         public string FullName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "البريد الإلكتروني المؤسسي مطلوب")]
+        [Required(ErrorMessage = "البريد الإلكتروني مطلوب")]
         [EmailAddress(ErrorMessage = "صيغة البريد الإلكتروني غير صالحة")]
-        [Display(Name = "البريد الإلكتروني الأكاديمي (المؤسسي)")]
+        [Display(Name = "البريد الإلكتروني")]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "كلمة المرور مطلوبة")]

@@ -27,16 +27,17 @@
 
             <div class="col-md-6">
                 <label asp-for="CategoryId" class="form-label"></label> <span class="text-danger">*</span>
-                <select asp-for="CategoryId" id="categorySelect" class="form-select" required onchange="loadDynamicCategoryFields(this.value);">
-                    <option value="">-- اختر نوع وتصنيف البحث --</option>
+                <input type="hidden" asp-for="CategoryId" id="partialCategoryId" />
+                <input type="text" id="partialCategoryDisplayInput" list="partialCategoriesList" class="form-control" placeholder="ابحث أو اختر نوع وتصنيف البحث..." required autocomplete="off" />
+                <datalist id="partialCategoriesList">
                     @if (ViewBag.Categories != null)
                     {
                         foreach (var cat in ViewBag.Categories)
                         {
-                            <option value="@cat.Id">@cat.Name</option>
+                            <option value="@cat.Name" data-id="@cat.Id"></option>
                         }
                     }
-                </select>
+                </datalist>
                 <span asp-validation-for="CategoryId" class="text-danger small"></span>
             </div>
 
@@ -99,6 +100,19 @@
 </div>
 
 <script>
+    $('#partialCategoryDisplayInput').on('input change', function() {
+        var val = $(this).val();
+        var match = $('#partialCategoriesList option').filter(function() { return this.value === val; });
+        if (match.length > 0) {
+            var catId = match.data('id');
+            $('#partialCategoryId').val(catId);
+            loadDynamicCategoryFields(catId);
+        } else {
+            $('#partialCategoryId').val('');
+            $('#dynamicFieldsContainer').empty();
+        }
+    });
+
     function loadDynamicCategoryFields(categoryId) {
         if (!categoryId) {
             $('#dynamicFieldsContainer').empty();

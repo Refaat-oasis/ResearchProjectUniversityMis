@@ -33,17 +33,17 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label small fw-bold">الكلية المعنية</label>
-                <select name="collegeId" class="form-select">
-                    <option value="">-- كافة كليات الجامعة --</option>
+                <input type="hidden" name="collegeId" id="certCollegeId" value="@queryCollege" />
+                <input type="text" list="certCollegesList" id="certCollegeInput" class="form-control" placeholder="ابحث أو اختر الكلية..." autocomplete="off" />
+                <datalist id="certCollegesList">
                     @if (ViewBag.Colleges != null)
                     {
                         foreach (var c in ViewBag.Colleges)
                         {
-                            var selected = (queryCollege == c.Id.ToString()) ? "selected" : "";
-                            <!option value="@c.Id" @selected>@c.Name</!option>
+                            <option value="@c.Name" data-id="@c.Id">@c.Code</option>
                         }
                     }
-                </select>
+                </datalist>
             </div>
             <div class="col-md-3 d-flex align-items-end gap-2">
                 <button type="submit" class="btn btn-primary-custom flex-grow-1">
@@ -140,4 +140,32 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var initialId = $('#certCollegeId').val();
+            if (initialId) {
+                var match = $('#certCollegesList option').filter(function () {
+                    return $(this).data('id') == initialId;
+                });
+                if (match.length > 0) {
+                    $('#certCollegeInput').val(match.val());
+                }
+            }
+
+            $('#certCollegeInput').on('input change', function () {
+                var selectedVal = $(this).val();
+                var match = $('#certCollegesList option').filter(function () {
+                    return this.value === selectedVal;
+                });
+                if (match.length > 0) {
+                    $('#certCollegeId').val(match.data('id'));
+                } else {
+                    $('#certCollegeId').val('');
+                }
+            });
+        });
+    </script>
+}
 

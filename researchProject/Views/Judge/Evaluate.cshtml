@@ -48,63 +48,81 @@
 
     @if (Model.SubmittedAt.HasValue)
     {
-        <!-- Read-Only View of Submitted Evaluation -->
-        <div class="alert alert-success border-success p-3 mb-4 rounded-3">
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="bi bi-patch-check-fill text-success fs-4"></i>
-                <h5 class="fw-bold text-success mb-0">تم تقديم هذا التقييم وتوقيعه رقمياً بنجاح</h5>
+        @if (Model.Decision == EvaluationDecisionConstants.ClosedDueToOtherJudge || Model.Decision == "مغلق لاكتمال التحكيم")
+        {
+            <div class="alert alert-secondary border-secondary p-3 mb-4 rounded-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-lock-fill text-secondary fs-4"></i>
+                    <h5 class="fw-bold text-secondary mb-0">تم إغلاق التحكيم لهذا المقترح</h5>
+                </div>
+                <div class="small text-muted mb-2">
+                    تم اعتماد تقييم محكم آخر مسند لنفس المقترح في هذه الجولة، وبناءً عليه تم إغلاق جولة التحكيم واعتماد النتيجة تلقائياً.
+                </div>
+                <div class="badge bg-secondary-subtle text-secondary border">
+                    <i class="bi bi-info-circle me-1"></i> الحالة: مغلق لاكتمال التحكيم بواسطة محكم آخر
+                </div>
             </div>
-            <div class="small text-muted">
-                تاريخ وتوقيت التوقيع الرقمي: <strong>@Model.SignedAt?.ToString("yyyy/MM/dd HH:mm:ss") UTC</strong>
+        }
+        else
+        {
+            <!-- Read-Only View of Submitted Evaluation -->
+            <div class="alert alert-success border-success p-3 mb-4 rounded-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-patch-check-fill text-success fs-4"></i>
+                    <h5 class="fw-bold text-success mb-0">تم تقديم هذا التقييم وتوقيعه رقمياً بنجاح</h5>
+                </div>
+                <div class="small text-muted">
+                    تاريخ وتوقيت التوقيع الرقمي: <strong>@Model.SignedAt?.ToString("yyyy/MM/dd HH:mm:ss") UTC</strong>
+                </div>
             </div>
-        </div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-4">
-                <div class="p-3 border rounded bg-white">
-                    <div class="text-muted small">تقييم حماية الخصوصية:</div>
-                    <div class="fw-bold text-dark mt-1">@Model.PrivacyProtectionRating</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="p-3 border rounded bg-white">
-                    <div class="text-muted small">تقييم نسبة المخاطر:</div>
-                    <div class="fw-bold text-dark mt-1">@Model.RiskLevel</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="p-3 border rounded bg-white">
-                    <div class="text-muted small">تقييم الموافقة المستنيرة:</div>
-                    <div class="fw-bold text-dark mt-1">@Model.InformedConsentRating</div>
-                </div>
-            </div>
-            <div class="col-12">
-                <div class="p-3 border rounded bg-white">
-                    <div class="text-muted small">قرار التحكيم النهائي:</div>
-                    <div class="fs-5 fw-bold @(Model.Decision == EvaluationDecisionConstants.Approved ? "text-success" : "text-danger") mt-1">
-                        @Model.Decision
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="p-3 border rounded bg-white">
+                        <div class="text-muted small">تقييم حماية الخصوصية:</div>
+                        <div class="fw-bold text-dark mt-1">@Model.PrivacyProtectionRating</div>
                     </div>
                 </div>
-            </div>
-            @if (!string.IsNullOrWhiteSpace(Model.ModificationNotes))
-            {
+                <div class="col-md-4">
+                    <div class="p-3 border rounded bg-white">
+                        <div class="text-muted small">تقييم نسبة المخاطر:</div>
+                        <div class="fw-bold text-dark mt-1">@Model.RiskLevel</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded bg-white">
+                        <div class="text-muted small">تقييم الموافقة المستنيرة:</div>
+                        <div class="fw-bold text-dark mt-1">@Model.InformedConsentRating</div>
+                    </div>
+                </div>
                 <div class="col-12">
                     <div class="p-3 border rounded bg-white">
-                        <div class="text-muted small">الملاحظات والتعديلات المطلوبة:</div>
-                        <div class="text-dark mt-1">@Model.ModificationNotes</div>
+                        <div class="text-muted small">قرار التحكيم النهائي:</div>
+                        <div class="fs-5 fw-bold @(Model.Decision == EvaluationDecisionConstants.Approved ? "text-success" : "text-danger") mt-1">
+                            @Model.Decision
+                        </div>
                     </div>
                 </div>
-            }
-            @if (!string.IsNullOrWhiteSpace(Model.Recommendations))
-            {
-                <div class="col-12">
-                    <div class="p-3 border rounded bg-white">
-                        <div class="text-muted small">التوصيات:</div>
-                        <div class="text-dark mt-1">@Model.Recommendations</div>
+                @if (!string.IsNullOrWhiteSpace(Model.ModificationNotes))
+                {
+                    <div class="col-12">
+                        <div class="p-3 border rounded bg-white">
+                            <div class="text-muted small">الملاحظات والتعديلات المطلوبة:</div>
+                            <div class="text-dark mt-1">@Model.ModificationNotes</div>
+                        </div>
                     </div>
-                </div>
-            }
-        </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Recommendations))
+                {
+                    <div class="col-12">
+                        <div class="p-3 border rounded bg-white">
+                            <div class="text-muted small">التوصيات:</div>
+                            <div class="text-dark mt-1">@Model.Recommendations</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     }
     else
     {
@@ -119,39 +137,30 @@
                 </h6>
 
                 <div class="row g-3">
+                    <datalist id="ethicsRatingList">
+                        <option value="@EthicsRatingConstants.Appropriate"></option>
+                        <option value="@EthicsRatingConstants.NeedsModification"></option>
+                        <option value="@EthicsRatingConstants.Inappropriate"></option>
+                    </datalist>
+
                     <!-- 1. Privacy Protection -->
                     <div class="col-md-4">
                         <label class="form-label">1. حماية الخصوصية وسرية البيانات <span class="text-danger">*</span></label>
-                        <select name="PrivacyProtectionRating" class="form-select" required>
-                            <option value="">-- اختر التقييم --</option>
-                            <option value="@EthicsRatingConstants.Appropriate">@EthicsRatingConstants.Appropriate</option>
-                            <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
-                            <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
-                        </select>
+                        <input list="ethicsRatingList" name="PrivacyProtectionRating" class="form-control" placeholder="اختر أو اكتب التقييم..." required autocomplete="off" />
                         <div class="form-text small">تدابير حماية وتجهيل هوية المشاركين بالبحث.</div>
                     </div>
 
                     <!-- 2. Risk Level -->
                     <div class="col-md-4">
                         <label class="form-label">2. نسبة المخاطر والموازنة <span class="text-danger">*</span></label>
-                        <select name="RiskLevel" class="form-select" required>
-                            <option value="">-- اختر التقييم --</option>
-                            <option value="@EthicsRatingConstants.Appropriate">@EthicsRatingConstants.Appropriate</option>
-                            <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
-                            <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
-                        </select>
+                        <input list="ethicsRatingList" name="RiskLevel" class="form-control" placeholder="اختر أو اكتب التقييم..." required autocomplete="off" />
                         <div class="form-text small">مستوى الأمان الحيوي والتدابير الوقائية.</div>
                     </div>
 
                     <!-- 3. Informed Consent -->
                     <div class="col-md-4">
                         <label class="form-label">3. إجراءات الموافقة المستنيرة <span class="text-danger">*</span></label>
-                        <select name="InformedConsentRating" class="form-select" required>
-                            <option value="">-- اختر التقييم --</option>
-                            <option value="@EthicsRatingConstants.Appropriate">@EthicsRatingConstants.Appropriate</option>
-                            <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
-                            <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
-                        </select>
+                        <input list="ethicsRatingList" name="InformedConsentRating" class="form-control" placeholder="اختر أو اكتب التقييم..." required autocomplete="off" />
                         <div class="form-text small">وضوح استمارة الموافقة وحرية المشاركة.</div>
                     </div>
                 </div>
