@@ -1,0 +1,107 @@
+@model List<researchProject.Models.Entities.Evaluation>
+@using researchProject.Models.Constants
+@{
+    ViewData["Title"] = "المقترحات البحثية المسندة للتحكيم الأخلاقي";
+}
+
+<div class="page-header-card">
+    <div>
+        <h2><i class="bi bi-file-earmark-medical text-warning"></i> المقترحات البحثية المسندة للتحكيم الأخلاقي</h2>
+        <p>تقييم الجوانب الأخلاقية للمقترحات البحثية المسندة إليكم بصفتكم محكماً علمياً مستقلاً</p>
+    </div>
+    <span class="badge bg-light text-dark fs-6 p-2 border">
+        إجمالي المهام المسندة: <strong>@(Model?.Count ?? 0)</strong>
+    </span>
+</div>
+
+<div class="liquid-glass-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>عنوان المقترح البحثي</th>
+                    <th>الكلية</th>
+                    <th>التصنيف والتخصص</th>
+                    <th>الجولة</th>
+                    <th>حالة التقييم</th>
+                    <th>التوقيع الرقمي</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var ev in Model)
+                    {
+                        bool isDone = ev.SubmittedAt.HasValue;
+
+                        <tr class="@(isDone ? "" : "table-warning-subtle")">
+                            <td>@index</td>
+                            <td class="fw-bold" style="max-width: 250px;">@ev.Research?.Title</td>
+                            <td><span class="badge bg-light text-dark border">@ev.Research?.College?.Name</span></td>
+                            <td>
+                                <div>@ev.Research?.Category?.Name</div>
+                                <div class="text-muted small">@ev.Research?.AcademicSpecialty</div>
+                            </td>
+                            <td><span class="badge bg-secondary">الجولة @ev.RoundNumber</span></td>
+                            <td>
+                                @if (isDone)
+                                {
+                                    @if (ev.Decision == EvaluationDecisionConstants.Approved)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>موافق</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-circle me-1"></i>طلب تعديلات</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>قيد التقييم</span>
+                                }
+                            </td>
+                            <td>
+                                @if (ev.IsDigitallySigned)
+                                {
+                                    <span class="badge bg-primary-subtle text-primary"><i class="bi bi-check2-circle me-1"></i>موقع</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!isDone)
+                                {
+                                    <a asp-action="Evaluate" asp-route-id="@ev.Id" class="btn btn-sm btn-primary-custom">
+                                        <i class="bi bi-pencil-square me-1"></i> تعبئة نموذج التقييم
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-action="Evaluate" asp-route-id="@ev.Id" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye me-1"></i> استعراض التقييم
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-clipboard2-check fs-1 d-block mb-3 text-secondary"></i>
+                            لا توجد أي مقترحات بحثية مسندة للتحكيم حالياً.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+

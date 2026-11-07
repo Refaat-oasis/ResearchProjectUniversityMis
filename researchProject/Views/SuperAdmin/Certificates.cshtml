@@ -1,0 +1,143 @@
+@model List<researchProject.Models.Entities.Research>
+@{
+    ViewData["Title"] = "الأرشيف الرقمي الموحد للشهادات الأخلاقية";
+    var querySerial = Context.Request.Query["serialNumber"].ToString();
+    var queryResearcher = Context.Request.Query["researcherName"].ToString();
+    var queryCollege = Context.Request.Query["collegeId"].ToString();
+}
+
+<div class="page-header-card">
+    <div>
+        <h2><i class="bi bi-archive text-primary"></i> الأرشيف الرقمي الموحد للشهادات الأخلاقية</h2>
+        <p>قاعدة بيانات موثقة لجميع قرارات وشهادات الموافقة الأخلاقية الصادرة على مستوى كليات الجامعة مع إمكانية التحقق الفوري</p>
+    </div>
+    <span class="badge bg-light text-dark border p-2">
+        <i class="bi bi-file-earmark-check me-1"></i> إجمالي الشهادات الصادرة: @(Model?.Count ?? 0)
+    </span>
+</div>
+
+<!-- Search & Filter Card -->
+<div class="liquid-glass-card p-4 mb-4">
+    <h5 class="fw-bold text-dark mb-3">
+        <i class="bi bi-funnel text-primary me-2"></i>فلترة وبحث في سجلات الشهادات
+    </h5>
+    <form method="get" action="/SuperAdmin/Certificates">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">الرقم المسلسل للشهادة</label>
+                <input type="text" name="serialNumber" value="@querySerial" class="form-control" placeholder="REC-..." dir="ltr" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">اسم الباحث</label>
+                <input type="text" name="researcherName" value="@queryResearcher" class="form-control" placeholder="ابحث باسم الباحث..." />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">الكلية المعنية</label>
+                <select name="collegeId" class="form-select">
+                    <option value="">-- كافة كليات الجامعة --</option>
+                    @if (ViewBag.Colleges != null)
+                    {
+                        foreach (var c in ViewBag.Colleges)
+                        {
+                            var selected = (queryCollege == c.Id.ToString()) ? "selected" : "";
+                            <!option value="@c.Id" @selected>@c.Name</!option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary-custom flex-grow-1">
+                    <i class="bi bi-search me-1"></i> تصفية
+                </button>
+                @if (!string.IsNullOrEmpty(querySerial) || !string.IsNullOrEmpty(queryResearcher) || !string.IsNullOrEmpty(queryCollege))
+                {
+                    <a href="/SuperAdmin/Certificates" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Certificates Archive Table -->
+<div class="liquid-glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-dark mb-0">
+            <i class="bi bi-list-check text-success me-2"></i>سجل الشهادات الأخلاقية المعتمدة
+        </h5>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>الرقم المسلسل</th>
+                    <th>عنوان المقترح البحثي</th>
+                    <th>الكلية</th>
+                    <th>الباحث الرئيسي</th>
+                    <th>تاريخ الاعتماد</th>
+                    <th>رمز التحقق QR</th>
+                    <th class="text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var r in Model)
+                    {
+                        var author = r.ResearcherResearchesBridges?.FirstOrDefault()?.Researcher?.User?.FullName ?? "غير محدد";
+                        <tr>
+                            <td>@index</td>
+                            <td>
+                                <span class="fw-bold font-monospace text-success bg-success-subtle px-2 py-1 rounded border border-success-subtle" dir="ltr">
+                                    @r.CertificateSerialNumber
+                                </span>
+                            </td>
+                            <td class="fw-bold text-dark" style="max-width: 280px;">@r.Title</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">@r.College?.Name</span>
+                            </td>
+                            <td>
+                                <i class="bi bi-person text-secondary me-1"></i>@author
+                            </td>
+                            <td class="text-muted small">
+                                <i class="bi bi-calendar3 me-1"></i>@(r.CertificateIssuedAt?.ToString("yyyy/MM/dd") ?? "-")
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(r.CertificateQrCodeUrl))
+                                {
+                                    <a href="@r.CertificateQrCodeUrl" target="_blank" class="badge bg-primary text-decoration-none p-2">
+                                        <i class="bi bi-qr-code me-1"></i> فحص عام
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">-</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <a href="/Researcher/DownloadCertificate?researchId=@r.Id" target="_blank" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> فتح الشهادة
+                                </a>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-patch-question fs-2 d-block mb-2"></i>
+                            لا توجد شهادات أخلاقية صادرة تطابق معايير البحث الحالية.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+

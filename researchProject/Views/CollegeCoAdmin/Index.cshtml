@@ -4,9 +4,4 @@
     var initialQueue = ViewBag.InitialQueue as List<researchProject.Models.Entities.Research> ?? new List<researchProject.Models.Entities.Research>();
 }
 
-<div class="app-container">
-    <partial name="_RightSidebarPartial" />
-    <main id="main-content-container" class="main-content">
-        <partial name="_ScreeningQueuePartial" model="initialQueue" />
-    </main>
-</div>
+<partial name="_ScreeningQueuePartial" model="initialQueue" />

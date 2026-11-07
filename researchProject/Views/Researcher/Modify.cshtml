@@ -1,0 +1,107 @@
+@model researchProject.Models.DTOs.ResearchModificationDto
+@{
+    ViewData["Title"] = "رفع الوثائق والمقترح المعدل";
+    var research = ViewBag.Research as researchProject.Models.Entities.Research;
+}
+
+<div class="page-header-card">
+    <div>
+        <h2><i class="bi bi-cloud-arrow-up text-danger"></i> رفع الوثائق والمقترح المعدل</h2>
+        <p>« @(research?.Title ?? "") »</p>
+    </div>
+    <a asp-action="Tracker" asp-route-id="@Model.ResearchId" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-arrow-right me-1"></i> العودة للمسار
+    </a>
+</div>
+
+<div class="liquid-glass-card">
+    <!-- Review Modification Requests from Judges -->
+    <div class="card bg-danger-subtle border-danger p-3 mb-4 rounded-3">
+        <h6 class="fw-bold text-danger mb-2">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>التعديلات المطلوبة من هيئة التحكيم:
+        </h6>
+        <div class="p-3 bg-white rounded border small text-dark" style="white-space: pre-line;">
+            @{
+                var latestHistory = research?.ResearchStatusHistories?
+                    .OrderByDescending(h => h.ChangedAt)
+                    .FirstOrDefault(h => h.NewStatus == researchProject.Models.Constants.ResearchStatusConstants.ModificationsRequired);
+
+                if (latestHistory != null && !string.IsNullOrWhiteSpace(latestHistory.Reason))
+                {
+                    @latestHistory.Reason
+                }
+                else
+                {
+                    <span>يرجى استيفاء التعديلات الأخلاقية المطلوبة وإعادة رفع المقترح.</span>
+                }
+            }
+        </div>
+    </div>
+
+    <form id="uploadModForm" asp-action="SubmitModifications" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ResearchId" />
+
+        <div class="mb-3">
+            <label asp-for="ResearcherNotes" class="form-label"></label>
+            <textarea asp-for="ResearcherNotes" class="form-control" rows="3" placeholder="وضح هنا تفصيلاً النقاط التي تم تعديلها واستيفاؤها في هذه النسخة..."></textarea>
+            <span asp-validation-for="ResearcherNotes" class="text-danger small"></span>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label">ملف المقترح البحثي المعدل (خطة البحث) <span class="text-danger">*</span></label>
+                <input type="file" name="ModifiedProposalFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                <div class="form-text small">نسخة جديدة من خطة البحث تتضمن كافة التعديلات المطلوبة.</div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">ملف أدوات البحث المعدلة (اختياري)</label>
+                <input type="file" name="ModifiedToolsFile" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                <div class="form-text small">في حال طُلب تعديل على استمارات الاستبيان أو أدوات البحث.</div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted">
+                <i class="bi bi-info-circle me-1"></i> سيتم حفظ هذه الملفات كنسخة جديدة وبدء جولة تحكيمية تالية للمحكمين.
+            </div>
+            <button type="submit" class="btn btn-danger px-4 py-2 fw-bold">
+                <i class="bi bi-send-check-fill me-1"></i> تسليم التعديلات وبدء الجولة التحكيمية
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $('#uploadModForm').on('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const formData = new FormData(form);
+
+            $('#partial-loading-spinner').css('display', 'flex');
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    $('#partial-loading-spinner').hide();
+                    if (res && res.success) {
+                        alert(res.message);
+                        window.location.href = '/Researcher/Tracker/@Model.ResearchId';
+                    } else {
+                        alert(res.message || 'حدث خطأ أثناء تسليم التعديلات.');
+                    }
+                },
+                error: function(xhr) {
+                    $('#partial-loading-spinner').hide();
+                    alert(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.');
+                }
+            });
+        });
+    </script>
+}

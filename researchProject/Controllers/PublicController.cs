@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using researchProject.Models.DTOs;
+using researchProject.Models.ViewModels;
 using researchProject.Repositories.Interfaces;
 
 namespace researchProject.Controllers
@@ -21,7 +21,7 @@ namespace researchProject.Controllers
         {
             if (string.IsNullOrWhiteSpace(serialNumber))
             {
-                return View(new CertificateVerificationResultDto
+                return View(new CertificateVerificationResultViewModel
                 {
                     IsValid = false,
                     Message = "يرجى إدخال الرقم المسلسل للشهادة للتحقق من صحتها."

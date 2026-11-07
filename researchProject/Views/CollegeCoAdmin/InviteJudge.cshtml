@@ -1,0 +1,71 @@
+@{
+    ViewData["Title"] = "دعوة محكم علمي معتمد";
+}
+
+<div class="page-header-card">
+    <div>
+        <h2><i class="bi bi-envelope-plus text-info"></i> دعوة محكم علمي معتمد</h2>
+        <p>إرسال رابط دعوة آمن عبر البريد الإلكتروني لانضمام خبير أو باحث لهيئة المحكمين بالكلية</p>
+    </div>
+</div>
+
+<div class="liquid-glass-card">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="p-4 border rounded-3 bg-light">
+                <form id="coAdminInviteForm" asp-action="InviteJudge" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" required placeholder="judge@example.com" dir="ltr" />
+                        <div class="form-text small">يمكن دعوة محكمين من داخل الكلية أو من خبراء خارجيين مستقلين.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">التخصص الأكاديمي الدقيق المطلوب للتحكيم</label>
+                        <input type="text" name="specialty" class="form-control" placeholder="مثال: علم الأدوية السريري / الأخلاقيات الحيوية" />
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-action="ScreeningQueue" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-right me-1"></i> العودة لطابور الفحص
+                        </a>
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                            <i class="bi bi-send-fill me-1"></i> إرسال رابط الدعوة الرسمية
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#coAdminInviteForm').on('submit', function (e) {
+            e.preventDefault();
+            const form = this;
+            const data = $(form).serialize();
+
+            $('#partial-loading-spinner').css('display', 'flex');
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: data,
+                success: function (res) {
+                    $('#partial-loading-spinner').hide();
+                    alert(res.message);
+                    if (res.success) {
+                        form.reset();
+                    }
+                },
+                error: function (xhr) {
+                    $('#partial-loading-spinner').hide();
+                    alert(xhr.responseText || 'حدث خطأ أثناء إرسال الدعوة.');
+                }
+            });
+        });
+    </script>
+}
+

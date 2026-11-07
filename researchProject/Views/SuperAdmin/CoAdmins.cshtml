@@ -1,0 +1,137 @@
+@model List<researchProject.Models.Entities.CollegeCoAdmin>
+@{
+    ViewData["Title"] = "إدارة مديري اللجان الفرعية بالكليات";
+}
+
+<div class="page-header-card">
+    <div>
+        <h2><i class="bi bi-person-badge text-warning"></i> إدارة مديري اللجان الفرعية بالكليات</h2>
+        <p>تعيين مديري اللجان لكل كلية لإدارة الفحص الشكلي وإسناد المحكمين والاعتماد وإصدار الشهادات</p>
+    </div>
+    <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCoAdminModal">
+        <i class="bi bi-person-plus-fill me-1"></i> تعيين مدير لجنة جديد
+    </button>
+</div>
+
+<div class="liquid-glass-card mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>الاسم الكامل</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>الكلية المسندة</th>
+                    <th>حالة التوقيع الرقمي</th>
+                    <th>تاريخ التسجيل</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var a in Model)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold text-dark">@a.User?.FullName</td>
+                            <td dir="ltr" class="text-end font-monospace small">@a.User?.Email</td>
+                            <td><span class="badge bg-primary-subtle text-primary fs-6">@a.College?.Name</span></td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(a.SignatureImagePath))
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>تم رفع التوقيع</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>بانتظار رفع التوقيع</span>
+                                }
+                            </td>
+                            <td class="text-muted small">@DateTime.UtcNow.ToString("yyyy/MM/dd")</td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add Co-Admin -->
+<div class="modal fade" id="addCoAdminModal" tabindex="-1" aria-labelledby="addCoAdminModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addCoAdminModalLabel"><i class="bi bi-person-plus me-2 text-primary"></i>تعيين مدير لجنة فرعية لكلية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createCoAdminForm" asp-action="CreateCoAdminNewUser" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
+                        <select name="collegeId" class="form-select" required>
+                            <option value="">-- اختر الكلية --</option>
+                            @if (ViewBag.Colleges != null)
+                            {
+                                foreach (var c in ViewBag.Colleges)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
+                        <input type="text" name="fullName" class="form-control" required placeholder="مثال: أ.د. أحمد محمد علي" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">البريد الإلكتروني المؤسسي <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" required placeholder="coadmin.med@university.edu.eg" dir="ltr" />
+                        <div class="form-text small">سيقوم النظام بإنشاء الحساب وإرسال كلمة مرور مؤقتة عبر البريد الإلكتروني.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom">إنشاء وتعيين مدير الكلية</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#createCoAdminForm').on('submit', function (e) {
+            e.preventDefault();
+            const form = this;
+            const data = $(form).serialize();
+
+            $('#partial-loading-spinner').css('display', 'flex');
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: data,
+                success: function (res) {
+                    $('#partial-loading-spinner').hide();
+                    alert(res.message);
+                    if (res.success) {
+                        window.location.reload();
+                    }
+                },
+                error: function (xhr) {
+                    $('#partial-loading-spinner').hide();
+                    alert(xhr.responseText || 'حدث خطأ.');
+                }
+            });
+        });
+    </script>
+}
+

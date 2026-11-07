@@ -4,9 +4,4 @@
     var initialEvaluations = ViewBag.InitialEvaluations as List<researchProject.Models.Entities.Evaluation> ?? new List<researchProject.Models.Entities.Evaluation>();
 }
 
-<div class="app-container">
-    <partial name="_RightSidebarPartial" />
-    <main id="main-content-container" class="main-content">
-        <partial name="_AssignedResearchesPartial" model="initialEvaluations" />
-    </main>
-</div>
+<partial name="_AssignedResearchesPartial" model="initialEvaluations" />

@@ -27,11 +27,65 @@ namespace researchProject.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            return RedirectToAction(nameof(MyResearches));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MyResearches()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            var researches = await _researcherRepo.GetMyResearchesAsync(userId);
+            return View(researches);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             var profile = await _researcherRepo.GetProfileByUserIdAsync(userId);
-            ViewBag.Profile = profile;
-            ViewBag.InitialResearches = await _researcherRepo.GetMyResearchesAsync(userId);
-            return View(profile);
+
+            if (profile != null)
+            {
+                ViewBag.Categories = await _researcherRepo.GetCategoriesForCollegeAsync(profile.CollegeId);
+                ViewBag.ResearcherCollege = profile.College;
+            }
+
+            return View(new ResearchCreateDto());
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Tracker(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            var research = await _researcherRepo.GetResearchDetailsAsync(id, userId);
+            if (research == null) return NotFound("المقترح البحثي غير موجود أو غير مصرح لك بمشاهدته.");
+
+            return View(research);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Modify(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            var research = await _researcherRepo.GetResearchDetailsAsync(id, userId);
+            if (research == null) return NotFound("المقترح البحثي غير موجود.");
+
+            if (research.WorkflowStatus != ResearchStatusConstants.ModificationsRequired)
+            {
+                return BadRequest("هذا البحث ليس بحاجة لتعديلات حالياً.");
+            }
+
+            var dto = new ResearchModificationDto { ResearchId = id };
+            ViewBag.Research = research;
+            return View(dto);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Certificates()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            var certs = await _researcherRepo.GetMyCertificatesAsync(userId);
+            return View(certs);
         }
 
         [HttpGet]

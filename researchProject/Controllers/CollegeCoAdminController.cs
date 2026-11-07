@@ -30,12 +30,49 @@ namespace researchProject.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            var profile = await _coAdminRepo.GetProfileByUserIdAsync(userId);
-            ViewBag.Profile = profile;
-            var collegeId = profile?.CollegeId ?? 0;
-            ViewBag.InitialQueue = await _coAdminRepo.GetScreeningQueueAsync(collegeId);
-            return View(profile);
+            return RedirectToAction(nameof(ScreeningQueue));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ScreeningQueue()
+        {
+            var collegeId = await GetCurrentCollegeIdAsync();
+            var queue = await _coAdminRepo.GetScreeningQueueAsync(collegeId);
+            return View(queue);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Review(int id)
+        {
+            var collegeId = await GetCurrentCollegeIdAsync();
+            var research = await _coAdminRepo.GetResearchDetailsAsync(id, collegeId);
+            if (research == null) return NotFound("المقترح البحثي غير موجود أو يتبع كلية أخرى.");
+
+            ViewBag.SuggestedJudges = await _coAdminRepo.SuggestJudgesAsync(id, collegeId);
+            ViewBag.AllJudges = await _coAdminRepo.GetAvailableJudgesForCollegeAsync(id);
+            return View(research);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FinalApproval()
+        {
+            var collegeId = await GetCurrentCollegeIdAsync();
+            var approvedList = await _coAdminRepo.GetApprovedResearchesForIssuanceAsync(collegeId);
+            return View(approvedList);
+        }
+
+        [HttpGet]
+        public IActionResult InviteJudge()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Reports()
+        {
+            var collegeId = await GetCurrentCollegeIdAsync();
+            var stats = await _coAdminRepo.GetCollegeStatisticsAsync(collegeId);
+            return View(stats);
         }
 
         [HttpGet]

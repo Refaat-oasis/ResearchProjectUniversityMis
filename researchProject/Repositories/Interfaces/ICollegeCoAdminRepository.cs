@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Models.ViewModels;
 
 namespace researchProject.Repositories.Interfaces
 {
@@ -24,6 +25,6 @@ namespace researchProject.Repositories.Interfaces
         Task<(bool Succeeded, string? ErrorMessage)> UploadSignatureImageAsync(string coAdminUserId, string relativePath);
         Task<(bool Succeeded, string? ErrorMessage)> UploadSignatureFileAsync(string coAdminUserId, IFormFile signatureFile);
 
-        Task<SystemStatisticsDto> GetCollegeStatisticsAsync(int collegeId);
+        Task<SystemStatisticsViewModel> GetCollegeStatisticsAsync(int collegeId);
     }
 }

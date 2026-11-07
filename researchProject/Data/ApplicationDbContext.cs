@@ -22,10 +22,15 @@ namespace researchProject.Data
         public DbSet<Evaluation> Evaluations => Set<Evaluation>();
         public DbSet<JudgeInvitation> JudgeInvitations => Set<JudgeInvitation>();
         public DbSet<ResearchStatusHistory> ResearchStatusHistories => Set<ResearchStatusHistory>();
+        public DbSet<Notification> Notifications => Set<Notification>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Index on Notifications for fast lookup by user and date
+            builder.Entity<Notification>()
+                .HasIndex(n => new { n.UserId, n.CreatedAt });
 
             // 1. Profile table 1:1 unique indexes on UserId
             builder.Entity<CollegeCoAdmin>()

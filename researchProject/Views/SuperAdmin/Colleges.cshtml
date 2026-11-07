@@ -1,0 +1,165 @@
+@model List<researchProject.Models.Entities.College>
+@{
+    ViewData["Title"] = "إدارة كليات الجامعة ولجانها الفرعية";
+}
+
+<div class="page-header-card">
+    <div>
+        <h2><i class="bi bi-buildings text-warning"></i> إدارة كليات الجامعة ولجانها الفرعية</h2>
+        <p>إدارة الكليات وتعيين مديري اللجان ورموز الاعتماد المؤسسية</p>
+    </div>
+    <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCollegeModal">
+        <i class="bi bi-plus-lg me-1"></i> إضافة كلية جديدة
+    </button>
+</div>
+
+<div class="liquid-glass-card mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>اسم الكلية</th>
+                    <th>رمز الكلية</th>
+                    <th>مدير اللجنة الفرعية</th>
+                    <th>عدد التصنيفات</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var c in Model)
+                    {
+                        var coAdmin = c.CollegeCoAdmins?.FirstOrDefault()?.User?.FullName ?? "لم يُعين بعد";
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold text-dark">@c.Name</td>
+                            <td><span class="badge bg-secondary-subtle text-secondary font-monospace">@c.Code</span></td>
+                            <td>
+                                @if (c.CollegeCoAdmins != null && c.CollegeCoAdmins.Any())
+                                {
+                                    <span class="text-primary"><i class="bi bi-person-badge me-1"></i>@coAdmin</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger small"><i class="bi bi-exclamation-circle me-1"></i>لا يوجد مدير لجنة</span>
+                                }
+                            </td>
+                            <td>@(c.ResearchCategories?.Count ?? 0) تصنيف</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="editCollege(@c.Id, '@c.Name', '@c.Code')">
+                                    <i class="bi bi-pencil"></i> تعديل
+                                </button>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">لا توجد كليات مسجلة حالياً.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add College -->
+<div class="modal fade" id="addCollegeModal" tabindex="-1" aria-labelledby="addCollegeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addCollegeModalLabel"><i class="bi bi-building-add me-2 text-primary"></i>إضافة كلية جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createCollegeForm" asp-action="CreateCollege" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">اسم الكلية <span class="text-danger">*</span></label>
+                        <input type="text" name="Name" class="form-control" required placeholder="مثال: كلية الطب البشري" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">رمز الكلية (الكود المختصر) <span class="text-danger">*</span></label>
+                        <input type="text" name="Code" class="form-control font-monospace" required placeholder="MED, PHARM, DENT, ENG..." dir="ltr" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom">حفظ الكلية</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit College -->
+<div class="modal fade" id="editCollegeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2 text-primary"></i>تعديل بيانات الكلية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editCollegeForm" asp-action="UpdateCollege" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" id="editCollegeId" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">اسم الكلية <span class="text-danger">*</span></label>
+                        <input type="text" name="Name" id="editCollegeName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">رمز الكلية <span class="text-danger">*</span></label>
+                        <input type="text" name="Code" id="editCollegeCode" class="form-control font-monospace" required dir="ltr" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editCollege(id, name, code) {
+            $('#editCollegeId').val(id);
+            $('#editCollegeName').val(name);
+            $('#editCollegeCode').val(code);
+            new bootstrap.Modal(document.getElementById('editCollegeModal')).show();
+        }
+
+        $('#createCollegeForm, #editCollegeForm').on('submit', function (e) {
+            e.preventDefault();
+            const form = this;
+            const data = $(form).serialize();
+
+            $('#partial-loading-spinner').css('display', 'flex');
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: data,
+                success: function (res) {
+                    $('#partial-loading-spinner').hide();
+                    alert(res.message);
+                    if (res.success) {
+                        window.location.reload();
+                    }
+                },
+                error: function (xhr) {
+                    $('#partial-loading-spinner').hide();
+                    alert(xhr.responseText || 'حدث خطأ.');
+                }
+            });
+        });
+    </script>
+}
+

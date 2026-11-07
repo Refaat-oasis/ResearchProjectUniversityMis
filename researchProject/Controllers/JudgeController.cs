@@ -21,11 +21,28 @@ namespace researchProject.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            return RedirectToAction(nameof(AssignedResearches));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AssignedResearches()
+        {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            var profile = await _judgeRepo.GetProfileByUserIdAsync(userId);
-            ViewBag.Profile = profile;
-            ViewBag.InitialEvaluations = await _judgeRepo.GetAssignedEvaluationsAsync(userId);
-            return View(profile);
+            var evaluations = await _judgeRepo.GetAssignedEvaluationsAsync(userId);
+            return View(evaluations);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Evaluate(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            var evaluation = await _judgeRepo.GetEvaluationDetailsAsync(id, userId);
+            if (evaluation == null)
+            {
+                return NotFound("طلب التحكيم غير موجود أو غير مسند إليك، أو يوجد تعارض مصالح يمنعك من تحكيمه.");
+            }
+
+            return View(evaluation);
         }
 
         [HttpGet]

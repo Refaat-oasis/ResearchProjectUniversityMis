@@ -27,9 +27,69 @@ namespace researchProject.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            ViewBag.ActiveSection = "Overview";
             var stats = await _superAdminRepo.GetSystemStatisticsAsync();
             return View(stats);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Colleges()
+        {
+            var colleges = await _superAdminRepo.GetAllCollegesAsync();
+            return View(colleges);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Categories()
+        {
+            ViewBag.Colleges = await _superAdminRepo.GetAllCollegesAsync();
+            var categories = await _superAdminRepo.GetAllCategoriesAsync();
+            return View(categories);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CoAdmins()
+        {
+            ViewBag.Colleges = await _superAdminRepo.GetAllCollegesAsync();
+            var coAdmins = await _superAdminRepo.GetAllCoAdminsAsync();
+            return View(coAdmins);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Judges()
+        {
+            ViewBag.Invitations = await _superAdminRepo.GetAllJudgeInvitationsAsync();
+            var judges = await _superAdminRepo.GetAllJudgesAsync();
+            return View(judges);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Researches()
+        {
+            var researches = await _superAdminRepo.GetAllResearchesAsync();
+            return View(researches);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ResearchDetails(int id)
+        {
+            var research = await _superAdminRepo.GetResearchDetailsAsync(id);
+            if (research == null) return NotFound("المقترح البحثي غير موجود.");
+            return View(research);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Reports()
+        {
+            var stats = await _superAdminRepo.GetSystemStatisticsAsync();
+            return View(stats);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Certificates(string? serialNumber, string? researcherName, int? collegeId, DateTime? fromDate, DateTime? toDate)
+        {
+            ViewBag.Colleges = await _superAdminRepo.GetAllCollegesAsync();
+            var archives = await _superAdminRepo.SearchCertificatesArchiveAsync(serialNumber, researcherName, collegeId, fromDate, toDate);
+            return View(archives);
         }
 
         [HttpGet]

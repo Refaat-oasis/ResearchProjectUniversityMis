@@ -14,8 +14,10 @@ using researchProject.Data;
 using researchProject.Models.Constants;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Models.ViewModels;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
+using researchProject.Services.Interfaces;
 
 namespace researchProject.Repositories.Implementations
 {
@@ -27,6 +29,7 @@ namespace researchProject.Repositories.Implementations
         private readonly IConfiguration _configuration;
         private readonly ILogger<CollegeCoAdminRepository> _logger;
         private readonly IWebHostEnvironment? _env;
+        private readonly INotificationService? _notificationService;
 
         public CollegeCoAdminRepository(
             ApplicationDbContext db,
@@ -34,7 +37,8 @@ namespace researchProject.Repositories.Implementations
             IEmailSender emailSender,
             IConfiguration configuration,
             ILogger<CollegeCoAdminRepository> logger,
-            IWebHostEnvironment? env = null)
+            IWebHostEnvironment? env = null,
+            INotificationService? notificationService = null)
         {
             _db = db;
             _certificateService = certificateService;
@@ -42,6 +46,7 @@ namespace researchProject.Repositories.Implementations
             _configuration = configuration;
             _logger = logger;
             _env = env;
+            _notificationService = notificationService;
         }
 
         public async Task<CollegeCoAdmin?> GetProfileByUserIdAsync(string userId)
@@ -218,6 +223,49 @@ namespace researchProject.Repositories.Implementations
                     }
                 }
 
+                // In-app SignalR notifications
+                if (_notificationService != null)
+                {
+                    // 1. Notify each assigned Judge with direct link to evaluation form
+                    var newEvaluations = await _db.Evaluations
+                        .Where(e => e.ResearchId == researchId && e.RoundNumber == targetRound)
+                        .ToListAsync();
+
+                    foreach (var judge in judges)
+                    {
+                        var eval = newEvaluations.FirstOrDefault(e => e.JudgeId == judge.Id);
+                        var evalUrl = eval != null ? $"/Judge/Evaluate/{eval.Id}" : "/Judge/AssignedResearches";
+
+                        await _notificationService.SendNotificationAsync(
+                            judge.UserId,
+                            "تكليف بتحكيم مقترح بحثي جديد",
+                            $"تم تكليفكم رسمياً بتحكيم المقترح البحثي: '{research.Title}' (الجولة التحكيمية {targetRound}).",
+                            evalUrl,
+                            "JudgeAssignment",
+                            "bi-patch-check");
+                    }
+
+                    // 2. Notify Researcher that proposal is assigned to judges
+                    var authors = await _db.ResearcherResearchesBridge
+                        .Where(b => b.ResearchId == researchId)
+                        .Include(b => b.Researcher)
+                        .ToListAsync();
+
+                    foreach (var author in authors)
+                    {
+                        if (!string.IsNullOrEmpty(author.Researcher?.UserId))
+                        {
+                            await _notificationService.SendNotificationAsync(
+                                author.Researcher.UserId,
+                                "إحالة المقترح للتحكيم الأخلاقي",
+                                $"اجتاز مقترحكم '{research.Title}' الفرز الإداري وتمت إحالته لهيئة التحكيم الأكاديمية.",
+                                $"/Researcher/Tracker/{researchId}",
+                                "StatusChange",
+                                "bi-journal-check");
+                        }
+                    }
+                }
+
                 return (true, null);
             }
             catch (Exception ex)
@@ -354,6 +402,17 @@ namespace researchProject.Repositories.Implementations
                             _logger.LogWarning(ex, "فشل إرسال إشعار الشهادة للباحث: {Email}", researcherEmail);
                         }
                     }
+
+                    if (_notificationService != null && !string.IsNullOrEmpty(bridge.Researcher?.UserId))
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            bridge.Researcher.UserId,
+                            "اعتماد المقترح وإصدار الشهادة الأخلاقية",
+                            $"مبارك! تم اعتماد المقترح '{research.Title}' رسمياً وإصدار الشهادة الأخلاقية الرقمية برقم: {serialNumber}",
+                            "/Researcher/Certificates",
+                            "CertificateIssued",
+                            "bi-award");
+                    }
                 }
 
                 return (true, null, serialNumber);
@@ -404,7 +463,7 @@ namespace researchProject.Repositories.Implementations
             return await UploadSignatureImageAsync(coAdminUserId, relativePath);
         }
 
-        public async Task<SystemStatisticsDto> GetCollegeStatisticsAsync(int collegeId)
+        public async Task<SystemStatisticsViewModel> GetCollegeStatisticsAsync(int collegeId)
         {
             var researches = await _db.Researches
                 .Include(r => r.Category)
@@ -480,7 +539,7 @@ namespace researchProject.Repositories.Implementations
             }
             var avgJudgingDays = closedRoundsCount > 0 ? totalJudgingDays / closedRoundsCount : 0.0;
 
-            return new SystemStatisticsDto
+            return new SystemStatisticsViewModel
             {
                 TotalResearches = total,
                 UnderScreeningCount = underScreening,

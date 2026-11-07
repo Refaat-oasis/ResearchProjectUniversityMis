@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using researchProject.Data;
+using researchProject.Hubs;
 using researchProject.Models.Constants;
 using researchProject.Models.Entities;
 using researchProject.Repositories.Implementations;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
+using researchProject.Services.Implementations;
+using researchProject.Services.Interfaces;
 
 namespace researchProject
 {
@@ -17,7 +20,7 @@ namespace researchProject
 
             // 1. Database Context
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-                ?? "Server=(localdb)\\mssqllocaldb;Database=ResearchEthicsPlatformDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+                ?? "Server=DESKTOP-I633H4F;Database=ResearchEthicsPlatformDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
@@ -63,6 +66,8 @@ namespace researchProject
             builder.Services.AddScoped<IEmailSender, EmailSender>();
             builder.Services.AddScoped<IFileStorageService, FileStorageService>();
             builder.Services.AddScoped<ICertificateService, CertificateService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddSignalR();
 
             // 4. Dedicated Repositories Per Actor
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
@@ -112,6 +117,8 @@ namespace researchProject
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            app.MapHub<NotificationHub>("/hubs/notifications");
 
             await app.RunAsync();
         }

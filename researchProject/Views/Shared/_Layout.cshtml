@@ -42,6 +42,29 @@
                 @if (SignInManager.IsSignedIn(User))
                 {
                     var currentUser = await UserManager.GetUserAsync(User);
+
+                    <!-- Liquid Glass Notification Center Dropdown -->
+                    <div class="dropdown me-2" id="notifDropdown">
+                        <button class="notif-bell-btn" type="button" id="notifBellBtn" data-bs-toggle="dropdown" aria-expanded="false" title="مركز الإشعارات">
+                            <i class="bi bi-bell"></i>
+                            <span class="notif-badge-pill" id="notifBadge" style="display:none;">0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-start liquid-glass-dropdown shadow-lg border-0" aria-labelledby="notifBellBtn">
+                            <div class="notif-header">
+                                <h6><i class="bi bi-bell-fill text-primary"></i> مركز التنبيهات والإشعارات</h6>
+                                <button type="button" class="notif-mark-all-btn" id="notifMarkAllBtn">
+                                    <i class="bi bi-check-all"></i> تحديد الكل كمقروء
+                                </button>
+                            </div>
+                            <div class="notif-list-container" id="notifList">
+                                <div class="notif-empty-state">
+                                    <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                                    <div>جاري تحميل الإشعارات...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle fs-5 text-primary"></i>
@@ -89,7 +112,21 @@
     }
 
     <!-- Main App Body -->
-    @RenderBody()
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <div class="app-container">
+            <partial name="_RightSidebarPartial" />
+            <main class="main-content">
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        <main class="public-container">
+            @RenderBody()
+        </main>
+    }
 
     <!-- Loading Spinner Overlay -->
     <div id="partial-loading-spinner">
@@ -103,6 +140,8 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script src="~/js/notifications.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>

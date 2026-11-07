@@ -1,4 +1,18 @@
 @using researchProject.Models.Constants
+@{
+    var currentCtrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAct = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    bool IsActive(string ctrl, params string[] actions)
+    {
+        if (!string.Equals(currentCtrl, ctrl, StringComparison.OrdinalIgnoreCase)) return false;
+        if (actions.Length == 0) return true;
+        foreach (var a in actions)
+        {
+            if (string.Equals(currentAct, a, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+        return false;
+    }
+}
 
 <aside class="right-sidebar">
     <!-- User Portal Badge -->
@@ -33,42 +47,42 @@
             </div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="#overview" data-hash="overview" data-url="/SuperAdmin/OverviewDashboardPartial" class="active">
+                    <a asp-controller="SuperAdmin" asp-action="Index" class="@(IsActive("SuperAdmin", "Index", "Dashboard") ? "active" : "")">
                         <i class="bi bi-speedometer2"></i> لوحة المؤشرات المركزية
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#colleges" data-hash="colleges" data-url="/SuperAdmin/ManageCollegesPartial">
+                    <a asp-controller="SuperAdmin" asp-action="Colleges" class="@(IsActive("SuperAdmin", "Colleges") ? "active" : "")">
                         <i class="bi bi-buildings"></i> إدارة كليات الجامعة
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#categories" data-hash="categories" data-url="/SuperAdmin/ManageCategoriesPartial">
+                    <a asp-controller="SuperAdmin" asp-action="Categories" class="@(IsActive("SuperAdmin", "Categories") ? "active" : "")">
                         <i class="bi bi-sliders"></i> تصنيفات الأبحاث ونماذجها
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#coadmins" data-hash="coadmins" data-url="/SuperAdmin/ManageCoAdminsPartial">
+                    <a asp-controller="SuperAdmin" asp-action="CoAdmins" class="@(IsActive("SuperAdmin", "CoAdmins") ? "active" : "")">
                         <i class="bi bi-person-badge"></i> مديرو اللجان الفرعية
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#judges" data-hash="judges" data-url="/SuperAdmin/ManageJudgesPartial">
+                    <a asp-controller="SuperAdmin" asp-action="Judges" class="@(IsActive("SuperAdmin", "Judges") ? "active" : "")">
                         <i class="bi bi-mortarboard"></i> هيئة المحكمين والدعوات
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#all-researches" data-hash="all-researches" data-url="/SuperAdmin/AllUniversityResearchesPartial">
+                    <a asp-controller="SuperAdmin" asp-action="Researches" class="@(IsActive("SuperAdmin", "Researches", "ResearchDetails") ? "active" : "")">
                         <i class="bi bi-journal-text"></i> كافة مقترحات الجامعة
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#reports" data-hash="reports" data-url="/SuperAdmin/ReportsPartial">
+                    <a asp-controller="SuperAdmin" asp-action="Reports" class="@(IsActive("SuperAdmin", "Reports") ? "active" : "")">
                         <i class="bi bi-graph-up-arrow"></i> تقارير الجودة والاعتماد
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#archive" data-hash="archive" data-url="/SuperAdmin/CertificatesArchivePartial">
+                    <a asp-controller="SuperAdmin" asp-action="Certificates" class="@(IsActive("SuperAdmin", "Certificates") ? "active" : "")">
                         <i class="bi bi-archive"></i> أرشيف الشهادات الأخلاقية
                     </a>
                 </li>
@@ -85,22 +99,22 @@
             </div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="#screening-queue" data-hash="screening-queue" data-url="/CollegeCoAdmin/ScreeningQueuePartial">
-                        <i class="bi bi-hourglass-split text-warning"></i> طابور الفحص الشكلي (24-48h)
+                    <a asp-controller="CollegeCoAdmin" asp-action="ScreeningQueue" class="@(IsActive("CollegeCoAdmin", "ScreeningQueue", "Index", "Review") ? "active" : "")">
+                        <i class="bi bi-hourglass-split text-warning"></i> طابور الفحص الشكلي
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#invite-judge" data-hash="invite-judge" data-url="/CollegeCoAdmin/InviteJudgePartial">
-                        <i class="bi bi-envelope-plus text-info"></i> دعوة محكم علمي
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#final-approval" data-hash="final-approval" data-url="/CollegeCoAdmin/FinalApprovalPartial">
+                    <a asp-controller="CollegeCoAdmin" asp-action="FinalApproval" class="@(IsActive("CollegeCoAdmin", "FinalApproval") ? "active" : "")">
                         <i class="bi bi-award text-success"></i> اعتماد وإصدار الشهادات
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#college-reports" data-hash="college-reports" data-url="/CollegeCoAdmin/CollegeReportsPartial">
+                    <a asp-controller="CollegeCoAdmin" asp-action="InviteJudge" class="@(IsActive("CollegeCoAdmin", "InviteJudge") ? "active" : "")">
+                        <i class="bi bi-envelope-plus text-info"></i> دعوة محكم علمي
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="CollegeCoAdmin" asp-action="Reports" class="@(IsActive("CollegeCoAdmin", "Reports") ? "active" : "")">
                         <i class="bi bi-pie-chart"></i> إحصائيات وتقارير الكلية
                     </a>
                 </li>
@@ -117,7 +131,7 @@
             </div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="#assigned-researches" data-hash="assigned-researches" data-url="/Judge/AssignedResearchesPartial">
+                    <a asp-controller="Judge" asp-action="AssignedResearches" class="@(IsActive("Judge", "AssignedResearches", "Index", "Evaluate") ? "active" : "")">
                         <i class="bi bi-file-earmark-medical"></i> الأبحاث المسندة للتحكيم
                     </a>
                 </li>
@@ -134,17 +148,17 @@
             </div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="#create-research" data-hash="create-research" data-url="/Researcher/CreateResearchPartial">
+                    <a asp-controller="Researcher" asp-action="Create" class="@(IsActive("Researcher", "Create") ? "active" : "")">
                         <i class="bi bi-file-earmark-plus text-success"></i> تقديم مقترح بحثي جديد
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#my-researches" data-hash="my-researches" data-url="/Researcher/MyResearchesPartial">
+                    <a asp-controller="Researcher" asp-action="MyResearches" class="@(IsActive("Researcher", "MyResearches", "Index", "Tracker", "Modify") ? "active" : "")">
                         <i class="bi bi-folder2-open text-primary"></i> مقترحاتي ومتابعة الحالات
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#my-certificates" data-hash="my-certificates" data-url="/Researcher/MyCertificatesPartial">
+                    <a asp-controller="Researcher" asp-action="Certificates" class="@(IsActive("Researcher", "Certificates") ? "active" : "")">
                         <i class="bi bi-patch-check-fill text-success"></i> شهاداتي الأخلاقية المعتمدة
                     </a>
                 </li>

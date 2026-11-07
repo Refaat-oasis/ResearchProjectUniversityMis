@@ -10,6 +10,7 @@ using researchProject.Data;
 using researchProject.Models.Constants;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Models.ViewModels;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
 
@@ -354,7 +355,7 @@ namespace researchProject.Repositories.Implementations
             return await query.OrderByDescending(r => r.CertificateIssuedAt).ToListAsync();
         }
 
-        public async Task<SystemStatisticsDto> GetSystemStatisticsAsync()
+        public async Task<SystemStatisticsViewModel> GetSystemStatisticsAsync()
         {
             var researches = await _db.Researches
                 .Include(r => r.College)
@@ -432,7 +433,7 @@ namespace researchProject.Repositories.Implementations
             }
             var avgJudgingDays = closedRoundsCount > 0 ? totalJudgingDays / closedRoundsCount : 0.0;
 
-            return new SystemStatisticsDto
+            return new SystemStatisticsViewModel
             {
                 TotalResearches = total,
                 UnderScreeningCount = underScreening,

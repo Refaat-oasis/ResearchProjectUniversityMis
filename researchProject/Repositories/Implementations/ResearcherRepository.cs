@@ -11,6 +11,7 @@ using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
+using researchProject.Services.Interfaces;
 
 namespace researchProject.Repositories.Implementations
 {
@@ -21,19 +22,22 @@ namespace researchProject.Repositories.Implementations
         private readonly IEmailSender _emailSender;
         private readonly IConfiguration _configuration;
         private readonly ICertificateService? _certificateService;
+        private readonly INotificationService? _notificationService;
 
         public ResearcherRepository(
             ApplicationDbContext db,
             IFileStorageService fileStorage,
             IEmailSender emailSender,
             IConfiguration configuration,
-            ICertificateService? certificateService = null)
+            ICertificateService? certificateService = null,
+            INotificationService? notificationService = null)
         {
             _db = db;
             _fileStorage = fileStorage;
             _emailSender = emailSender;
             _configuration = configuration;
             _certificateService = certificateService;
+            _notificationService = notificationService;
         }
 
         public async Task<Researcher?> GetProfileByUserIdAsync(string userId)
@@ -238,6 +242,36 @@ namespace researchProject.Repositories.Implementations
                         $"تم استلام المقترح البحثي بنجاح، وهو قيد المراجعة الشكلية من إدارة اللجنة (الموعد المستهدف: خلال {slaHours} ساعة).");
                 }
 
+                // Trigger in-app SignalR notifications
+                if (_notificationService != null)
+                {
+                    // 1. Notify Researcher confirmation
+                    await _notificationService.SendNotificationAsync(
+                        researcherUserId,
+                        "تم تقديم المقترح بنجاح",
+                        $"تم استلام مقترحكم '{research.Title}' وبدأت مرحلة الفرز الإداري بالكلية.",
+                        $"/Researcher/Tracker/{research.Id}",
+                        "NewSubmission",
+                        "bi-check2-circle");
+
+                    // 2. Notify College Co-Admins of the college
+                    var coAdmins = await _db.CollegeCoAdmins
+                        .Where(a => a.CollegeId == dto.CollegeId)
+                        .Select(a => a.UserId)
+                        .ToListAsync();
+
+                    foreach (var coAdminUserId in coAdmins)
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            coAdminUserId,
+                            "مقترح بحثي جديد يتطلب الفرز",
+                            $"تم تقديم مقترح بحثي جديد: '{research.Title}' ينتظر مراجعة الفرز الإداري وتعيين المحكمين.",
+                            $"/CollegeCoAdmin/Review/{research.Id}",
+                            "NewSubmission",
+                            "bi-file-earmark-plus");
+                    }
+                }
+
                 return (true, null, research.Id);
             }
             catch (Exception ex)
@@ -369,6 +403,41 @@ namespace researchProject.Repositories.Implementations
                             oldStatus,
                             ResearchStatusConstants.AssignedToJudges,
                             $"قام الباحث برفع النسخة المعدلة من المقترح البحثي، وبدأت الجولة التحكيمية رقم {nextRound}.");
+                    }
+
+                    if (_notificationService != null && !string.IsNullOrEmpty(judge.UserId))
+                    {
+                        var judgeEval = await _db.Evaluations
+                            .FirstOrDefaultAsync(e => e.ResearchId == research.Id && e.JudgeId == judge.Id && e.RoundNumber == nextRound);
+
+                        var evalTargetUrl = judgeEval != null ? $"/Judge/Evaluate/{judgeEval.Id}" : "/Judge/AssignedResearches";
+
+                        await _notificationService.SendNotificationAsync(
+                            judge.UserId,
+                            "تم رفع التعديلات وبدء جولة تحكيمية",
+                            $"قام الباحث برفع النسخة المعدلة للمقترح: '{research.Title}'. يرجى استكمال التحكيم للجولة {nextRound}.",
+                            evalTargetUrl,
+                            "JudgeAssignment",
+                            "bi-arrow-repeat");
+                    }
+                }
+
+                if (_notificationService != null)
+                {
+                    var coAdmins = await _db.CollegeCoAdmins
+                        .Where(a => a.CollegeId == research.CollegeId)
+                        .Select(a => a.UserId)
+                        .ToListAsync();
+
+                    foreach (var coAdminUserId in coAdmins)
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            coAdminUserId,
+                            "استيفاء التعديلات من الباحث",
+                            $"قام الباحث برفع التعديلات للمقترح: '{research.Title}'. بدأت الجولة التحكيمية رقم {nextRound}.",
+                            $"/CollegeCoAdmin/Review/{research.Id}",
+                            "ModificationUploaded",
+                            "bi-arrow-repeat");
                     }
                 }
 

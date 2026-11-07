@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
-using researchProject.Models.DTOs;
+using researchProject.Models.ViewModels;
 
 namespace researchProject.Repositories.Interfaces
 {
     public interface IPublicRepository
     {
-        Task<CertificateVerificationResultDto> VerifyCertificateAsync(string serialNumber);
+        Task<CertificateVerificationResultViewModel> VerifyCertificateAsync(string serialNumber);
     }
 }

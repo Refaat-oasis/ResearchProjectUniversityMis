@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using researchProject.Data;
 using researchProject.Models.Constants;
-using researchProject.Models.DTOs;
+using researchProject.Models.ViewModels;
 using researchProject.Repositories.Interfaces;
 
 namespace researchProject.Repositories.Implementations
@@ -16,11 +16,11 @@ namespace researchProject.Repositories.Implementations
             _db = db;
         }
 
-        public async Task<CertificateVerificationResultDto> VerifyCertificateAsync(string serialNumber)
+        public async Task<CertificateVerificationResultViewModel> VerifyCertificateAsync(string serialNumber)
         {
             if (string.IsNullOrWhiteSpace(serialNumber))
             {
-                return new CertificateVerificationResultDto
+                return new CertificateVerificationResultViewModel
                 {
                     IsValid = false,
                     Message = "رقم الشهادة غير محدد أو غير صالح."
@@ -34,7 +34,7 @@ namespace researchProject.Repositories.Implementations
 
             if (research == null)
             {
-                return new CertificateVerificationResultDto
+                return new CertificateVerificationResultViewModel
                 {
                     IsValid = false,
                     SerialNumber = serialNumber,
@@ -42,7 +42,7 @@ namespace researchProject.Repositories.Implementations
                 };
             }
 
-            return new CertificateVerificationResultDto
+            return new CertificateVerificationResultViewModel
             {
                 IsValid = true,
                 SerialNumber = research.CertificateSerialNumber,

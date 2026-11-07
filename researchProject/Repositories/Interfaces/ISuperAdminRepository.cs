@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Models.ViewModels;
 
 namespace researchProject.Repositories.Interfaces
 {
@@ -32,6 +33,6 @@ namespace researchProject.Repositories.Interfaces
         Task<Research?> GetResearchDetailsAsync(int researchId);
 
         Task<List<Research>> SearchCertificatesArchiveAsync(string? serialNumber, string? researcherName, int? collegeId, DateTime? fromDate, DateTime? toDate);
-        Task<SystemStatisticsDto> GetSystemStatisticsAsync();
+        Task<SystemStatisticsViewModel> GetSystemStatisticsAsync();
     }
 }
