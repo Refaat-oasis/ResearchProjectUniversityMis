@@ -42,3 +42,4 @@ namespace researchProject.Models.DTOs
         public IFormFile? AdditionalDocumentFile { get; set; }
     }
 }
+

@@ -18,3 +18,4 @@ namespace researchProject.Models.DTOs
         public bool RememberMe { get; set; }
     }
 }
+

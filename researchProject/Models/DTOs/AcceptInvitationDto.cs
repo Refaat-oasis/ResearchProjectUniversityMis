@@ -28,3 +28,4 @@ namespace researchProject.Models.DTOs
         public string AcademicTitle { get; set; } = string.Empty;
     }
 }
+

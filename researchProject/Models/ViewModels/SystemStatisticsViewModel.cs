@@ -20,3 +20,4 @@ namespace researchProject.Models.ViewModels
         public Dictionary<string, int> ResearchesByCategory { get; set; } = new Dictionary<string, int>();
     }
 }
+

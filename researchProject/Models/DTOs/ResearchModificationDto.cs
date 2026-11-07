@@ -19,3 +19,4 @@ namespace researchProject.Models.DTOs
         public IFormFile? ModifiedToolsFile { get; set; }
     }
 }
+

@@ -12,3 +12,4 @@ namespace researchProject.Models.ViewModels
         public string? Message { get; set; }
     }
 }
+

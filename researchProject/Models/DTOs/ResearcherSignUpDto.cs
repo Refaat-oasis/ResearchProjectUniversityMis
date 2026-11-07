@@ -53,3 +53,4 @@ namespace researchProject.Models.DTOs
         public string PhoneNumber { get; set; } = string.Empty;
     }
 }
+
