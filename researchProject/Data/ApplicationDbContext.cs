@@ -24,10 +24,15 @@ namespace researchProject.Data
         public DbSet<JudgeInvitation> JudgeInvitations => Set<JudgeInvitation>();
         public DbSet<ResearchStatusHistory> ResearchStatusHistories => Set<ResearchStatusHistory>();
         public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<EmailVerificationCode> EmailVerificationCodes => Set<EmailVerificationCode>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Index on Verification Codes for fast lookup by email, purpose and status
+            builder.Entity<EmailVerificationCode>()
+                .HasIndex(c => new { c.Email, c.Purpose, c.IsUsed, c.ExpiresAt });
 
             // Index on Notifications for fast lookup by user and date
             builder.Entity<Notification>()

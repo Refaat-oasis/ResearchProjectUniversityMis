@@ -48,7 +48,7 @@
                             <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                         </div>
 
-                        <!-- College Selection via Datalist -->
+                        <!-- College Selection via Unified Datalist -->
                         <div class="col-md-6">
                             <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
                             <input type="hidden" asp-for="CollegeId" id="CollegeId" />
@@ -64,7 +64,17 @@
                                     }
                                 }
                             }
-                            <input type="text" id="collegeDisplayInput" list="collegesList" class="form-control" placeholder="ابحث أو اختر الكلية..." autocomplete="off" value="@initialCollegeName" required />
+                            <div class="custom-datalist-wrapper">
+                                <i class="bi bi-search datalist-search-icon"></i>
+                                <input type="text" id="collegeDisplayInput" list="collegesList" 
+                                       class="form-control custom-datalist-input" 
+                                       placeholder="ابحث أو اختر الكلية..." 
+                                       data-hidden-target="#CollegeId"
+                                       autocomplete="off" value="@initialCollegeName" required />
+                                <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
                             <datalist id="collegesList">
                                 @if (ViewBag.Colleges != null)
                                 {
@@ -77,10 +87,18 @@
                             <span asp-validation-for="CollegeId" class="text-danger small"></span>
                         </div>
 
-                        <!-- Researcher Type via Datalist -->
+                        <!-- Researcher Type via Unified Datalist -->
                         <div class="col-md-6">
                             <label asp-for="ResearcherType" class="form-label"></label>
-                            <input asp-for="ResearcherType" list="researcherTypesList" class="form-control" placeholder="ابحث أو اختر فئة الباحث..." autocomplete="off" required />
+                            <div class="custom-datalist-wrapper">
+                                <i class="bi bi-chevron-expand datalist-search-icon"></i>
+                                <input asp-for="ResearcherType" list="researcherTypesList" 
+                                       class="form-control custom-datalist-input" 
+                                       placeholder="ابحث أو اختر فئة الباحث..." autocomplete="off" required />
+                                <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
                             <datalist id="researcherTypesList">
                                 <option value="عضو هيئة تدريس"></option>
                                 <option value="باحث"></option>
@@ -89,10 +107,18 @@
                             <span asp-validation-for="ResearcherType" class="text-danger small"></span>
                         </div>
 
-                        <!-- Academic Degree via Datalist (Requirement 2 & 6) -->
+                        <!-- Academic Degree via Unified Datalist -->
                         <div class="col-md-6">
                             <label asp-for="AcademicDegree" class="form-label"></label>
-                            <input asp-for="AcademicDegree" list="degreesList" class="form-control" placeholder="ابحث أو اختر الدرجة العلمية..." autocomplete="off" required />
+                            <div class="custom-datalist-wrapper">
+                                <i class="bi bi-chevron-expand datalist-search-icon"></i>
+                                <input asp-for="AcademicDegree" list="degreesList" 
+                                       class="form-control custom-datalist-input" 
+                                       placeholder="ابحث أو اختر الدرجة العلمية..." autocomplete="off" required />
+                                <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
                             <datalist id="degreesList">
                                 <option value="بكالوريوس / ليسانس"></option>
                                 <option value="دبلوم دراسات عليا"></option>
@@ -106,15 +132,25 @@
                             <span asp-validation-for="AcademicDegree" class="text-danger small"></span>
                         </div>
 
-                        <!-- Academic Department via Datalist (Requirement 3 & 6) -->
+                        <!-- Academic Department via Unified Datalist -->
                         <div class="col-md-6">
                             <label asp-for="Department" class="form-label"></label>
-                            <input asp-for="Department" list="departmentsList" class="form-control" placeholder="اختر أو اكتب القسم الأكاديمي..." autocomplete="off" required />
+                            <div class="custom-datalist-wrapper">
+                                <i class="bi bi-search datalist-search-icon"></i>
+                                <input asp-for="Department" list="departmentsList" 
+                                       class="form-control custom-datalist-input" 
+                                       placeholder="اختر أو اكتب القسم الأكاديمي..." autocomplete="off" required />
+                                <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
                             <datalist id="departmentsList">
                                 <!-- Populated dynamically when college is selected or user can type -->
                             </datalist>
                             <span asp-validation-for="Department" class="text-danger small"></span>
-                            <div class="form-text small text-muted">تُعرض أقسام الكلية المختارة تلقائياً ويمكنك الكتابة مباشرة.</div>
+                            <div class="custom-datalist-hint">
+                                <i class="bi bi-info-circle me-1"></i> تُعرض أقسام الكلية المحددة تلقائياً ويمكنك البحث أو الكتابة مباشرة.
+                            </div>
                         </div>
 
                         <div class="col-md-6">

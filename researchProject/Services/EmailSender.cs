@@ -77,69 +77,97 @@ namespace researchProject.Services
         public Task SendRegistrationTokenAsync(string email, string token, string confirmationLink)
         {
             var body = $@"
-                <div style='text-align: right;'>
-                    <span style='display:inline-block; background-color:#e0f2fe; color:#0369a1; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; margin-bottom:12px;'>
+                <div style='text-align: right; font-family: Cairo, Tahoma, Arial, sans-serif;'>
+                    <div style='display:inline-block; background-color:#eff6ff; color:#1d4ed8; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:12px; border:1px solid #bfdbfe;'>
                         🔐 تأكيد تسجيل الحساب الأكاديمي
-                    </span>
-                    <h3 style='margin: 0 0 10px 0; color:#0f172a; font-size:20px;'>مرحباً بك في منصة أخلاقيات البحث العلمي</h3>
-                    <p style='color:#475569; font-size:14px; line-height:1.6; margin-bottom:20px;'>
-                        شكراً لانضمامكم إلى المنصة الجامعية للنزاهة الأكاديمية وأخلاقيات البحث العلمي. لإتمام تفعيل حسابك، يرجى استخدام رمز الأمان أدناه أو النقر على زر التفعيل المباشر.
+                    </div>
+                    <h3 style='margin: 0 0 10px 0; color:#0f172a; font-size:22px; font-weight:700;'>مرحباً بك في منصة أخلاقيات البحث العلمي</h3>
+                    <p style='color:#475569; font-size:14px; line-height:1.7; margin-bottom:20px;'>
+                        شكراً لانضمامكم إلى المنصة الجامعية للنزاهة الأكاديمية وأخلاقيات البحث العلمي. لإتمام تفعيل حسابك، يرجى استخدام رمز الأمان المكوّن من 6 أرقام أدناه أو النقر على زر التفعيل المباشر.
                     </p>
 
-                    <div style='background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 2px dashed #6366f1; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;'>
-                        <div style='color: #64748b; font-size: 13px; font-weight: bold; margin-bottom: 8px;'>رمز التحقق الخاص بكم (انقر للتحديد والنسخ):</div>
-                        <div style='font-family: Consolas, Monaco, monospace; font-size: 24px; font-weight: 800; letter-spacing: 3px; color: #312e81; user-select: all; -webkit-user-select: all; background:#ffffff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; word-break: break-all;'>
-                            {token}
-                        </div>
-                        <div style='color: #94a3b8; font-size: 11px; margin-top: 6px;'>* يمكنك تحديد الرمز ونسخه ولصقه في شاشة التحقق</div>
+                    <!-- Alert for 15-minute expiration -->
+                    <div style='background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center;'>
+                        <span style='color: #b45309; font-size: 13px; font-weight: 600;'>
+                            ⏰ تنبيه: رمز التحقق صالح للاستخدام لمدة <strong>15 دقيقة فقط</strong> من وقت إرسال هذه الرسالة.
+                        </span>
                     </div>
 
-                    <div style='text-align: center; margin: 25px 0;'>
-                        <a href='{confirmationLink}' style='display:inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 12px rgba(37,99,235,0.25);'>
+                    <!-- 6-digit OTP Box -->
+                    <div style='background: linear-gradient(135deg, #f8fafc 0%, #eef2f6 100%); border: 2px dashed #3b82f6; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;'>
+                        <div style='color: #475569; font-size: 13px; font-weight: bold; margin-bottom: 10px;'>رمز التحقق الرقمي الخاص بك (OTP):</div>
+                        <div id='otpCodeContainer' style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 10px; color: #1e3a8a; user-select: all; -webkit-user-select: all; background:#ffffff; padding:14px 20px; border-radius:10px; border:2px solid #cbd5e1; display:inline-block; margin: 0 auto 14px auto;'>
+                            {token}
+                        </div>
+                        <div style='margin-top: 10px;'>
+                            <button type='button' onclick='navigator.clipboard.writeText(""{token}""); alert(""تم نسخ الرمز بنجاح!"");' style='cursor:pointer; display:inline-block; background-color:#ffffff; color:#1e40af; border:1px solid #93c5fd; padding:6px 18px; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;'>
+                                📋 انقر هنا لنسخ الرمز
+                            </button>
+                        </div>
+                        <div style='color: #94a3b8; font-size: 11px; margin-top: 8px;'>* يمكنك أيضاً تحديد الأرقام أعلاه ونسخها مباشرة</div>
+                    </div>
+
+                    <!-- 1-Click Verification Link -->
+                    <div style='text-align: center; margin: 28px 0;'>
+                        <a href='{confirmationLink}' style='display:inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(37,99,235,0.25);'>
                             🚀 تفعيل الحساب بنقرة واحدة
                         </a>
                     </div>
 
-                    <p style='color:#94a3b8; font-size:12px; margin-top:20px; line-height:1.5;'>
-                        إذا لم تكن أنت من قام بطلب التسجيل في المنصة، يمكنك تجاهل هذه الرسالة بأمان.
+                    <p style='color:#94a3b8; font-size:12px; margin-top:24px; line-height:1.6;'>
+                        إذا لم تكن أنت من قام بطلب التسجيل في المنصة، يمكنك تجاهل هذه الرسالة بأمان دون أي إجراء.
                     </p>
                 </div>";
 
-            return SendEmailAsync(email, "تأكيد الحساب ورمز التحقق - منصة أخلاقيات البحث العلمي", body);
+            return SendEmailAsync(email, "رمز التحقق وتفعيل الحساب (صالح لـ 15 دقيقة) - منصة أخلاقيات البحث العلمي", body);
         }
 
         public Task SendPasswordResetTokenAsync(string email, string token, string resetLink)
         {
             var body = $@"
-                <div style='text-align: right;'>
-                    <span style='display:inline-block; background-color:#fef2f2; color:#b91c1c; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; margin-bottom:12px;'>
+                <div style='text-align: right; font-family: Cairo, Tahoma, Arial, sans-serif;'>
+                    <div style='display:inline-block; background-color:#fef2f2; color:#b91c1c; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:12px; border:1px solid #fecaca;'>
                         🔑 استعادة كلمة المرور
-                    </span>
-                    <h3 style='margin: 0 0 10px 0; color:#0f172a; font-size:20px;'>طلب إعادة تعيين كلمة المرور</h3>
-                    <p style='color:#475569; font-size:14px; line-height:1.6; margin-bottom:20px;'>
-                        تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في المنصة. يمكنك استخدام رمز التحقق المرفق أدناه أو النقر على زر إعادة التعيين المباشر.
+                    </div>
+                    <h3 style='margin: 0 0 10px 0; color:#0f172a; font-size:22px; font-weight:700;'>طلب إعادة تعيين كلمة المرور</h3>
+                    <p style='color:#475569; font-size:14px; line-height:1.7; margin-bottom:20px;'>
+                        تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في المنصة. يرجى استخدام رمز الأمان المكوّن من 6 أرقام أدناه أو النقر على زر إعادة التعيين المباشر.
                     </p>
 
-                    <div style='background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px dashed #ea580c; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;'>
-                        <div style='color: #9a3412; font-size: 13px; font-weight: bold; margin-bottom: 8px;'>رمز استعادة كلمة المرور:</div>
-                        <div style='font-family: Consolas, Monaco, monospace; font-size: 24px; font-weight: 800; letter-spacing: 3px; color: #7c2d12; user-select: all; -webkit-user-select: all; background:#ffffff; padding:12px; border-radius:8px; border:1px solid #fdba74; word-break: break-all;'>
-                            {token}
-                        </div>
-                        <div style='color: #9a3412; font-size: 11px; margin-top: 6px;'>* يمكنك تحديد الرمز ونسخه ولصقه في شاشة استعادة كلمة المرور</div>
+                    <!-- Alert for 15-minute expiration -->
+                    <div style='background-color: #fff7ed; border: 1px solid #ffedd5; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;'>
+                        <span style='color: #c2410c; font-size: 13px; font-weight: 600;'>
+                            ⏰ تنبيه: رمز استعادة كلمة المرور صالح للاستخدام لمدة <strong>15 دقيقة فقط</strong> من وقت إرسال هذه الرسالة.
+                        </span>
                     </div>
 
-                    <div style='text-align: center; margin: 25px 0;'>
-                        <a href='{resetLink}' style='display:inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 12px rgba(220,38,38,0.25);'>
+                    <!-- 6-digit OTP Box -->
+                    <div style='background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px dashed #ea580c; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;'>
+                        <div style='color: #9a3412; font-size: 13px; font-weight: bold; margin-bottom: 10px;'>رمز استعادة كلمة المرور (OTP):</div>
+                        <div id='resetOtpContainer' style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 10px; color: #7c2d12; user-select: all; -webkit-user-select: all; background:#ffffff; padding:14px 20px; border-radius:10px; border:2px solid #fdba74; display:inline-block; margin: 0 auto 14px auto;'>
+                            {token}
+                        </div>
+                        <div style='margin-top: 10px;'>
+                            <button type='button' onclick='navigator.clipboard.writeText(""{token}""); alert(""تم نسخ الرمز بنجاح!"");' style='cursor:pointer; display:inline-block; background-color:#ffffff; color:#c2410c; border:1px solid #fed7aa; padding:6px 18px; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;'>
+                                📋 انقر هنا لنسخ الرمز
+                            </button>
+                        </div>
+                        <div style='color: #9a3412; font-size: 11px; margin-top: 8px;'>* يمكنك أيضاً تحديد الأرقام أعلاه ونسخها مباشرة</div>
+                    </div>
+
+                    <!-- 1-Click Direct Reset Link -->
+                    <div style='text-align: center; margin: 28px 0;'>
+                        <a href='{resetLink}' style='display:inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(220,38,38,0.25);'>
                             🔒 تعيين كلمة المرور الجديدة
                         </a>
                     </div>
 
-                    <p style='color:#94a3b8; font-size:12px; margin-top:20px; line-height:1.5;'>
+                    <p style='color:#94a3b8; font-size:12px; margin-top:24px; line-height:1.6;'>
                         إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد، ولن يتم إجراء أي تعديل على حسابك.
                     </p>
                 </div>";
 
-            return SendEmailAsync(email, "رمز استعادة كلمة المرور - منصة أخلاقيات البحث العلمي", body);
+            return SendEmailAsync(email, "رمز استعادة كلمة المرور (صالح لـ 15 دقيقة) - منصة أخلاقيات البحث العلمي", body);
         }
 
         public Task SendJudgeInvitationAsync(string email, string invitationLink, string specialty)

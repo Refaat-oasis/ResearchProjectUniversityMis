@@ -17,7 +17,16 @@
                     @Html.AntiForgeryToken()
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
-                        <input list="systemUsersList" type="email" name="email" class="form-control" placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." required dir="ltr" autocomplete="off" />
+                        <div class="custom-datalist-wrapper">
+                            <i class="bi bi-search datalist-search-icon"></i>
+                            <input list="systemUsersList" type="email" name="email" 
+                                   class="form-control custom-datalist-input" 
+                                   placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." 
+                                   required dir="ltr" autocomplete="off" />
+                            <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        </div>
                         <datalist id="systemUsersList">
                             @if (ViewBag.SystemUsers != null)
                             {
@@ -27,7 +36,9 @@
                                 }
                             }
                         </datalist>
-                        <div class="form-text small">يمكنك اختيار مستخدم مسجل بالنظام أو كتابة أي بريد جديد وسيتم إرسال رابط الدعوة الرسمية إليه مباشرة.</div>
+                        <div class="custom-datalist-hint">
+                            <i class="bi bi-info-circle me-1"></i> يمكنك اختيار مستخدم مسجل بالنظام أو كتابة أي بريد جديد وسيتم إرسال رابط الدعوة الرسمية إليه مباشرة.
+                        </div>
                     </div>
 
                     <div class="mb-4">

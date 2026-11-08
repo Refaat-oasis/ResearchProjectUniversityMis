@@ -21,5 +21,10 @@ namespace researchProject.Repositories.Interfaces
         Task<(bool Succeeded, string? ErrorMessage, string? ResetToken, string? UserId)> GeneratePasswordResetTokenAsync(string email);
         Task<(bool Succeeded, string? ErrorMessage)> ResetPasswordWithTokenAsync(string email, string token, string newPassword);
         Task<(bool Succeeded, string? ErrorMessage)> ConfirmEmailWithTokenOrCodeAsync(string emailOrUserId, string token);
+        
+        // 6-digit 15-minute OTP operations
+        Task<(bool Succeeded, string? ErrorMessage, string? Code, string? UserId)> GenerateVerificationCodeAsync(string email, string purpose, string? userId = null);
+        Task<(bool Succeeded, string? ErrorMessage)> ValidateVerificationCodeAsync(string emailOrUserId, string code, string purpose);
+        Task<(bool Succeeded, string? ErrorMessage, string? Code)> ResendVerificationCodeAsync(string emailOrUserId, string purpose);
     }
 }

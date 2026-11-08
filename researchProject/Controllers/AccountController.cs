@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using researchProject.Models.Constants;
 using researchProject.Models.DTOs;
+using researchProject.Models.ViewModels;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
 
@@ -100,11 +101,11 @@ namespace researchProject.Controllers
                 return View(dto);
             }
 
-            // Generate confirmation link
+            // Generate direct confirmation link
             var confirmationLink = Url.Action(
-                nameof(ConfirmEmail), 
+                nameof(VerifyEmailToken), 
                 "Account", 
-                new { userId = userId, token = confirmationToken }, 
+                new { email = dto.Email, token = confirmationToken }, 
                 Request.Scheme);
 
             if (!string.IsNullOrEmpty(confirmationLink) && !string.IsNullOrEmpty(confirmationToken))
@@ -112,7 +113,7 @@ namespace researchProject.Controllers
                 await _emailSender.SendRegistrationTokenAsync(dto.Email, confirmationToken, confirmationLink);
             }
 
-            TempData["SuccessMessage"] = "تم إنشاء الحساب بنجاح! تم إرسال رمز ورابط تأكيد الحساب إلى بريدك الإلكتروني. يرجى فتح البريد وتأكيد الحساب قبل تسجيل الدخول.";
+            TempData["SuccessMessage"] = "تم إنشاء الحساب بنجاح! تم إرسال رمز التحقق الرقمي (صالح لمدة 15 دقيقة) إلى بريدك الإلكتروني. يرجى تفعيل الحساب للمتابعة.";
             return RedirectToAction(nameof(VerifyEmailToken), new { email = dto.Email, userId = userId });
         }
 
@@ -208,10 +209,11 @@ namespace researchProject.Controllers
                 }
             }
 
-            var model = new VerifyEmailDto
+            var model = new VerifyEmailViewModel
             {
                 EmailOrUserId = identifier ?? string.Empty,
-                Token = token ?? string.Empty
+                Token = token ?? string.Empty,
+                ValidityMinutes = 15
             };
             return View(model);
         }
@@ -223,18 +225,61 @@ namespace researchProject.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(dto);
+                var vm = new VerifyEmailViewModel
+                {
+                    EmailOrUserId = dto.EmailOrUserId,
+                    Token = dto.Token,
+                    ValidityMinutes = 15
+                };
+                return View(vm);
             }
 
-            var (succeeded, errorMessage) = await _accountRepository.ConfirmEmailWithTokenOrCodeAsync(dto.EmailOrUserId, dto.Token);
+            var (succeeded, errorMessage) = await _accountRepository.ValidateVerificationCodeAsync(dto.EmailOrUserId, dto.Token, "EmailConfirmation");
             if (!succeeded)
             {
-                ModelState.AddModelError(string.Empty, errorMessage ?? "رمز التحقق غير صالح.");
-                return View(dto);
+                ModelState.AddModelError(string.Empty, errorMessage ?? "رمز التحقق غير صالح أو منتهي الصلاحية.");
+                var vm = new VerifyEmailViewModel
+                {
+                    EmailOrUserId = dto.EmailOrUserId,
+                    Token = dto.Token,
+                    ValidityMinutes = 15,
+                    ErrorMessage = errorMessage
+                };
+                return View(vm);
             }
 
             TempData["SuccessMessage"] = "تم تأكيد بريدك الإلكتروني بنجاح! يمكنك الآن تسجيل الدخول إلى المنصة.";
             return RedirectToAction(nameof(Login));
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendVerificationCode(ResendVerificationCodeDto dto)
+        {
+            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(dto.EmailOrUserId))
+            {
+                return Json(new { success = false, message = "يرجى إدخال البريد الإلكتروني لإعادة الإرسال." });
+            }
+
+            var (succeeded, errorMessage, newCode) = await _accountRepository.ResendVerificationCodeAsync(dto.EmailOrUserId, "EmailConfirmation");
+            if (!succeeded || string.IsNullOrEmpty(newCode))
+            {
+                return Json(new { success = false, message = errorMessage ?? "فشل إعادة إرسال رمز التحقق." });
+            }
+
+            var confirmationLink = Url.Action(
+                nameof(VerifyEmailToken),
+                "Account",
+                new { email = dto.EmailOrUserId, token = newCode },
+                Request.Scheme);
+
+            if (!string.IsNullOrEmpty(confirmationLink))
+            {
+                await _emailSender.SendRegistrationTokenAsync(dto.EmailOrUserId, newCode, confirmationLink);
+            }
+
+            return Json(new { success = true, message = "تم إرسال رمز تحقق جديد مكوّن من 6 أرقام إلى بريدك الإلكتروني (صالح لمدة 15 دقيقة)." });
         }
 
         [HttpGet]

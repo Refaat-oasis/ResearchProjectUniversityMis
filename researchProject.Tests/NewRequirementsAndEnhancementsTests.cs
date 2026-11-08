@@ -164,11 +164,13 @@ namespace researchProject.Tests
             // 1. Generate Token
             var (genSucc, genErr, token, userId) = await repo.GeneratePasswordResetTokenAsync("resetuser@example.com");
             Assert.True(genSucc, genErr);
-            Assert.Equal("valid-reset-token-999", token);
+            Assert.NotNull(token);
+            Assert.Equal(6, token!.Length);
+            Assert.True(int.TryParse(token, out _), "Reset token must be a 6-digit numeric OTP");
             Assert.Equal(user.Id, userId);
 
             // 2. Reset with Token
-            var (resetSucc, resetErr) = await repo.ResetPasswordWithTokenAsync("resetuser@example.com", "valid-reset-token-999", "NewPassword123!");
+            var (resetSucc, resetErr) = await repo.ResetPasswordWithTokenAsync("resetuser@example.com", token, "NewPassword123!");
             Assert.True(resetSucc, resetErr);
         }
 

@@ -134,8 +134,9 @@ namespace researchProject.Repositories.Implementations
 
                 await transaction.CommitAsync();
 
-                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                return (true, null, token, user.Id);
+                // Generate 6-digit verification code with 15-minute expiration
+                var (otpOk, otpErr, otpCode, _) = await GenerateVerificationCodeAsync(user.Email!, "EmailConfirmation", user.Id);
+                return (true, null, otpCode, user.Id);
             }
             catch (Exception ex)
             {
@@ -324,8 +325,8 @@ namespace researchProject.Repositories.Implementations
                 return (false, "البريد الإلكتروني غير مسجل بالنظام.", null, null);
             }
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            return (true, null, token, user.Id);
+            var (ok, err, code, _) = await GenerateVerificationCodeAsync(user.Email!, "PasswordReset", user.Id);
+            return (ok, err, code, user.Id);
         }
 
         public async Task<(bool Succeeded, string? ErrorMessage)> ResetPasswordWithTokenAsync(string email, string token, string newPassword)
@@ -336,14 +337,37 @@ namespace researchProject.Repositories.Implementations
                 return (false, "البريد الإلكتروني غير مسجل بالنظام.");
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-            if (result.Succeeded)
+            var cleanToken = token.Trim();
+            if (cleanToken.Length == 6 && int.TryParse(cleanToken, out _))
             {
-                return (true, null);
-            }
+                var (valid, validErr) = await ValidateVerificationCodeAsync(email, cleanToken, "PasswordReset");
+                if (!valid)
+                {
+                    return (false, validErr ?? "رمز استعادة كلمة المرور غير صالح أو منتهي الصلاحية.");
+                }
 
-            var errors = string.Join("، ", result.Errors.Select(e => e.Description));
-            return (false, $"فشل إعادة تعيين كلمة المرور: {errors}");
+                var internalResetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var resetResult = await _userManager.ResetPasswordAsync(user, internalResetToken, newPassword);
+                if (resetResult.Succeeded)
+                {
+                    return (true, null);
+                }
+
+                var errors = string.Join("، ", resetResult.Errors.Select(e => e.Description));
+                return (false, $"فشل إعادة تعيين كلمة المرور: {errors}");
+            }
+            else
+            {
+                // Fallback for raw Identity token
+                var result = await _userManager.ResetPasswordAsync(user, cleanToken, newPassword);
+                if (result.Succeeded)
+                {
+                    return (true, null);
+                }
+
+                var errors = string.Join("، ", result.Errors.Select(e => e.Description));
+                return (false, $"فشل إعادة تعيين كلمة المرور: {errors}");
+            }
         }
 
         public async Task<(bool Succeeded, string? ErrorMessage)> ConfirmEmailWithTokenOrCodeAsync(string emailOrUserId, string token)
@@ -353,6 +377,13 @@ namespace researchProject.Repositories.Implementations
                 return (false, "البيانات المدخلة غير مكتملة.");
             }
 
+            var cleanToken = token.Trim();
+            if (cleanToken.Length == 6 && int.TryParse(cleanToken, out _))
+            {
+                return await ValidateVerificationCodeAsync(emailOrUserId, cleanToken, "EmailConfirmation");
+            }
+
+            // Fallback for direct token
             ApplicationUser? user = null;
             if (emailOrUserId.Contains('@'))
             {
@@ -373,13 +404,186 @@ namespace researchProject.Repositories.Implementations
                 return (true, null);
             }
 
-            var result = await _userManager.ConfirmEmailAsync(user, token.Trim());
+            var result = await _userManager.ConfirmEmailAsync(user, cleanToken);
             if (result.Succeeded)
             {
                 return (true, null);
             }
 
             return (false, "رمز التحقق غير صالح أو منتهي الصلاحية.");
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage, string? Code, string? UserId)> GenerateVerificationCodeAsync(string email, string purpose, string? userId = null)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return (false, "البريد الإلكتروني مطلوب.", null, null);
+            }
+
+            var normEmail = email.Trim().ToLowerInvariant();
+
+            // Invalidate existing pending unused codes for this email and purpose
+            var pendingCodes = await _db.EmailVerificationCodes
+                .Where(c => c.Email == normEmail && c.Purpose == purpose && !c.IsUsed)
+                .ToListAsync();
+
+            foreach (var pc in pendingCodes)
+            {
+                pc.IsUsed = true;
+            }
+
+            // Generate cryptographically secure 6-digit numeric OTP
+            var code = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+            var now = DateTime.UtcNow;
+
+            var verificationCode = new EmailVerificationCode
+            {
+                Email = normEmail,
+                UserId = userId,
+                Code = code,
+                Purpose = purpose,
+                CreatedAt = now,
+                ExpiresAt = now.AddMinutes(15), // Strictly 15 minutes!
+                IsUsed = false,
+                AttemptsCount = 0
+            };
+
+            await _db.EmailVerificationCodes.AddAsync(verificationCode);
+            await _db.SaveChangesAsync();
+
+            return (true, null, code, userId);
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> ValidateVerificationCodeAsync(string emailOrUserId, string code, string purpose)
+        {
+            if (string.IsNullOrWhiteSpace(emailOrUserId) || string.IsNullOrWhiteSpace(code))
+            {
+                return (false, "يرجى إدخال البريد الإلكتروني ورمز التحقق.");
+            }
+
+            var cleanCode = code.Trim();
+            ApplicationUser? user = null;
+            string email = emailOrUserId.Trim();
+
+            if (email.Contains('@'))
+            {
+                user = await _userManager.FindByEmailAsync(email);
+            }
+            else
+            {
+                user = await _userManager.FindByIdAsync(emailOrUserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    email = user.Email;
+                }
+            }
+
+            var normEmail = email.ToLowerInvariant();
+            var now = DateTime.UtcNow;
+
+            var activeCode = await _db.EmailVerificationCodes
+                .Where(c => c.Email == normEmail && c.Purpose == purpose && !c.IsUsed)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (activeCode == null)
+            {
+                return (false, "لا يوجد رمز تحقق نشط لهذا البريد. يرجى طلب رمز جديد.");
+            }
+
+            if (activeCode.ExpiresAt < now)
+            {
+                return (false, "انتهت صلاحية رمز التحقق (مدة الصلاحية 15 دقيقة). يرجى طلب إعادة إرسال رمز جديد.");
+            }
+
+            if (activeCode.AttemptsCount >= 5)
+            {
+                activeCode.IsUsed = true;
+                await _db.SaveChangesAsync();
+                return (false, "تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). يرجى طلب رمز جديد.");
+            }
+
+            var isCodeMatch = System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+                System.Text.Encoding.UTF8.GetBytes(activeCode.Code),
+                System.Text.Encoding.UTF8.GetBytes(cleanCode));
+
+            if (!isCodeMatch)
+            {
+                activeCode.AttemptsCount++;
+                if (activeCode.AttemptsCount >= 5)
+                {
+                    activeCode.IsUsed = true;
+                    await _db.SaveChangesAsync();
+                    return (false, "تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). يرجى طلب رمز جديد.");
+                }
+                await _db.SaveChangesAsync();
+                var remaining = 5 - activeCode.AttemptsCount;
+                return (false, $"رمز التحقق غير صحيح. المحاولات المتبقية: {remaining}");
+            }
+
+            // Successfully verified!
+            activeCode.IsUsed = true;
+            activeCode.UsedAt = now;
+
+            if (purpose == "EmailConfirmation" && user != null)
+            {
+                user.EmailConfirmed = true;
+                await _userManager.UpdateAsync(user);
+            }
+
+            await _db.SaveChangesAsync();
+            return (true, null);
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage, string? Code)> ResendVerificationCodeAsync(string emailOrUserId, string purpose)
+        {
+            if (string.IsNullOrWhiteSpace(emailOrUserId))
+            {
+                return (false, "البريد الإلكتروني مطلوب.", null);
+            }
+
+            ApplicationUser? user = null;
+            string email = emailOrUserId.Trim();
+
+            if (email.Contains('@'))
+            {
+                user = await _userManager.FindByEmailAsync(email);
+            }
+            else
+            {
+                user = await _userManager.FindByIdAsync(emailOrUserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    email = user.Email;
+                }
+            }
+
+            var normEmail = email.ToLowerInvariant();
+
+            if (user == null)
+            {
+                return (false, "البريد الإلكتروني المدخل غير مسجل في المنصة.", null);
+            }
+
+            if (user.EmailConfirmed && purpose == "EmailConfirmation")
+            {
+                return (false, "هذا الحساب مفعل بالفعل، يمكنك تسجيل الدخول مباشرة.", null);
+            }
+
+            // Enforce cooldown (60 seconds)
+            var lastCode = await _db.EmailVerificationCodes
+                .Where(c => c.Email == normEmail && c.Purpose == purpose)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (lastCode != null && (DateTime.UtcNow - lastCode.CreatedAt).TotalSeconds < 60)
+            {
+                var waitSeconds = 60 - (int)(DateTime.UtcNow - lastCode.CreatedAt).TotalSeconds;
+                return (false, $"يرجى الانتظار {waitSeconds} ثانية قبل طلب رمز جديد.", null);
+            }
+
+            var (ok, err, code, _) = await GenerateVerificationCodeAsync(normEmail, purpose, user?.Id);
+            return (ok, err, code);
         }
 
         private static string HashToken(string token)

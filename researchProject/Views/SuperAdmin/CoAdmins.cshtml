@@ -66,7 +66,17 @@
                     <div class="mb-3">
                         <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
                         <input type="hidden" name="collegeId" id="coAdminCollegeId" />
-                        <input type="text" list="coAdminCollegesList" id="coAdminCollegeInput" class="form-control" placeholder="ابحث أو اختر الكلية..." required autocomplete="off" />
+                        <div class="custom-datalist-wrapper">
+                            <i class="bi bi-search datalist-search-icon"></i>
+                            <input type="text" list="coAdminCollegesList" id="coAdminCollegeInput" 
+                                   class="form-control custom-datalist-input" 
+                                   placeholder="ابحث أو اختر الكلية من النظام..." 
+                                   data-hidden-target="#coAdminCollegeId"
+                                   required autocomplete="off" />
+                            <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        </div>
                         <datalist id="coAdminCollegesList">
                             @if (ViewBag.Colleges != null)
                             {
@@ -76,6 +86,9 @@
                                 }
                             }
                         </datalist>
+                        <div class="custom-datalist-hint">
+                            <i class="bi bi-info-circle me-1"></i> اختر من كليات الجامعة المسجلة لإسناد الصلاحيات إليها.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">الاسم الكامل <span class="text-danger">*</span></label>

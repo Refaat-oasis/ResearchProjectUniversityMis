@@ -103,7 +103,8 @@ namespace researchProject.Tests
 
             Assert.True(succeeded, errorMessage);
             Assert.NotNull(confirmationToken);
-            Assert.Equal("token-test-12345", confirmationToken);
+            Assert.Equal(6, confirmationToken!.Length);
+            Assert.True(int.TryParse(confirmationToken, out _), "Confirmation code must be 6 numeric digits");
             var researcherInDb = await db.Researchers.FirstOrDefaultAsync(r => r.Department == "الكيمياء");
             Assert.NotNull(researcherInDb);
         }

@@ -29,6 +29,9 @@ $(document).ready(function () {
         if ($firstLink.length && $('#main-content-container').is(':empty')) {
             $firstLink.trigger('click');
         }
+
+        // Initialize Custom Datalists
+        initCustomDatalists();
     }
 
     resolveInitialRoute();
@@ -98,3 +101,51 @@ function handleAjaxFormSubmit(formElement, successCallback) {
 
     return false;
 }
+
+// Global Unified Datalist Handler (ui-taste & frontend-design)
+function initCustomDatalists(container) {
+    var $root = container ? $(container) : $(document);
+    $root.find('.custom-datalist-wrapper').each(function () {
+        var $wrapper = $(this);
+        var $input = $wrapper.find('.custom-datalist-input');
+        var $clearBtn = $wrapper.find('.datalist-clear-btn');
+        var hiddenTarget = $input.data('hidden-target');
+        var listId = $input.attr('list');
+
+        function toggleClearBtn() {
+            if ($input.val() && $input.val().length > 0) {
+                $clearBtn.show();
+            } else {
+                $clearBtn.hide();
+            }
+        }
+
+        toggleClearBtn();
+
+        $input.off('input.datalist change.datalist').on('input.datalist change.datalist', function () {
+            toggleClearBtn();
+            if (hiddenTarget && listId) {
+                var currentVal = $(this).val();
+                var $matchedOption = $('#' + listId + ' option').filter(function () {
+                    return this.value === currentVal;
+                });
+                if ($matchedOption.length > 0) {
+                    var dataId = $matchedOption.data('id');
+                    $(hiddenTarget).val(dataId !== undefined ? dataId : currentVal).trigger('change');
+                } else {
+                    $(hiddenTarget).val('').trigger('change');
+                }
+            }
+        });
+
+        $clearBtn.off('click.datalist').on('click.datalist', function (e) {
+            e.preventDefault();
+            $input.val('').trigger('input').trigger('change');
+            if (hiddenTarget) {
+                $(hiddenTarget).val('').trigger('change');
+            }
+            $input.focus();
+        });
+    });
+}
+

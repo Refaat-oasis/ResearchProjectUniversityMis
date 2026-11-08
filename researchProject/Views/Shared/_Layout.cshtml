@@ -170,6 +170,11 @@
                         $.validator.unobtrusive.parse($(this));
                     });
 
+                    // Initialize unified custom datalists in the partial
+                    if (typeof initCustomDatalists === 'function') {
+                        initCustomDatalists(targetSelector);
+                    }
+
                     // Update sidebar active link
                     $('.sidebar-item a').removeClass('active');
                     if (hashKey) {
