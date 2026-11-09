@@ -21,55 +21,71 @@
 <!-- Key Performance Indicators (KPIs) -->
 <div class="row g-3 mb-4 align-items-stretch">
     <div class="col-md-3 d-flex">
-        <div class="liquid-glass-card p-3 text-center w-100 h-100 d-flex flex-column justify-content-between">
-            <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
-                <i class="bi bi-stopwatch text-primary me-1"></i>متوسط زمن الفحص الشكلي
+        <div class="liquid-glass-card kpi-metric-card text-center w-100 flex-fill">
+            <div class="kpi-header-box">
+                <span><i class="bi bi-stopwatch text-primary me-1"></i>متوسط زمن الفحص الشكلي</span>
             </div>
-            <div class="fs-2 fw-bold text-primary my-auto">@Model.AverageScreeningHours.ToString("0.0")</div>
-            <div class="text-muted small">ساعة (الحد النظامي: 48 ساعة)</div>
-            <div class="progress mt-2" style="height: 6px;">
-                <div class="progress-bar @(Model.AverageScreeningHours <= 48 ? "bg-success" : "bg-danger")" 
-                     style="width: @Math.Min(100, (Model.AverageScreeningHours / 48.0) * 100)%"></div>
+            <div class="kpi-value-box">
+                <span class="kpi-number text-primary">@Model.AverageScreeningHours.ToString("0.0")</span>
             </div>
-        </div>
-    </div>
-    <div class="col-md-3 d-flex">
-        <div class="liquid-glass-card p-3 text-center w-100 h-100 d-flex flex-column justify-content-between">
-            <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
-                <i class="bi bi-calendar-check text-info me-1"></i>متوسط فترة التحكيم الأخلاقي
-            </div>
-            <div class="fs-2 fw-bold text-info my-auto">@Model.AverageJudgingDays.ToString("0.0")</div>
-            <div class="text-muted small">يوم عمل (الحد النظامي: 14 يوم)</div>
-            <div class="progress mt-2" style="height: 6px;">
-                <div class="progress-bar @(Model.AverageJudgingDays <= 14 ? "bg-info" : "bg-warning")" 
-                     style="width: @Math.Min(100, (Model.AverageJudgingDays / 14.0) * 100)%"></div>
+            <div class="kpi-footer-box">
+                <div class="kpi-subtext" title="ساعة (الحد النظامي: 48 ساعة)">ساعة (الحد النظامي: 48 ساعة)</div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar @(Model.AverageScreeningHours <= 48 ? "bg-success" : "bg-danger")" 
+                         style="width: @Math.Min(100, (Model.AverageScreeningHours / 48.0) * 100)%"></div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3 d-flex">
-        <div class="liquid-glass-card p-3 text-center w-100 h-100 d-flex flex-column justify-content-between">
-            <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
-                <i class="bi bi-shield-check text-success me-1"></i>نسبة الالتزام بالمهلة (SLA)
+        <div class="liquid-glass-card kpi-metric-card text-center w-100 flex-fill">
+            <div class="kpi-header-box">
+                <span><i class="bi bi-calendar-check text-info me-1"></i>متوسط فترة التحكيم الأخلاقي</span>
             </div>
-            <div class="fs-2 fw-bold @(Model.SlaCompliancePercentage >= 85 ? "text-success" : "text-warning") my-auto">
-                @Model.SlaCompliancePercentage.ToString("0.0")%
+            <div class="kpi-value-box">
+                <span class="kpi-number text-info">@Model.AverageJudgingDays.ToString("0.0")</span>
             </div>
-            <div class="text-muted small">المعدل المستهدف: 90%+</div>
-            <div class="progress mt-2" style="height: 6px;">
-                <div class="progress-bar bg-success" style="width: @Math.Min(100, Model.SlaCompliancePercentage)%"></div>
+            <div class="kpi-footer-box">
+                <div class="kpi-subtext" title="يوم عمل (الحد النظامي: 14 يوم)">يوم عمل (الحد النظامي: 14 يوم)</div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar @(Model.AverageJudgingDays <= 14 ? "bg-info" : "bg-warning")" 
+                         style="width: @Math.Min(100, (Model.AverageJudgingDays / 14.0) * 100)%"></div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3 d-flex">
-        <div class="liquid-glass-card p-3 text-center w-100 h-100 d-flex flex-column justify-content-between">
-            <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
-                <i class="bi bi-patch-check text-warning me-1"></i>إجمالي الشهادات المعتمدة الصادرة
+        <div class="liquid-glass-card kpi-metric-card text-center w-100 flex-fill">
+            <div class="kpi-header-box">
+                <span><i class="bi bi-shield-check text-success me-1"></i>نسبة الالتزام بالمهلة (SLA)</span>
             </div>
-            <div class="fs-2 fw-bold text-warning my-auto">@Model.CertificatesIssuedCount</div>
-            <div class="text-muted small">من إجمالي @Model.TotalResearches مقترحاً</div>
-            <div class="progress mt-2" style="height: 6px;">
-                <div class="progress-bar bg-warning" 
-                     style="width: @(Model.TotalResearches > 0 ? (Model.CertificatesIssuedCount * 100.0 / Model.TotalResearches) : 0)%"></div>
+            <div class="kpi-value-box">
+                <span class="kpi-number @(Model.SlaCompliancePercentage >= 85 ? "text-success" : "text-warning")">
+                    @Model.SlaCompliancePercentage.ToString("0.0")%
+                </span>
+            </div>
+            <div class="kpi-footer-box">
+                <div class="kpi-subtext" title="المعدل المستهدف: 90%+">المعدل المستهدف: 90%+</div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-success" style="width: @Math.Min(100, Model.SlaCompliancePercentage)%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 d-flex">
+        <div class="liquid-glass-card kpi-metric-card text-center w-100 flex-fill">
+            <div class="kpi-header-box">
+                <span><i class="bi bi-patch-check text-warning me-1"></i>إجمالي الشهادات المعتمدة الصادرة</span>
+            </div>
+            <div class="kpi-value-box">
+                <span class="kpi-number text-warning">@Model.CertificatesIssuedCount</span>
+            </div>
+            <div class="kpi-footer-box">
+                <div class="kpi-subtext" title="من إجمالي @Model.TotalResearches مقترحاً">من إجمالي @Model.TotalResearches مقترحاً</div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-warning" 
+                         style="width: @(Model.TotalResearches > 0 ? (Model.CertificatesIssuedCount * 100.0 / Model.TotalResearches) : 0)%"></div>
+                </div>
             </div>
         </div>
     </div>

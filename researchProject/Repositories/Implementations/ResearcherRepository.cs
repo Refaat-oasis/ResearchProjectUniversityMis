@@ -23,6 +23,7 @@ namespace researchProject.Repositories.Implementations
         private readonly IConfiguration _configuration;
         private readonly ICertificateService? _certificateService;
         private readonly INotificationService? _notificationService;
+        private readonly ILogger<ResearcherRepository>? _logger;
 
         public ResearcherRepository(
             ApplicationDbContext db,
@@ -30,7 +31,8 @@ namespace researchProject.Repositories.Implementations
             IEmailSender emailSender,
             IConfiguration configuration,
             ICertificateService? certificateService = null,
-            INotificationService? notificationService = null)
+            INotificationService? notificationService = null,
+            ILogger<ResearcherRepository>? logger = null)
         {
             _db = db;
             _fileStorage = fileStorage;
@@ -38,6 +40,7 @@ namespace researchProject.Repositories.Implementations
             _configuration = configuration;
             _certificateService = certificateService;
             _notificationService = notificationService;
+            _logger = logger;
         }
 
         public async Task<Researcher?> GetProfileByUserIdAsync(string userId)
@@ -127,21 +130,21 @@ namespace researchProject.Repositories.Implementations
             var slaHours = _configuration.GetValue<int>("Screening:SlaHours", 48);
             var now = DateTime.UtcNow;
 
+            var research = new Research
+            {
+                Title = dto.Title,
+                CollegeId = dto.CollegeId,
+                CategoryId = dto.CategoryId,
+                AcademicSpecialty = dto.AcademicSpecialty,
+                DynamicFieldsJson = JsonSerializer.Serialize(dto.DynamicAnswers),
+                WorkflowStatus = ResearchStatusConstants.UnderFormalScreening,
+                SubmittedAt = now,
+                ScreeningDueAt = now.AddHours(slaHours)
+            };
+
             using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                var research = new Research
-                {
-                    Title = dto.Title,
-                    CollegeId = dto.CollegeId,
-                    CategoryId = dto.CategoryId,
-                    AcademicSpecialty = dto.AcademicSpecialty,
-                    DynamicFieldsJson = JsonSerializer.Serialize(dto.DynamicAnswers),
-                    WorkflowStatus = ResearchStatusConstants.UnderFormalScreening,
-                    SubmittedAt = now,
-                    ScreeningDueAt = now.AddHours(slaHours)
-                };
-
                 await _db.Researches.AddAsync(research);
                 await _db.SaveChangesAsync();
 
@@ -230,7 +233,16 @@ namespace researchProject.Repositories.Implementations
 
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return (false, $"فشل تقديم المقترح البحثي: {ex.Message}", null);
+            }
 
+            // Post-commit notifications (isolated from database transaction)
+            try
+            {
                 // Send email receipt to researcher
                 if (!string.IsNullOrEmpty(researcher.User.Email))
                 {
@@ -271,14 +283,13 @@ namespace researchProject.Repositories.Implementations
                             "bi-file-earmark-plus");
                     }
                 }
-
-                return (true, null, research.Id);
             }
-            catch (Exception ex)
+            catch (Exception notifEx)
             {
-                await transaction.RollbackAsync();
-                return (false, $"فشل تقديم المقترح البحثي: {ex.Message}", null);
+                _logger?.LogWarning(notifEx, "Failed to send notifications after creating research proposal {ResearchId}", research.Id);
             }
+
+            return (true, null, research.Id);
         }
 
         public async Task<(bool Succeeded, string? ErrorMessage)> SubmitModifiedAttachmentsAsync(ResearchModificationDto dto, string researcherUserId)
@@ -302,6 +313,9 @@ namespace researchProject.Repositories.Implementations
 
             var now = DateTime.UtcNow;
             var subFolder = $"Research_{research.Id}";
+            var oldStatus = research.WorkflowStatus;
+            int nextRound = 1;
+            List<Judge> activeJudges = new();
 
             // Determine latest version of attachments
             var maxVersion = await _db.ResearchAttachments
@@ -348,7 +362,7 @@ namespace researchProject.Repositories.Implementations
                     .Where(e => e.ResearchId == research.Id)
                     .MaxAsync(e => (int?)e.RoundNumber) ?? 1;
 
-                var nextRound = maxRound + 1;
+                nextRound = maxRound + 1;
 
                 // Previous judges from latest round
                 var previousJudgeIds = await _db.Evaluations
@@ -357,68 +371,98 @@ namespace researchProject.Repositories.Implementations
                     .Distinct()
                     .ToListAsync();
 
-                var activeJudges = await _db.Judges
+                activeJudges = await _db.Judges
                     .Include(j => j.User)
                     .Where(j => previousJudgeIds.Contains(j.Id) && j.IsActive)
                     .ToListAsync();
 
-                foreach (var judge in activeJudges)
+                if (activeJudges.Any())
                 {
-                    var eval = new Evaluation
+                    foreach (var judge in activeJudges)
+                    {
+                        var eval = new Evaluation
+                        {
+                            ResearchId = research.Id,
+                            JudgeId = judge.Id,
+                            RoundNumber = nextRound,
+                            Decision = EvaluationDecisionConstants.UnderEvaluation,
+                            IsDigitallySigned = false
+                        };
+                        await _db.Evaluations.AddAsync(eval);
+                    }
+
+                    research.WorkflowStatus = ResearchStatusConstants.AssignedToJudges;
+
+                    var history = new ResearchStatusHistory
                     {
                         ResearchId = research.Id,
-                        JudgeId = judge.Id,
-                        RoundNumber = nextRound,
-                        Decision = EvaluationDecisionConstants.UnderEvaluation,
-                        IsDigitallySigned = false
+                        OldStatus = oldStatus,
+                        NewStatus = ResearchStatusConstants.AssignedToJudges,
+                        ChangedByUserId = researcherUserId,
+                        ChangedAt = now,
+                        Reason = $"رفع المستندات المعدلة من الباحث وبدء جولة تحكيمية جديدة (الجولة {nextRound}).\n{dto.ResearcherNotes}"
                     };
-                    await _db.Evaluations.AddAsync(eval);
+                    await _db.ResearchStatusHistories.AddAsync(history);
                 }
-
-                var oldStatus = research.WorkflowStatus;
-                research.WorkflowStatus = ResearchStatusConstants.AssignedToJudges;
-
-                var history = new ResearchStatusHistory
+                else
                 {
-                    ResearchId = research.Id,
-                    OldStatus = oldStatus,
-                    NewStatus = ResearchStatusConstants.AssignedToJudges,
-                    ChangedByUserId = researcherUserId,
-                    ChangedAt = now,
-                    Reason = $"رفع المستندات المعدلة من الباحث وبدء جولة تحكيمية جديدة (الجولة {nextRound}).\n{dto.ResearcherNotes}"
-                };
-                await _db.ResearchStatusHistories.AddAsync(history);
+                    // BUG-03 fix: All previous judges became inactive; return to UnderFormalScreening so CoAdmin re-assigns active judges
+                    research.WorkflowStatus = ResearchStatusConstants.UnderFormalScreening;
+
+                    var history = new ResearchStatusHistory
+                    {
+                        ResearchId = research.Id,
+                        OldStatus = oldStatus,
+                        NewStatus = ResearchStatusConstants.UnderFormalScreening,
+                        ChangedByUserId = researcherUserId,
+                        ChangedAt = now,
+                        Reason = $"رفع المستندات المعدلة من الباحث. ونظراً لعدم توفر المحكمين السابقين، تمت إحالة المقترح للمراجعة الشكلية لإعادة التوزيع على محكمين نشطين.\n{dto.ResearcherNotes}"
+                    };
+                    await _db.ResearchStatusHistories.AddAsync(history);
+                }
 
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return (false, $"فشل رفع التعديلات: {ex.Message}");
+            }
 
-                // Notify judges
-                foreach (var judge in activeJudges)
+            // Post-commit notifications (isolated from database transaction)
+            try
+            {
+                if (research.WorkflowStatus == ResearchStatusConstants.AssignedToJudges)
                 {
-                    if (!string.IsNullOrEmpty(judge.User?.Email))
+                    // Notify judges
+                    foreach (var judge in activeJudges)
                     {
-                        _ = _emailSender.SendStatusChangedNotificationAsync(
-                            judge.User.Email,
-                            research.Title,
-                            oldStatus,
-                            ResearchStatusConstants.AssignedToJudges,
-                            $"قام الباحث برفع النسخة المعدلة من المقترح البحثي، وبدأت الجولة التحكيمية رقم {nextRound}.");
-                    }
+                        if (!string.IsNullOrEmpty(judge.User?.Email))
+                        {
+                            _ = _emailSender.SendStatusChangedNotificationAsync(
+                                judge.User.Email,
+                                research.Title,
+                                oldStatus,
+                                ResearchStatusConstants.AssignedToJudges,
+                                $"قام الباحث برفع النسخة المعدلة من المقترح البحثي، وبدأت الجولة التحكيمية رقم {nextRound}.");
+                        }
 
-                    if (_notificationService != null && !string.IsNullOrEmpty(judge.UserId))
-                    {
-                        var judgeEval = await _db.Evaluations
-                            .FirstOrDefaultAsync(e => e.ResearchId == research.Id && e.JudgeId == judge.Id && e.RoundNumber == nextRound);
+                        if (_notificationService != null && !string.IsNullOrEmpty(judge.UserId))
+                        {
+                            var judgeEval = await _db.Evaluations
+                                .FirstOrDefaultAsync(e => e.ResearchId == research.Id && e.JudgeId == judge.Id && e.RoundNumber == nextRound);
 
-                        var evalTargetUrl = judgeEval != null ? $"/Judge/Evaluate/{judgeEval.Id}" : "/Judge/AssignedResearches";
+                            var evalTargetUrl = judgeEval != null ? $"/Judge/Evaluate/{judgeEval.Id}" : "/Judge/AssignedResearches";
 
-                        await _notificationService.SendNotificationAsync(
-                            judge.UserId,
-                            "تم رفع التعديلات وبدء جولة تحكيمية",
-                            $"قام الباحث برفع النسخة المعدلة للمقترح: '{research.Title}'. يرجى استكمال التحكيم للجولة {nextRound}.",
-                            evalTargetUrl,
-                            "JudgeAssignment",
-                            "bi-arrow-repeat");
+                            await _notificationService.SendNotificationAsync(
+                                judge.UserId,
+                                "تم رفع التعديلات وبدء جولة تحكيمية",
+                                $"قام الباحث برفع النسخة المعدلة للمقترح: '{research.Title}'. يرجى استكمال التحكيم للجولة {nextRound}.",
+                                evalTargetUrl,
+                                "JudgeAssignment",
+                                "bi-arrow-repeat");
+                        }
                     }
                 }
 
@@ -429,25 +473,28 @@ namespace researchProject.Repositories.Implementations
                         .Select(a => a.UserId)
                         .ToListAsync();
 
+                    var notifMsg = research.WorkflowStatus == ResearchStatusConstants.AssignedToJudges
+                        ? $"قام الباحث برفع التعديلات للمقترح: '{research.Title}'. بدأت الجولة التحكيمية رقم {nextRound}."
+                        : $"قام الباحث برفع التعديلات للمقترح: '{research.Title}'. يتطلب إسناد محكمين نشطين بالكلية.";
+
                     foreach (var coAdminUserId in coAdmins)
                     {
                         await _notificationService.SendNotificationAsync(
                             coAdminUserId,
                             "استيفاء التعديلات من الباحث",
-                            $"قام الباحث برفع التعديلات للمقترح: '{research.Title}'. بدأت الجولة التحكيمية رقم {nextRound}.",
+                            notifMsg,
                             $"/CollegeCoAdmin/Review/{research.Id}",
                             "ModificationUploaded",
                             "bi-arrow-repeat");
                     }
                 }
-
-                return (true, null);
             }
-            catch (Exception ex)
+            catch (Exception notifEx)
             {
-                await transaction.RollbackAsync();
-                return (false, $"فشل تسليم التعديلات: {ex.Message}");
+                _logger?.LogWarning(notifEx, "Failed to send notifications after submitting modifications for research {ResearchId}", research.Id);
             }
+
+            return (true, null);
         }
 
         public async Task<List<Research>> GetMyCertificatesAsync(string researcherUserId)

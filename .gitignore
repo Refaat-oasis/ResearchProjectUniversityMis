@@ -29,3 +29,5 @@ App_Data/Certificates/*
 !App_Data/Certificates/.gitkeep
 researchProject/wwwroot/uploads/*
 !researchProject/wwwroot/uploads/.gitkeep
+.agents/
+

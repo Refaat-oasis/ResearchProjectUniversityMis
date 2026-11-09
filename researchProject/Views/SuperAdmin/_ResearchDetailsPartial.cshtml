@@ -90,6 +90,7 @@
                     <th>النسخة</th>
                     <th>اسم الملف الأصلي</th>
                     <th>تاريخ الرفع</th>
+                    <th class="text-center">تحميل / معاينة</th>
                 </tr>
             </thead>
             <tbody>
@@ -102,12 +103,17 @@
                             <td><span class="badge bg-secondary">V @att.Version</span></td>
                             <td>@att.OriginalFileName</td>
                             <td class="text-muted small">@att.UploadedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td class="text-center">
+                                <a href="/Attachment/Download/@att.Id" class="btn btn-sm btn-outline-primary" target="_blank" title="تحميل الملف">
+                                    <i class="bi bi-download me-1"></i> تحميل
+                                </a>
+                            </td>
                         </tr>
                     }
                 }
                 else
                 {
-                    <tr><td colspan="4" class="text-center py-2 text-muted">لا توجد مرفقات.</td></tr>
+                    <tr><td colspan="5" class="text-center py-2 text-muted">لا توجد مرفقات.</td></tr>
                 }
             </tbody>
         </table>

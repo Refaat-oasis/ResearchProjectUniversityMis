@@ -456,6 +456,61 @@ body {
     box-shadow: var(--glass-shadow-hover), var(--glass-specular);
 }
 
+/* Equal-size KPI Metric Cards */
+.kpi-metric-card {
+    min-height: 200px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 16px !important;
+}
+
+.kpi-metric-card .kpi-header-box {
+    height: 52px;
+    min-height: 52px;
+    max-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    color: var(--text-muted, #64748b);
+}
+
+.kpi-metric-card .kpi-value-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+}
+
+.kpi-metric-card .kpi-value-box .kpi-number {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.kpi-metric-card .kpi-footer-box {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.kpi-metric-card .kpi-subtext {
+    font-size: 0.8rem;
+    color: var(--text-muted, #64748b);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Standalone Page Header Card */
 .page-header-card {
     background: linear-gradient(135deg, rgba(26, 54, 93, 0.95), rgba(15, 39, 68, 0.95));

@@ -61,7 +61,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="createCoAdminForm" asp-action="CreateCoAdminNewUser" method="post">
-                @Html.AntiForgeryToken()
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>

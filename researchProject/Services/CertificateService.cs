@@ -20,9 +20,7 @@ namespace researchProject.Services
         public string GenerateSerialNumber(string collegeCode)
         {
             var year = DateTime.UtcNow.Year;
-            var randomBytes = new byte[4];
-            RandomNumberGenerator.Fill(randomBytes);
-            var randomNum = Math.Abs(BitConverter.ToInt32(randomBytes, 0)) % 900000 + 100000;
+            var randomNum = RandomNumberGenerator.GetInt32(100000, 1000000);
             return $"REC-{collegeCode.ToUpperInvariant()}-{year}-{randomNum}";
         }
 
@@ -55,8 +53,9 @@ namespace researchProject.Services
             if (!string.IsNullOrEmpty(issuingCoAdmin.SignatureImagePath))
             {
                 var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath ?? Directory.GetCurrentDirectory(), "wwwroot");
-                var sigFullPath = Path.Combine(webRoot, issuingCoAdmin.SignatureImagePath.TrimStart('~', '/', '\\'));
-                if (File.Exists(sigFullPath))
+                var cleanRelative = issuingCoAdmin.SignatureImagePath.TrimStart('~', '/', '\\');
+                var sigFullPath = Path.GetFullPath(Path.Combine(webRoot, cleanRelative));
+                if (sigFullPath.StartsWith(webRoot, StringComparison.OrdinalIgnoreCase) && File.Exists(sigFullPath))
                 {
                     var sigBytes = await File.ReadAllBytesAsync(sigFullPath);
                     var sigBase64 = Convert.ToBase64String(sigBytes);
@@ -64,13 +63,20 @@ namespace researchProject.Services
                 }
             }
 
+            var safeCollegeName = System.Net.WebUtility.HtmlEncode(research.College?.Name ?? string.Empty);
+            var safeTitle = System.Net.WebUtility.HtmlEncode(research.Title ?? string.Empty);
+            var safeSpecialty = System.Net.WebUtility.HtmlEncode(research.AcademicSpecialty ?? string.Empty);
+            var safeCategoryName = System.Net.WebUtility.HtmlEncode(research.Category?.Name ?? string.Empty);
+            var safeCoAdminName = System.Net.WebUtility.HtmlEncode(issuingCoAdmin.User?.FullName ?? string.Empty);
+
             var researchersList = new StringBuilder();
             if (research.ResearcherResearchesBridges != null)
             {
                 foreach (var bridge in research.ResearcherResearchesBridges)
                 {
                     var roleText = bridge.IsMainAuthor ? "(الباحث الرئيسي)" : "(باحث مشارك)";
-                    researchersList.Append($"<span style='margin-left: 15px;'><strong>{bridge.Researcher?.User?.FullName}</strong> {roleText}</span>");
+                    var safeAuthorName = System.Net.WebUtility.HtmlEncode(bridge.Researcher?.User?.FullName ?? string.Empty);
+                    researchersList.Append($"<span style='margin-left: 15px;'><strong>{safeAuthorName}</strong> {roleText}</span>");
                 }
             }
 

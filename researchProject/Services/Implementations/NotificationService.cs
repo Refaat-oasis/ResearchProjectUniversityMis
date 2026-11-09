@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using researchProject.Data;
 using researchProject.Hubs;
 using researchProject.Models.Entities;
@@ -16,13 +17,16 @@ namespace researchProject.Services.Implementations
     {
         private readonly ApplicationDbContext _context;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly ILogger<NotificationService>? _logger;
 
         public NotificationService(
             ApplicationDbContext context,
-            IHubContext<NotificationHub> hubContext)
+            IHubContext<NotificationHub> hubContext,
+            ILogger<NotificationService>? logger = null)
         {
             _context = context;
             _hubContext = hubContext;
+            _logger = logger;
         }
 
         public async Task SendNotificationAsync(string userId, string title, string message, string targetUrl, string type, string icon = "bi-bell")
@@ -57,8 +61,15 @@ namespace researchProject.Services.Implementations
                 TimeAgo = "الآن"
             };
 
-            // Push in real-time via SignalR to user
-            await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", viewModel);
+            // Push in real-time via SignalR to user with fault tolerance
+            try
+            {
+                await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Failed to send real-time SignalR notification to user {UserId}", userId);
+            }
         }
 
         public async Task<List<NotificationViewModel>> GetUserNotificationsAsync(string userId, int count = 15)

@@ -12,6 +12,7 @@ namespace researchProject.Repositories.Interfaces
         Task<(bool Succeeded, string? ErrorMessage)> ConfirmEmailAsync(string userId, string token);
         Task<JudgeInvitation?> GetInvitationByTokenAsync(string token);
         Task<(bool Succeeded, string? ErrorMessage)> AcceptJudgeInvitationAsync(string token, string? fullName, string? password, string? academicTitle, string? signedInUserId);
+        Task RefreshSignInAsync(string userId);
         Task SignOutAsync();
         Task<ApplicationUser?> FindByEmailAsync(string email);
         Task<ApplicationUser?> FindByIdAsync(string userId);

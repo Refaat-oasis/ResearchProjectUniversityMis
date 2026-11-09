@@ -200,46 +200,53 @@ namespace researchProject.Repositories.Implementations
                 };
                 await _db.ResearchStatusHistories.AddAsync(history);
 
-                // Notify researchers and Co-Admin
-                foreach (var b in research.ResearcherResearchesBridges)
+                // Notify researchers and Co-Admin safely without impacting database transaction
+                try
                 {
-                    if (!string.IsNullOrEmpty(b.Researcher?.User?.Email))
+                    foreach (var b in research.ResearcherResearchesBridges)
                     {
-                        _ = _emailSender.SendStatusChangedNotificationAsync(
-                            b.Researcher.User.Email,
-                            research.Title,
-                            oldStatus,
-                            ResearchStatusConstants.Approved,
-                            "نهنئكم بموافقة المحكم واعتماد المقترح، وهو الآن بانتظار إصدار الشهادة من مدير اللجنة.");
-                    }
+                        if (!string.IsNullOrEmpty(b.Researcher?.User?.Email))
+                        {
+                            _ = _emailSender.SendStatusChangedNotificationAsync(
+                                b.Researcher.User.Email,
+                                research.Title,
+                                oldStatus,
+                                ResearchStatusConstants.Approved,
+                                "نهنئكم بموافقة المحكم واعتماد المقترح، وهو الآن بانتظار إصدار الشهادة من مدير اللجنة.");
+                        }
 
-                    if (_notificationService != null && !string.IsNullOrEmpty(b.Researcher?.UserId))
-                    {
-                        await _notificationService.SendNotificationAsync(
-                            b.Researcher.UserId,
-                            "موافقة هيئة التحكيم على المقترح",
-                            $"نهنئكم بموافقة المحكم على المقترح '{research.Title}'، وهو بانتظار الاعتماد النهائي وإصدار الشهادة.",
-                            $"/Researcher/Tracker/{research.Id}",
-                            "StatusChange",
-                            "bi-check-all");
-                    }
-                }
-
-                if (_notificationService != null)
-                {
-                    foreach (var coAdmin in research.College.CollegeCoAdmins)
-                    {
-                        if (!string.IsNullOrEmpty(coAdmin.UserId))
+                        if (_notificationService != null && !string.IsNullOrEmpty(b.Researcher?.UserId))
                         {
                             await _notificationService.SendNotificationAsync(
-                                coAdmin.UserId,
-                                "مقترح جاهز للاعتماد النهائي",
-                                $"تمت موافقة المحكم على المقترح '{research.Title}'، وأصبح جاهزاً للاعتماد وإصدار الشهادة الأخلاقية.",
-                                "/CollegeCoAdmin/FinalApproval",
-                                "ReadyForApproval",
-                                "bi-award");
+                                b.Researcher.UserId,
+                                "موافقة هيئة التحكيم على المقترح",
+                                $"نهنئكم بموافقة المحكم على المقترح '{research.Title}'، وهو بانتظار الاعتماد النهائي وإصدار الشهادة.",
+                                $"/Researcher/Tracker/{research.Id}",
+                                "StatusChange",
+                                "bi-check-all");
                         }
                     }
+
+                    if (_notificationService != null)
+                    {
+                        foreach (var coAdmin in research.College.CollegeCoAdmins)
+                        {
+                            if (!string.IsNullOrEmpty(coAdmin.UserId))
+                            {
+                                await _notificationService.SendNotificationAsync(
+                                    coAdmin.UserId,
+                                    "مقترح جاهز للاعتماد النهائي",
+                                    $"تمت موافقة المحكم على المقترح '{research.Title}'، وأصبح جاهزاً للاعتماد وإصدار الشهادة الأخلاقية.",
+                                    "/CollegeCoAdmin/FinalApproval",
+                                    "ReadyForApproval",
+                                    "bi-award");
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore notification exceptions during evaluation completion
                 }
             }
             else
@@ -257,45 +264,52 @@ namespace researchProject.Repositories.Implementations
                 };
                 await _db.ResearchStatusHistories.AddAsync(history);
 
-                foreach (var b in research.ResearcherResearchesBridges)
+                try
                 {
-                    if (!string.IsNullOrEmpty(b.Researcher?.User?.Email))
+                    foreach (var b in research.ResearcherResearchesBridges)
                     {
-                        _ = _emailSender.SendStatusChangedNotificationAsync(
-                            b.Researcher.User.Email,
-                            research.Title,
-                            oldStatus,
-                            ResearchStatusConstants.ModificationsRequired,
-                            $"ملاحظات التعديل المطلوبة من هيئة التحكيم:\n{modificationNotes}");
-                    }
+                        if (!string.IsNullOrEmpty(b.Researcher?.User?.Email))
+                        {
+                            _ = _emailSender.SendStatusChangedNotificationAsync(
+                                b.Researcher.User.Email,
+                                research.Title,
+                                oldStatus,
+                                ResearchStatusConstants.ModificationsRequired,
+                                $"ملاحظات التعديل المطلوبة من هيئة التحكيم:\n{modificationNotes}");
+                        }
 
-                    if (_notificationService != null && !string.IsNullOrEmpty(b.Researcher?.UserId))
-                    {
-                        await _notificationService.SendNotificationAsync(
-                            b.Researcher.UserId,
-                            "مطلوب إجراء تعديلات على المقترح",
-                            $"طلب المحكم استيفاء تعديلات وملاحظات على مقترحكم '{research.Title}'.",
-                            $"/Researcher/Modify/{research.Id}",
-                            "ModificationRequired",
-                            "bi-pencil-square");
-                    }
-                }
-
-                if (_notificationService != null)
-                {
-                    foreach (var coAdmin in research.College.CollegeCoAdmins)
-                    {
-                        if (!string.IsNullOrEmpty(coAdmin.UserId))
+                        if (_notificationService != null && !string.IsNullOrEmpty(b.Researcher?.UserId))
                         {
                             await _notificationService.SendNotificationAsync(
-                                coAdmin.UserId,
-                                "طلب تعديلات على مقترح بحثي",
-                                $"قرر المحكم طلب تعديلات على المقترح: '{research.Title}'. تم إخطار الباحث بذلك.",
-                                $"/CollegeCoAdmin/Review/{research.Id}",
-                                "StatusChange",
-                                "bi-exclamation-circle");
+                                b.Researcher.UserId,
+                                "مطلوب إجراء تعديلات على المقترح",
+                                $"طلب المحكم استيفاء تعديلات وملاحظات على مقترحكم '{research.Title}'.",
+                                $"/Researcher/Modify/{research.Id}",
+                                "ModificationRequired",
+                                "bi-pencil-square");
                         }
                     }
+
+                    if (_notificationService != null)
+                    {
+                        foreach (var coAdmin in research.College.CollegeCoAdmins)
+                        {
+                            if (!string.IsNullOrEmpty(coAdmin.UserId))
+                            {
+                                await _notificationService.SendNotificationAsync(
+                                    coAdmin.UserId,
+                                    "طلب تعديلات على مقترح بحثي",
+                                    $"قرر المحكم طلب تعديلات على المقترح: '{research.Title}'. تم إخطار الباحث بذلك.",
+                                    $"/CollegeCoAdmin/Review/{research.Id}",
+                                    "StatusChange",
+                                    "bi-exclamation-circle");
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore notification exceptions during evaluation completion
                 }
             }
         }

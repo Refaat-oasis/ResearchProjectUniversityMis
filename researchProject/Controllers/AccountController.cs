@@ -335,8 +335,13 @@ namespace researchProject.Controllers
 
                 if (succeeded)
                 {
+                    if (!string.IsNullOrEmpty(userId))
+                    {
+                        await _accountRepository.RefreshSignInAsync(userId);
+                    }
+
                     TempData["SuccessMessage"] = "تم قبول دعوة التحكيم وإضافة صفة محكم إلى حسابك الحالي بنجاح!";
-                    return RedirectToAction(nameof(Login));
+                    return RedirectToAction("AssignedResearches", "Judge");
                 }
 
                 TempData["ErrorMessage"] = errorMessage ?? "تعذر قبول الدعوة.";

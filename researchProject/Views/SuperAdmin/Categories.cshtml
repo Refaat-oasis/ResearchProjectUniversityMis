@@ -76,7 +76,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="categoryForm" asp-action="SaveCategory" method="post">
-                @Html.AntiForgeryToken()
                 <input type="hidden" name="Id" id="catId" value="0" />
                 <input type="hidden" name="FieldsDefinitionJson" id="catFieldsJson" value="[]" />
 

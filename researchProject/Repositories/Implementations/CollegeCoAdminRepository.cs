@@ -109,7 +109,7 @@ namespace researchProject.Repositories.Implementations
 
             // Rank by: (1) Specialty matches Research.AcademicSpecialty, (2) Lowest active evaluations count
             return activeJudges
-                .OrderByDescending(j => j.Specialty.Trim().Equals(research.AcademicSpecialty.Trim(), StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(j => string.Equals(j.Specialty?.Trim(), research.AcademicSpecialty?.Trim(), StringComparison.OrdinalIgnoreCase))
                 .ThenBy(j => j.Evaluations.Count(e => e.Decision == EvaluationDecisionConstants.UnderEvaluation))
                 .ToList();
         }
@@ -160,6 +160,11 @@ namespace researchProject.Repositories.Implementations
                 .Where(j => judgeIds.Contains(j.Id) && j.IsActive)
                 .ToListAsync();
 
+            if (judges.Count < minJudges)
+            {
+                return (false, $"المحكمون المختارون غير متاحين أو غير نشطين. يرجى اختيار {minJudges} محكم نشط على الأقل.");
+            }
+
             foreach (var judge in judges)
             {
                 if (authorUserIds.Contains(judge.UserId))
@@ -168,47 +173,61 @@ namespace researchProject.Repositories.Implementations
                 }
             }
 
-            // Determine next round number
+            // Determine target round number
             var currentMaxRound = await _db.Evaluations
                 .Where(e => e.ResearchId == researchId)
                 .Select(e => (int?)e.RoundNumber)
                 .MaxAsync() ?? 0;
 
-            var targetRound = currentMaxRound + 1;
+            var targetRound = (research.WorkflowStatus == ResearchStatusConstants.AssignedToJudges && currentMaxRound > 0)
+                ? currentMaxRound
+                : currentMaxRound + 1;
 
-            using var transaction = await _db.Database.BeginTransactionAsync();
-            try
+            var oldStatus = research.WorkflowStatus;
+
+            using (var transaction = await _db.Database.BeginTransactionAsync())
             {
-                foreach (var judge in judges)
+                try
                 {
-                    var evaluation = new Evaluation
+                    foreach (var judge in judges)
+                    {
+                        var evaluation = new Evaluation
+                        {
+                            ResearchId = researchId,
+                            JudgeId = judge.Id,
+                            RoundNumber = targetRound,
+                            Decision = EvaluationDecisionConstants.UnderEvaluation,
+                            IsDigitallySigned = false
+                        };
+                        await _db.Evaluations.AddAsync(evaluation);
+                    }
+
+                    research.WorkflowStatus = ResearchStatusConstants.AssignedToJudges;
+
+                    var history = new ResearchStatusHistory
                     {
                         ResearchId = researchId,
-                        JudgeId = judge.Id,
-                        RoundNumber = targetRound,
-                        Decision = EvaluationDecisionConstants.UnderEvaluation,
-                        IsDigitallySigned = false
+                        OldStatus = oldStatus,
+                        NewStatus = ResearchStatusConstants.AssignedToJudges,
+                        ChangedByUserId = actingUserId,
+                        ChangedAt = DateTime.UtcNow,
+                        Reason = $"إسناد البحث إلى {judges.Count} محكمين للجولة التحكيمية رقم {targetRound}"
                     };
-                    await _db.Evaluations.AddAsync(evaluation);
+                    await _db.ResearchStatusHistories.AddAsync(history);
+
+                    await _db.SaveChangesAsync();
+                    await transaction.CommitAsync();
                 }
-
-                var oldStatus = research.WorkflowStatus;
-                research.WorkflowStatus = ResearchStatusConstants.AssignedToJudges;
-
-                var history = new ResearchStatusHistory
+                catch (Exception ex)
                 {
-                    ResearchId = researchId,
-                    OldStatus = oldStatus,
-                    NewStatus = ResearchStatusConstants.AssignedToJudges,
-                    ChangedByUserId = actingUserId,
-                    ChangedAt = DateTime.UtcNow,
-                    Reason = $"إسناد البحث إلى {judges.Count} محكمين للجولة التحكيمية رقم {targetRound}"
-                };
-                await _db.ResearchStatusHistories.AddAsync(history);
+                    await transaction.RollbackAsync();
+                    return (false, $"فشل إسناد المحكمين: {ex.Message}");
+                }
+            }
 
-                await _db.SaveChangesAsync();
-                await transaction.CommitAsync();
-
+            // Notifications executed outside database transaction so failures never roll back db state
+            try
+            {
                 // Send email notifications to judges
                 foreach (var judge in judges)
                 {
@@ -265,14 +284,13 @@ namespace researchProject.Repositories.Implementations
                         }
                     }
                 }
-
-                return (true, null);
             }
-            catch (Exception ex)
+            catch (Exception notifEx)
             {
-                await transaction.RollbackAsync();
-                return (false, $"فشل إسناد المحكمين: {ex.Message}");
+                _logger?.LogWarning(notifEx, "Failed to send notifications after assigning judges to research {ResearchId}", researchId);
             }
+
+            return (true, null);
         }
 
         public async Task<List<UserSummaryViewModel>> GetAssignableUsersForInvitationAsync()
@@ -383,29 +401,39 @@ namespace researchProject.Repositories.Implementations
             // Generate physical HTML/PDF file
             var certFileName = await _certificateService.GenerateCertificateFileAsync(research, coAdmin, baseUrl);
 
-            using var transaction = await _db.Database.BeginTransactionAsync();
+            using (var transaction = await _db.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var oldStatus = research.WorkflowStatus;
+                    research.WorkflowStatus = ResearchStatusConstants.CertificateIssued;
+                    research.CertificateIssuedAt = DateTime.UtcNow;
+                    research.CertificateFilePath = certFileName;
+
+                    var history = new ResearchStatusHistory
+                    {
+                        ResearchId = researchId,
+                        OldStatus = oldStatus,
+                        NewStatus = ResearchStatusConstants.CertificateIssued,
+                        ChangedByUserId = coAdminUserId,
+                        ChangedAt = DateTime.UtcNow,
+                        Reason = $"إصدار الشهادة الأخلاقية الرسمية برقم مسلسل: {serialNumber} وتوقيع د. {coAdmin.User.FullName}"
+                    };
+                    await _db.ResearchStatusHistories.AddAsync(history);
+
+                    await _db.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, $"فشل إصدار الشهادة: {ex.Message}", null);
+                }
+            }
+
+            // Post-commit notifications (isolated from database transaction)
             try
             {
-                var oldStatus = research.WorkflowStatus;
-                research.WorkflowStatus = ResearchStatusConstants.CertificateIssued;
-                research.CertificateIssuedAt = DateTime.UtcNow;
-                research.CertificateFilePath = certFileName;
-
-                var history = new ResearchStatusHistory
-                {
-                    ResearchId = researchId,
-                    OldStatus = oldStatus,
-                    NewStatus = ResearchStatusConstants.CertificateIssued,
-                    ChangedByUserId = coAdminUserId,
-                    ChangedAt = DateTime.UtcNow,
-                    Reason = $"إصدار الشهادة الأخلاقية الرسمية برقم مسلسل: {serialNumber} وتوقيع د. {coAdmin.User.FullName}"
-                };
-                await _db.ResearchStatusHistories.AddAsync(history);
-
-                await _db.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                // Email PDF notification to researchers (failures do NOT roll back)
                 var downloadUrl = $"{baseUrl.TrimEnd('/')}/Researcher/DownloadCertificate?researchId={research.Id}";
                 foreach (var bridge in research.ResearcherResearchesBridges)
                 {
@@ -437,14 +465,13 @@ namespace researchProject.Repositories.Implementations
                             "bi-award");
                     }
                 }
-
-                return (true, null, serialNumber);
             }
-            catch (Exception ex)
+            catch (Exception notifEx)
             {
-                await transaction.RollbackAsync();
-                return (false, $"فشل إصدار الشهادة: {ex.Message}", null);
+                _logger.LogWarning(notifEx, "Failed to send notifications for certificate issuance {SerialNumber}", serialNumber);
             }
+
+            return (true, null, serialNumber);
         }
 
         public async Task<(bool Succeeded, string? ErrorMessage)> UploadSignatureImageAsync(string coAdminUserId, string relativePath)

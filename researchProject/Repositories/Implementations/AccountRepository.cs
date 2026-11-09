@@ -284,6 +284,16 @@ namespace researchProject.Repositories.Implementations
             }
         }
 
+        public async Task RefreshSignInAsync(string userId)
+        {
+            if (string.IsNullOrEmpty(userId)) return;
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                await _signInManager.RefreshSignInAsync(user);
+            }
+        }
+
         public async Task SignOutAsync()
         {
             await _signInManager.SignOutAsync();

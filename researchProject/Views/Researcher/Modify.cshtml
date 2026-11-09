@@ -39,7 +39,6 @@
     </div>
 
     <form id="uploadModForm" asp-action="SubmitModifications" method="post" enctype="multipart/form-data">
-        @Html.AntiForgeryToken()
         <input type="hidden" asp-for="ResearchId" />
 
         <div class="mb-3">

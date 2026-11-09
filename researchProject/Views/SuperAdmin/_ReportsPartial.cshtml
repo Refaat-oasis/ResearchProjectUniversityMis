@@ -92,39 +92,55 @@
     <h6 class="fw-bold text-dark mb-3"><i class="bi bi-speedometer text-primary me-2"></i>مؤشرات قياس الأداء الرئيسية (KPIs)</h6>
     <div class="row g-3 align-items-stretch">
         <div class="col-md-3 d-flex">
-            <div class="p-3 border rounded bg-white text-center w-100 h-100 d-flex flex-column justify-content-between">
-                <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
-                    <i class="bi bi-stopwatch text-primary me-1"></i>متوسط زمن الفحص الشكلي
+            <div class="kpi-metric-card border rounded bg-white text-center w-100 flex-fill">
+                <div class="kpi-header-box">
+                    <span><i class="bi bi-stopwatch text-primary me-1"></i>متوسط زمن الفحص الشكلي</span>
                 </div>
-                <div class="fs-3 fw-bold text-primary my-auto">@Model.AverageScreeningHours</div>
-                <div class="text-muted small mt-1">ساعة (الحد الأقصى: 48 ساعة)</div>
+                <div class="kpi-value-box">
+                    <span class="kpi-number text-primary">@Model.AverageScreeningHours.ToString("0.0")</span>
+                </div>
+                <div class="kpi-footer-box">
+                    <div class="kpi-subtext" title="ساعة (الحد الأقصى: 48 ساعة)">ساعة (الحد الأقصى: 48 ساعة)</div>
+                </div>
             </div>
         </div>
         <div class="col-md-3 d-flex">
-            <div class="p-3 border rounded bg-white text-center w-100 h-100 d-flex flex-column justify-content-between">
-                <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
-                    <i class="bi bi-calendar-check text-info me-1"></i>متوسط زمن التحكيم الأخلاقي
+            <div class="kpi-metric-card border rounded bg-white text-center w-100 flex-fill">
+                <div class="kpi-header-box">
+                    <span><i class="bi bi-calendar-check text-info me-1"></i>متوسط زمن التحكيم الأخلاقي</span>
                 </div>
-                <div class="fs-3 fw-bold text-info my-auto">@Model.AverageJudgingDays</div>
-                <div class="text-muted small mt-1">أيام عمل لكل مقترح</div>
+                <div class="kpi-value-box">
+                    <span class="kpi-number text-info">@Model.AverageJudgingDays.ToString("0.0")</span>
+                </div>
+                <div class="kpi-footer-box">
+                    <div class="kpi-subtext" title="أيام عمل لكل مقترح">أيام عمل لكل مقترح</div>
+                </div>
             </div>
         </div>
         <div class="col-md-3 d-flex">
-            <div class="p-3 border rounded bg-white text-center w-100 h-100 d-flex flex-column justify-content-between">
-                <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
-                    <i class="bi bi-shield-check text-success me-1"></i>الامتثال لاتفاقية مستوى الخدمة
+            <div class="kpi-metric-card border rounded bg-white text-center w-100 flex-fill">
+                <div class="kpi-header-box">
+                    <span><i class="bi bi-shield-check text-success me-1"></i>الامتثال لاتفاقية مستوى الخدمة</span>
                 </div>
-                <div class="fs-3 fw-bold text-success my-auto">@Model.SlaCompliancePercentage%</div>
-                <div class="text-muted small mt-1">أبحاث فُحصت خلال المهلة</div>
+                <div class="kpi-value-box">
+                    <span class="kpi-number text-success">@Model.SlaCompliancePercentage.ToString("0.0")%</span>
+                </div>
+                <div class="kpi-footer-box">
+                    <div class="kpi-subtext" title="أبحاث فُحصت خلال المهلة">أبحاث فُحصت خلال المهلة</div>
+                </div>
             </div>
         </div>
         <div class="col-md-3 d-flex">
-            <div class="p-3 border rounded bg-white text-center w-100 h-100 d-flex flex-column justify-content-between">
-                <div class="kpi-header-box d-flex align-items-center justify-content-center text-muted small mb-2" style="min-height: 48px; line-height: 1.35;">
-                    <i class="bi bi-patch-check text-warning me-1"></i>إجمالي الشهادات المعتمدة الصادرة
+            <div class="kpi-metric-card border rounded bg-white text-center w-100 flex-fill">
+                <div class="kpi-header-box">
+                    <span><i class="bi bi-patch-check text-warning me-1"></i>إجمالي الشهادات المعتمدة الصادرة</span>
                 </div>
-                <div class="fs-3 fw-bold text-dark my-auto">@Model.CertificatesIssuedCount</div>
-                <div class="text-muted small mt-1">شهادة أخلاقية رقمية</div>
+                <div class="kpi-value-box">
+                    <span class="kpi-number text-dark">@Model.CertificatesIssuedCount</span>
+                </div>
+                <div class="kpi-footer-box">
+                    <div class="kpi-subtext" title="شهادة أخلاقية رقمية">شهادة أخلاقية رقمية</div>
+                </div>
             </div>
         </div>
     </div>

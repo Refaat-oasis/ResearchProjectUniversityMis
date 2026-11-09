@@ -71,7 +71,18 @@ namespace researchProject.Services
 
         public Task<Stream?> GetFileStreamAsync(string storedFileName, string subFolder)
         {
-            var fullPath = Path.Combine(_baseStoragePath, subFolder, storedFileName);
+            var safeSubFolder = Path.GetFileName(subFolder ?? string.Empty);
+            var safeFileName = Path.GetFileName(storedFileName ?? string.Empty);
+            var fullPath = Path.Combine(_baseStoragePath, safeSubFolder, safeFileName);
+
+            // Path Traversal Guard
+            var fullCanonicalPath = Path.GetFullPath(fullPath);
+            var baseCanonicalPath = Path.GetFullPath(_baseStoragePath);
+            if (!fullCanonicalPath.StartsWith(baseCanonicalPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult<Stream?>(null);
+            }
+
             if (!File.Exists(fullPath))
             {
                 return Task.FromResult<Stream?>(null);
@@ -83,7 +94,18 @@ namespace researchProject.Services
 
         public void DeleteFile(string storedFileName, string subFolder)
         {
-            var fullPath = Path.Combine(_baseStoragePath, subFolder, storedFileName);
+            var safeSubFolder = Path.GetFileName(subFolder ?? string.Empty);
+            var safeFileName = Path.GetFileName(storedFileName ?? string.Empty);
+            var fullPath = Path.Combine(_baseStoragePath, safeSubFolder, safeFileName);
+
+            // Path Traversal Guard
+            var fullCanonicalPath = Path.GetFullPath(fullPath);
+            var baseCanonicalPath = Path.GetFullPath(_baseStoragePath);
+            if (!fullCanonicalPath.StartsWith(baseCanonicalPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
             if (File.Exists(fullPath))
             {
                 try
