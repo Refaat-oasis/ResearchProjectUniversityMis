@@ -31,7 +31,7 @@ namespace researchProject.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
-            return View(new LoginDto());
+            return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
 
         [HttpPost]
@@ -42,7 +42,8 @@ namespace researchProject.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (!ModelState.IsValid)
             {
-                return View(dto);
+                var vm = new LoginViewModel { Email = dto.Email, RememberMe = dto.RememberMe, ReturnUrl = returnUrl };
+                return View(vm);
             }
 
             var (succeeded, isLockedOut, requiresTwoFactor, errorMessage, roles) = 
@@ -51,13 +52,15 @@ namespace researchProject.Controllers
             if (isLockedOut)
             {
                 ModelState.AddModelError(string.Empty, "تم قفل الحساب مؤقتاً بسبب تكرار المحاولات الخاطئة. يرجى المحاولة بعد 15 دقيقة.");
-                return View(dto);
+                var vm = new LoginViewModel { Email = dto.Email, RememberMe = dto.RememberMe, ReturnUrl = returnUrl };
+                return View(vm);
             }
 
             if (!succeeded)
             {
                 ModelState.AddModelError(string.Empty, errorMessage ?? "فشل تسجيل الدخول. يرجى التحقق من صحة البيانات.");
-                return View(dto);
+                var vm = new LoginViewModel { Email = dto.Email, RememberMe = dto.RememberMe, ReturnUrl = returnUrl, ErrorMessage = errorMessage };
+                return View(vm);
             }
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -77,8 +80,9 @@ namespace researchProject.Controllers
                 return RedirectToUserDashboard();
             }
 
-            ViewBag.Colleges = await _accountRepository.GetActiveCollegesAsync();
-            return View(new ResearcherSignUpDto());
+            var colleges = await _accountRepository.GetActiveCollegesAsync();
+            ViewBag.Colleges = colleges;
+            return View(new ResearcherSignUpViewModel { AvailableColleges = colleges });
         }
 
         [HttpPost]
@@ -88,8 +92,21 @@ namespace researchProject.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Colleges = await _accountRepository.GetActiveCollegesAsync();
-                return View(dto);
+                var colleges = await _accountRepository.GetActiveCollegesAsync();
+                ViewBag.Colleges = colleges;
+                var vm = new ResearcherSignUpViewModel
+                {
+                    FullName = dto.FullName,
+                    Email = dto.Email,
+                    CollegeId = dto.CollegeId,
+                    ResearcherType = dto.ResearcherType,
+                    AcademicDegree = dto.AcademicDegree,
+                    Department = dto.Department,
+                    NationalId = dto.NationalId,
+                    PhoneNumber = dto.PhoneNumber,
+                    AvailableColleges = colleges
+                };
+                return View(vm);
             }
 
             var (succeeded, errorMessage, confirmationToken, userId) = await _accountRepository.SignUpResearcherAsync(dto);
@@ -97,8 +114,22 @@ namespace researchProject.Controllers
             if (!succeeded)
             {
                 ModelState.AddModelError(string.Empty, errorMessage ?? "فشل تسجيل الحساب.");
-                ViewBag.Colleges = await _accountRepository.GetActiveCollegesAsync();
-                return View(dto);
+                var colleges = await _accountRepository.GetActiveCollegesAsync();
+                ViewBag.Colleges = colleges;
+                var vm = new ResearcherSignUpViewModel
+                {
+                    FullName = dto.FullName,
+                    Email = dto.Email,
+                    CollegeId = dto.CollegeId,
+                    ResearcherType = dto.ResearcherType,
+                    AcademicDegree = dto.AcademicDegree,
+                    Department = dto.Department,
+                    NationalId = dto.NationalId,
+                    PhoneNumber = dto.PhoneNumber,
+                    AvailableColleges = colleges,
+                    ErrorMessage = errorMessage
+                };
+                return View(vm);
             }
 
             // Generate direct confirmation link
@@ -129,7 +160,7 @@ namespace researchProject.Controllers
         [AllowAnonymous]
         public IActionResult ForgotPassword()
         {
-            return View(new ForgotPasswordDto());
+            return View(new ForgotPasswordViewModel());
         }
 
         [HttpPost]
@@ -139,7 +170,7 @@ namespace researchProject.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(dto);
+                return View(new ForgotPasswordViewModel { Email = dto.Email });
             }
 
             var (succeeded, errorMessage, resetToken, userId) = await _accountRepository.GeneratePasswordResetTokenAsync(dto.Email);
@@ -160,7 +191,7 @@ namespace researchProject.Controllers
         [AllowAnonymous]
         public IActionResult ResetPassword(string? email = null, string? token = null)
         {
-            var model = new ResetPasswordDto
+            var model = new ResetPasswordViewModel
             {
                 Email = email ?? string.Empty,
                 Token = token ?? string.Empty
@@ -175,14 +206,14 @@ namespace researchProject.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(dto);
+                return View(new ResetPasswordViewModel { Email = dto.Email, Token = dto.Token });
             }
 
             var (succeeded, errorMessage) = await _accountRepository.ResetPasswordWithTokenAsync(dto.Email, dto.Token, dto.NewPassword);
             if (!succeeded)
             {
                 ModelState.AddModelError(string.Empty, errorMessage ?? "فشل إعادة تعيين كلمة المرور.");
-                return View(dto);
+                return View(new ResetPasswordViewModel { Email = dto.Email, Token = dto.Token, ErrorMessage = errorMessage });
             }
 
             TempData["SuccessMessage"] = "تم تغيير كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.";
@@ -262,21 +293,22 @@ namespace researchProject.Controllers
                 return Json(new { success = false, message = "يرجى إدخال البريد الإلكتروني لإعادة الإرسال." });
             }
 
-            var (succeeded, errorMessage, newCode) = await _accountRepository.ResendVerificationCodeAsync(dto.EmailOrUserId, "EmailConfirmation");
+            var (succeeded, errorMessage, newCode, resolvedEmail) = await _accountRepository.ResendVerificationCodeAsync(dto.EmailOrUserId, "EmailConfirmation");
             if (!succeeded || string.IsNullOrEmpty(newCode))
             {
                 return Json(new { success = false, message = errorMessage ?? "فشل إعادة إرسال رمز التحقق." });
             }
 
+            var emailToUse = resolvedEmail ?? dto.EmailOrUserId;
             var confirmationLink = Url.Action(
                 nameof(VerifyEmailToken),
                 "Account",
-                new { email = dto.EmailOrUserId, token = newCode },
+                new { email = emailToUse, token = newCode },
                 Request.Scheme);
 
             if (!string.IsNullOrEmpty(confirmationLink))
             {
-                await _emailSender.SendRegistrationTokenAsync(dto.EmailOrUserId, newCode, confirmationLink);
+                await _emailSender.SendRegistrationTokenAsync(emailToUse, newCode, confirmationLink);
             }
 
             return Json(new { success = true, message = "تم إرسال رمز تحقق جديد مكوّن من 6 أرقام إلى بريدك الإلكتروني (صالح لمدة 15 دقيقة)." });
@@ -322,9 +354,11 @@ namespace researchProject.Controllers
                 return RedirectToAction(nameof(Login));
             }
 
-            var dto = new AcceptInvitationDto
+            var vm = new AcceptInvitationViewModel
             {
-                Token = token
+                Token = token,
+                Email = invitation.Email,
+                Specialty = invitation.Specialty
             };
 
             // If user is logged in
@@ -350,7 +384,7 @@ namespace researchProject.Controllers
 
             ViewBag.InvitationEmail = invitation.Email;
             ViewBag.Specialty = invitation.Specialty;
-            return View(dto);
+            return View(vm);
         }
 
         [HttpPost]
@@ -360,7 +394,13 @@ namespace researchProject.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(dto);
+                var vm = new AcceptInvitationViewModel
+                {
+                    Token = dto.Token,
+                    FullName = dto.FullName,
+                    AcademicTitle = dto.AcademicTitle
+                };
+                return View(vm);
             }
 
             var (succeeded, errorMessage) = await _accountRepository.AcceptJudgeInvitationAsync(
@@ -373,10 +413,17 @@ namespace researchProject.Controllers
             if (!succeeded)
             {
                 ModelState.AddModelError(string.Empty, errorMessage ?? "تعذر إكمال قبول الدعوة وإنشاء الحساب.");
-                return View(dto);
+                var vm = new AcceptInvitationViewModel
+                {
+                    Token = dto.Token,
+                    FullName = dto.FullName,
+                    AcademicTitle = dto.AcademicTitle,
+                    ErrorMessage = errorMessage
+                };
+                return View(vm);
             }
 
-            TempData["SuccessMessage"] = "تم إنشاء وتفعيل حساب المحكم بنجاح! يمكنك الآن تسجيل الدخول ببياناتك الجديدة.";
+            TempData["SuccessMessage"] = "تم تفعيل حساب المحكم بنجاح! يمكنك الآن تسجيل الدخول ببياناتك.";
             return RedirectToAction(nameof(Login));
         }
 

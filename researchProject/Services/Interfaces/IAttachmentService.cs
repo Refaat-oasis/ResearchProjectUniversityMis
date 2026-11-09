@@ -8,3 +8,4 @@ namespace researchProject.Services.Interfaces
         Task<(bool IsAuthorized, bool FileExists, Stream? FileStream, string ContentType, string FileName)> GetAttachmentDownloadAsync(int attachmentId, string userId);
     }
 }
+

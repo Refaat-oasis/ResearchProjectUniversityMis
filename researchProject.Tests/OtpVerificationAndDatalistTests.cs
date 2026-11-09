@@ -11,6 +11,7 @@ using Moq;
 using researchProject.Data;
 using researchProject.Models.Entities;
 using researchProject.Repositories.Implementations;
+using researchProject.Repositories.Interfaces;
 using researchProject.Services;
 using Xunit;
 
@@ -91,7 +92,7 @@ namespace researchProject.Tests
 
             var saved = await db.EmailVerificationCodes.FirstOrDefaultAsync(c => c.Email == email);
             Assert.NotNull(saved);
-            Assert.Equal(code, saved!.Code);
+            Assert.Equal(AccountRepository.HashToken(code), saved!.Code);
             Assert.False(saved.IsUsed);
             Assert.Equal(0, saved.AttemptsCount);
 
@@ -222,7 +223,7 @@ namespace researchProject.Tests
             await repo.GenerateVerificationCodeAsync(user.Email, "EmailConfirmation", user.Id);
 
             // 2. Immediate resend should be rate-limited (under 60s)
-            var (immediateOk, immediateErr, _) = await repo.ResendVerificationCodeAsync(user.Email, "EmailConfirmation");
+            var (immediateOk, immediateErr, _, _) = await repo.ResendVerificationCodeAsync(user.Email, "EmailConfirmation");
             Assert.False(immediateOk);
             Assert.Contains("ثانية", immediateErr);
 
@@ -232,7 +233,7 @@ namespace researchProject.Tests
             await db.SaveChangesAsync();
 
             // 4. Resend now succeeds and creates fresh code
-            var (resendOk, _, newCode) = await repo.ResendVerificationCodeAsync(user.Email, "EmailConfirmation");
+            var (resendOk, _, newCode, _) = await repo.ResendVerificationCodeAsync(user.Email, "EmailConfirmation");
             Assert.True(resendOk);
             Assert.NotNull(newCode);
             Assert.Equal(6, newCode!.Length);
@@ -250,7 +251,7 @@ namespace researchProject.Tests
 
             var repo = new AccountRepository(userMgr.Object, signInMgr.Object, roleMgr.Object, db, CreateTestConfig(), emailSender.Object);
 
-            var (ok, err, _) = await repo.ResendVerificationCodeAsync("unknown@test.com", "EmailConfirmation");
+            var (ok, err, _, _) = await repo.ResendVerificationCodeAsync("unknown@test.com", "EmailConfirmation");
             Assert.False(ok);
             Assert.Contains("غير مسجل", err);
         }
@@ -266,9 +267,134 @@ namespace researchProject.Tests
 
             var repo = new AccountRepository(userMgr.Object, signInMgr.Object, roleMgr.Object, db, CreateTestConfig(), emailSender.Object);
 
-            var (ok, err, _) = await repo.ResendVerificationCodeAsync(user.Email, "EmailConfirmation");
+            var (ok, err, _, _) = await repo.ResendVerificationCodeAsync(user.Email, "EmailConfirmation");
             Assert.False(ok);
             Assert.Contains("مفعل بالفعل", err);
+        }
+
+        [Fact]
+        public async Task ConfirmEmailWithTokenOrCodeAsync_WithValidNumericOtp_ConfirmsEmailSuccessfully()
+        {
+            var db = CreateInMemoryDb(nameof(ConfirmEmailWithTokenOrCodeAsync_WithValidNumericOtp_ConfirmsEmailSuccessfully));
+            var (userMgr, signInMgr, roleMgr, emailSender) = CreateMocks();
+
+            var user = new ApplicationUser { Id = "u-otp-valid", Email = "researcher.otp@example.com", EmailConfirmed = false };
+            userMgr.Setup(m => m.FindByEmailAsync(user.Email)).ReturnsAsync(user);
+
+            var repo = new AccountRepository(userMgr.Object, signInMgr.Object, roleMgr.Object, db, CreateTestConfig(), emailSender.Object);
+
+            var (genOk, _, otpCode, _) = await repo.GenerateVerificationCodeAsync(user.Email, "EmailConfirmation", user.Id);
+            Assert.True(genOk);
+            Assert.NotNull(otpCode);
+
+            var (confirmOk, confirmErr) = await repo.ConfirmEmailWithTokenOrCodeAsync(user.Email, otpCode!);
+            Assert.True(confirmOk, confirmErr);
+            Assert.True(user.EmailConfirmed);
+
+            var codeInDb = await db.EmailVerificationCodes.FirstOrDefaultAsync(c => c.Email == user.Email);
+            Assert.NotNull(codeInDb);
+            Assert.True(codeInDb!.IsUsed);
+        }
+
+        [Fact]
+        public async Task ValidateVerificationCode_TracksFailedAttemptsAndLocksOutAfter5Failures()
+        {
+            var db = CreateInMemoryDb(nameof(ValidateVerificationCode_TracksFailedAttemptsAndLocksOutAfter5Failures));
+            var (userMgr, signInMgr, roleMgr, emailSender) = CreateMocks();
+
+            var user = new ApplicationUser { Id = "u-lockout", Email = "lockout.test@example.com", EmailConfirmed = false };
+            userMgr.Setup(m => m.FindByEmailAsync(user.Email)).ReturnsAsync(user);
+
+            var repo = new AccountRepository(userMgr.Object, signInMgr.Object, roleMgr.Object, db, CreateTestConfig(), emailSender.Object);
+
+            var (genOk, _, otpCode, _) = await repo.GenerateVerificationCodeAsync(user.Email, "EmailConfirmation", user.Id);
+            Assert.True(genOk);
+
+            // Attempts 1 to 4 fail with "غير صحيح"
+            for (int i = 0; i < 4; i++)
+            {
+                var (wrongOk, wrongErr) = await repo.ValidateVerificationCodeAsync(user.Email, "000000", "EmailConfirmation");
+                Assert.False(wrongOk);
+                Assert.Contains("غير صحيح", wrongErr);
+            }
+
+            // 5th attempt immediately locks out and marks the code as used
+            var (lockoutOk, lockoutErr) = await repo.ValidateVerificationCodeAsync(user.Email, "000000", "EmailConfirmation");
+            Assert.False(lockoutOk);
+            Assert.Contains("تم تجاوز الحد الأقصى للمحاولات", lockoutErr);
+
+            // Even the correct code should now fail because it's locked out / invalidated
+            var (correctAfterLockoutOk, correctAfterLockoutErr) = await repo.ValidateVerificationCodeAsync(user.Email, otpCode!, "EmailConfirmation");
+            Assert.False(correctAfterLockoutOk);
+        }
+
+        [Fact]
+        public async Task AccountController_VerifyEmailToken_GetReturnsViewModel()
+        {
+            var (userMgr, signInMgr, roleMgr, emailSender) = CreateMocks();
+            var repoMock = new Mock<IAccountRepository>();
+            var controller = new Microsoft.AspNetCore.Mvc.ControllerContext();
+
+            var accountController = new researchProject.Controllers.AccountController(repoMock.Object, emailSender.Object);
+
+            var result = await accountController.VerifyEmailToken("test@example.com", null, null);
+            var viewResult = Assert.IsType<Microsoft.AspNetCore.Mvc.ViewResult>(result);
+            var model = Assert.IsType<researchProject.Models.ViewModels.VerifyEmailViewModel>(viewResult.Model);
+
+            Assert.Equal("test@example.com", model.EmailOrUserId);
+            Assert.Equal(15, model.ValidityMinutes);
+        }
+
+        [Fact]
+        public async Task AccountController_VerifyEmailToken_PostWithValidOtp_RedirectsToLogin()
+        {
+            var (userMgr, signInMgr, roleMgr, emailSender) = CreateMocks();
+            var repoMock = new Mock<IAccountRepository>();
+            repoMock.Setup(r => r.ValidateVerificationCodeAsync("test@example.com", "123456", "EmailConfirmation", true))
+                .ReturnsAsync((true, null));
+
+            var accountController = new researchProject.Controllers.AccountController(repoMock.Object, emailSender.Object);
+            accountController.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(
+                new Microsoft.AspNetCore.Http.DefaultHttpContext(),
+                Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>());
+
+            var dto = new researchProject.Models.DTOs.VerifyEmailDto
+            {
+                EmailOrUserId = "test@example.com",
+                Token = "123456"
+            };
+
+            var result = await accountController.VerifyEmailToken(dto);
+            var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectToActionResult>(result);
+            Assert.Equal("Login", redirectResult.ActionName);
+        }
+
+        [Fact]
+        public void ReportExportService_GeneratesValidCsv_WithProperEncodingAndHeaders()
+        {
+            var exportService = new researchProject.Services.ReportExportService();
+            var stats = new researchProject.Models.ViewModels.SystemStatisticsViewModel
+            {
+                TotalResearches = 10,
+                ApprovedCount = 5,
+                ModificationsRequiredCount = 2,
+                UnderScreeningCount = 3,
+                CertificatesIssuedCount = 5,
+                AverageScreeningHours = 12.5,
+                ResearchesByCollege = new Dictionary<string, int>
+                {
+                    { "كلية الهندسة", 6 },
+                    { "كلية الطب", 4 }
+                }
+            };
+
+            var bytes = exportService.ExportStatisticsToCsv(stats, "تقرير الجودة");
+            Assert.NotNull(bytes);
+            Assert.True(bytes.Length > 0);
+
+            var csvText = System.Text.Encoding.UTF8.GetString(bytes);
+            Assert.Contains("كلية الهندسة", csvText);
+            Assert.Contains("إجمالي المقترحات بالجامعة", csvText);
         }
     }
 }

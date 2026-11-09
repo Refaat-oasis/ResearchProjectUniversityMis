@@ -91,7 +91,7 @@ namespace researchProject.Repositories.Implementations
 
         public async Task<List<Judge>> SuggestJudgesAsync(int researchId, int collegeId)
         {
-            var research = await _db.Researches.FirstOrDefaultAsync(r => r.Id == researchId);
+            var research = await _db.Researches.FirstOrDefaultAsync(r => r.Id == researchId && (collegeId == 0 || r.CollegeId == collegeId));
             if (research == null) return new List<Judge>();
 
             // Get user IDs of all authors of this research to enforce conflict of interest
@@ -143,10 +143,9 @@ namespace researchProject.Repositories.Implementations
             if (research == null) return (false, "المقترح البحثي غير موجود أو يتبع كلية أخرى.");
 
             if (research.WorkflowStatus != ResearchStatusConstants.UnderFormalScreening &&
-                research.WorkflowStatus != ResearchStatusConstants.ModificationsRequired &&
                 research.WorkflowStatus != ResearchStatusConstants.AssignedToJudges)
             {
-                return (false, "لا يمكن إسناد المحكمين إلا للأبحاث التي هي قيد المراجعة الشكلية، أو تم تسليم تعديلاتها، أو المسندة لإعادة التوزيع.");
+                return (false, "لا يمكن إسناد المحكمين إلا للأبحاث التي هي قيد المراجعة الشكلية، أو المسندة لإعادة التوزيع.");
             }
 
             // Conflict of Interest strict check: None of the judges can be an author

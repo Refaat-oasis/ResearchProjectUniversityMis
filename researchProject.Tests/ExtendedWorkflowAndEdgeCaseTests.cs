@@ -432,6 +432,21 @@ namespace researchProject.Tests
             db.Researches.Add(research);
             await db.SaveChangesAsync();
 
+            var existingJudgeUser = new ApplicationUser { Id = "existing-j-u", FullName = "محكم أول" };
+            db.Users.Add(existingJudgeUser);
+            var existingJudge = new Judge { UserId = existingJudgeUser.Id, Specialty = "تمريض", AcademicTitle = "أستاذ", IsActive = true };
+            db.Judges.Add(existingJudge);
+            await db.SaveChangesAsync();
+
+            db.Evaluations.Add(new Evaluation
+            {
+                ResearchId = research.Id,
+                JudgeId = existingJudge.Id,
+                RoundNumber = 1,
+                Decision = "قيد التقييم"
+            });
+            await db.SaveChangesAsync();
+
             var u = new ApplicationUser { Id = "judge-reassign-u", FullName = "محكم جديد" };
             db.Users.Add(u);
             var j = new Judge { UserId = u.Id, Specialty = "تمريض", AcademicTitle = "أستاذ مساعد", IsActive = true };
@@ -445,6 +460,7 @@ namespace researchProject.Tests
 
             var savedEval = await db.Evaluations.FirstOrDefaultAsync(e => e.ResearchId == research.Id && e.JudgeId == j.Id);
             Assert.NotNull(savedEval);
+            Assert.Equal(1, savedEval!.RoundNumber); // Asserts BUG-04 fix: stays in round 1, does not corrupt round
         }
 
         [Fact]

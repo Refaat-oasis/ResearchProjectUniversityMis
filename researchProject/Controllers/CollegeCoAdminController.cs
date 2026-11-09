@@ -18,13 +18,16 @@ namespace researchProject.Controllers
     {
         private readonly ICollegeCoAdminRepository _coAdminRepo;
         private readonly IEmailSender _emailSender;
+        private readonly IReportExportService _reportExportService;
 
         public CollegeCoAdminController(
             ICollegeCoAdminRepository coAdminRepo,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IReportExportService? reportExportService = null)
         {
             _coAdminRepo = coAdminRepo;
             _emailSender = emailSender;
+            _reportExportService = reportExportService ?? new ReportExportService();
         }
 
         [HttpGet]
@@ -198,39 +201,20 @@ namespace researchProject.Controllers
         {
             var collegeId = await GetCurrentCollegeIdAsync();
             var stats = await _coAdminRepo.GetCollegeStatisticsAsync(collegeId);
-
-            var sb = new StringBuilder();
-            sb.AppendLine("المؤشر,القيمة");
-            sb.AppendLine($"إجمالي المقترحات,{stats.TotalResearches}");
-            sb.AppendLine($"قيد الفحص الشكلي,{stats.UnderScreeningCount}");
-            sb.AppendLine($"مسند للمحكمين,{stats.AssignedToJudgesCount}");
-            sb.AppendLine($"تعديلات مطلوبة,{stats.ModificationsRequiredCount}");
-            sb.AppendLine($"معتمد,{stats.ApprovedCount}");
-            sb.AppendLine($"صادر الشهادة,{stats.CertificatesIssuedCount}");
-            sb.AppendLine($"إجمالي الباحثين بالكلية,{stats.TotalResearchers}");
-            sb.AppendLine($"متوسط ساعات الفحص,{stats.AverageScreeningHours}");
-            sb.AppendLine($"متوسط أيام التحكيم,{stats.AverageJudgingDays}");
-            sb.AppendLine($"نسبة الالتزام بالمهلة النظامية,{stats.SlaCompliancePercentage}%");
-
-            if (stats.ResearchesByCategory != null && stats.ResearchesByCategory.Any())
-            {
-                sb.AppendLine("\nتصنيف البحث,العدد");
-                foreach (var cat in stats.ResearchesByCategory)
-                {
-                    sb.AppendLine($"\"{cat.Key}\",{cat.Value}");
-                }
-            }
-
-            var preamble = Encoding.UTF8.GetPreamble();
-            var bytes = preamble.Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            var bytes = _reportExportService.ExportStatisticsToCsv(stats, "تقرير إحصائيات كلية");
             return File(bytes, "text/csv; charset=utf-8", $"College_Ethics_Report_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
         private async Task<int> GetCurrentCollegeIdAsync()
         {
+            if (User.IsInRole(RoleConstants.SuperAdmin))
+            {
+                return 0; // SuperAdmin sees system-wide
+            }
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             var profile = await _coAdminRepo.GetProfileByUserIdAsync(userId);
-            return profile?.CollegeId ?? 0;
+            return profile?.CollegeId ?? -1;
         }
     }
 }

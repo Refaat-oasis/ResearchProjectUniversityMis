@@ -68,6 +68,7 @@ namespace researchProject
             builder.Services.AddScoped<ICertificateService, CertificateService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+            builder.Services.AddScoped<IReportExportService, ReportExportService>();
             builder.Services.AddSignalR();
 
             // 4. Dedicated Repositories Per Actor

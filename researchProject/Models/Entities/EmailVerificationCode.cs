@@ -19,7 +19,7 @@ namespace researchProject.Models.Entities
 
         [Required(ErrorMessage = "رمز التحقق مطلوب")]
         [Display(Name = "رمز التحقق")]
-        [StringLength(10, MinimumLength = 6, ErrorMessage = "رمز التحقق يجب أن يكون 6 أرقام")]
+        [StringLength(128, ErrorMessage = "رمز التحقق المشفر غير صالح")]
         public string Code { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "الغرض من الرمز مطلوب")]

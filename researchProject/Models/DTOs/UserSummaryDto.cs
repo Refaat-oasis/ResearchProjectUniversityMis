@@ -1,8 +1,9 @@
-using researchProject.Models.ViewModels;
-
 namespace researchProject.Models.DTOs
 {
-    public class UserSummaryDto : UserSummaryViewModel
+    public class UserSummaryDto
     {
+        public string Email { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string RoleName { get; set; } = string.Empty;
     }
 }

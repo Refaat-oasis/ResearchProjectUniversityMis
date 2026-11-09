@@ -100,6 +100,16 @@ namespace researchProject.Repositories.Implementations
             var category = await _db.ResearchCategories.FindAsync(dto.CategoryId);
             if (category == null) return (false, "تصنيف البحث غير موجود.", null);
 
+            // BUG-19: Enforce institutional college isolation
+            if (dto.CollegeId != researcher.CollegeId)
+            {
+                return (false, "غير مصرح لك بتقديم مقترح يتبع كلية غير كليتك المسجلة.", null);
+            }
+            if (category.CollegeId != researcher.CollegeId)
+            {
+                return (false, "تصنيف البحث المحدد لا يتبع كليتك.", null);
+            }
+
             // Server-side validation of dynamic category fields
             if (!string.IsNullOrEmpty(category.FieldsDefinitionJson))
             {
@@ -142,6 +152,9 @@ namespace researchProject.Repositories.Implementations
                 ScreeningDueAt = now.AddHours(slaHours)
             };
 
+            var subFolder = $"Research_{research.Id}";
+            var savedFiles = new List<(string StoredFileName, string SubFolder)>();
+
             using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
@@ -158,10 +171,9 @@ namespace researchProject.Repositories.Implementations
                 await _db.ResearcherResearchesBridge.AddAsync(bridge);
 
                 // Save mandatory attachments outside wwwroot
-                var subFolder = $"Research_{research.Id}";
-
                 // 1. Informed Consent
                 var (storedConsent, consentSize) = await _fileStorage.SaveFileAsync(dto.InformedConsentFile, subFolder);
+                savedFiles.Add((storedConsent, subFolder));
                 var attConsent = new ResearchAttachment
                 {
                     ResearchId = research.Id,
@@ -176,6 +188,7 @@ namespace researchProject.Repositories.Implementations
 
                 // 2. Research Tools
                 var (storedTools, toolsSize) = await _fileStorage.SaveFileAsync(dto.ResearchToolsFile, subFolder);
+                savedFiles.Add((storedTools, subFolder));
                 var attTools = new ResearchAttachment
                 {
                     ResearchId = research.Id,
@@ -190,6 +203,7 @@ namespace researchProject.Repositories.Implementations
 
                 // 3. Research Proposal
                 var (storedProp, propSize) = await _fileStorage.SaveFileAsync(dto.ResearchProposalFile, subFolder);
+                savedFiles.Add((storedProp, subFolder));
                 var attProp = new ResearchAttachment
                 {
                     ResearchId = research.Id,
@@ -206,6 +220,7 @@ namespace researchProject.Repositories.Implementations
                 if (dto.AdditionalDocumentFile != null && dto.AdditionalDocumentFile.Length > 0)
                 {
                     var (storedAdd, addSize) = await _fileStorage.SaveFileAsync(dto.AdditionalDocumentFile, subFolder);
+                    savedFiles.Add((storedAdd, subFolder));
                     var attAdd = new ResearchAttachment
                     {
                         ResearchId = research.Id,
@@ -237,6 +252,17 @@ namespace researchProject.Repositories.Implementations
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
+                foreach (var (fName, sFolder) in savedFiles)
+                {
+                    try
+                    {
+                        _fileStorage.DeleteFile(fName, sFolder);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup failures during rollback
+                    }
+                }
                 return (false, $"فشل تقديم المقترح البحثي: {ex.Message}", null);
             }
 
@@ -325,10 +351,12 @@ namespace researchProject.Repositories.Implementations
             var newVersion = maxVersion + 1;
 
             using var transaction = await _db.Database.BeginTransactionAsync();
+            var savedModifiedFiles = new List<(string StoredFileName, string SubFolder)>();
             try
             {
                 // Save modified proposal file
                 var (storedProposal, propSize) = await _fileStorage.SaveFileAsync(dto.ModifiedProposalFile, subFolder);
+                savedModifiedFiles.Add((storedProposal, subFolder));
                 var attProposal = new ResearchAttachment
                 {
                     ResearchId = research.Id,
@@ -344,6 +372,7 @@ namespace researchProject.Repositories.Implementations
                 if (dto.ModifiedToolsFile != null && dto.ModifiedToolsFile.Length > 0)
                 {
                     var (storedTools, toolsSize) = await _fileStorage.SaveFileAsync(dto.ModifiedToolsFile, subFolder);
+                    savedModifiedFiles.Add((storedTools, subFolder));
                     var attTools = new ResearchAttachment
                     {
                         ResearchId = research.Id,
@@ -427,6 +456,17 @@ namespace researchProject.Repositories.Implementations
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
+                foreach (var (fName, sFolder) in savedModifiedFiles)
+                {
+                    try
+                    {
+                        _fileStorage.DeleteFile(fName, sFolder);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup failures during rollback
+                    }
+                }
                 return (false, $"فشل رفع التعديلات: {ex.Message}");
             }
 

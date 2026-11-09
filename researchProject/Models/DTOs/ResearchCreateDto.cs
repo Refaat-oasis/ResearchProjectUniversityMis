@@ -24,6 +24,7 @@ namespace researchProject.Models.DTOs
 
         // Dynamic fields answers stored as JSON key-value
         public Dictionary<string, string> DynamicAnswers { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> DynamicFields { get => DynamicAnswers; set => DynamicAnswers = value; }
 
         // Mandatory attachments
         [Required(ErrorMessage = "ملف وثيقة الموافقة المستنيرة إلزامي")]

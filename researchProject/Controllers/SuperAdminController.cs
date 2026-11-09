@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using researchProject.Models.Constants;
+using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
@@ -17,11 +18,16 @@ namespace researchProject.Controllers
     {
         private readonly ISuperAdminRepository _superAdminRepo;
         private readonly IEmailSender _emailSender;
+        private readonly IReportExportService _reportExportService;
 
-        public SuperAdminController(ISuperAdminRepository superAdminRepo, IEmailSender emailSender)
+        public SuperAdminController(
+            ISuperAdminRepository superAdminRepo,
+            IEmailSender emailSender,
+            IReportExportService? reportExportService = null)
         {
             _superAdminRepo = superAdminRepo;
             _emailSender = emailSender;
+            _reportExportService = reportExportService ?? new ReportExportService();
         }
 
         [HttpGet]
@@ -109,12 +115,18 @@ namespace researchProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCollege(College college)
+        public async Task<IActionResult> CreateCollege(CollegeCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
                 return Json(new { success = false, message = "يرجى استيفاء جميع بيانات الكلية المطلوبة." });
             }
+
+            var college = new College
+            {
+                Name = dto.Name.Trim(),
+                Code = dto.Code.Trim().ToUpperInvariant()
+            };
 
             var (succeeded, errorMessage) = await _superAdminRepo.CreateCollegeAsync(college);
             return Json(new { success = succeeded, message = errorMessage ?? "تمت إضافة الكلية بنجاح." });
@@ -122,12 +134,19 @@ namespace researchProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateCollege(College college)
+        public async Task<IActionResult> UpdateCollege(CollegeUpdateDto dto)
         {
             if (!ModelState.IsValid)
             {
-                return Json(new { success = false, message = "بيانات غير صالحة." });
+                return Json(new { success = false, message = "بيانات الكلية غير صالحة." });
             }
+
+            var college = new College
+            {
+                Id = dto.Id,
+                Name = dto.Name.Trim(),
+                Code = dto.Code.Trim().ToUpperInvariant()
+            };
 
             var (succeeded, errorMessage) = await _superAdminRepo.UpdateCollegeAsync(college);
             return Json(new { success = succeeded, message = errorMessage ?? "تم تحديث بيانات الكلية بنجاح." });
@@ -143,12 +162,21 @@ namespace researchProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveCategory(ResearchCategory category)
+        public async Task<IActionResult> SaveCategory(CategorySaveDto dto)
         {
-            if (string.IsNullOrWhiteSpace(category.Name) || category.CollegeId <= 0)
+            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(dto.Name) || dto.CollegeId <= 0)
             {
-                return Json(new { success = false, message = "اسم التصنيف والكلية مطلوبان." });
+                return Json(new { success = false, message = "اسم التصنيف والكلية مطلوبان بصيغة صحيحة." });
             }
+
+            var category = new ResearchCategory
+            {
+                Id = dto.Id,
+                CollegeId = dto.CollegeId,
+                Name = dto.Name.Trim(),
+                Description = dto.Description?.Trim(),
+                FieldsDefinitionJson = dto.FieldsDefinitionJson
+            };
 
             var (succeeded, errorMessage) = await _superAdminRepo.SaveCategoryAsync(category);
             return Json(new { success = succeeded, message = errorMessage ?? "تم حفظ تصنيف البحث وتعريف الحقول بنجاح." });
@@ -300,42 +328,7 @@ namespace researchProject.Controllers
         public async Task<IActionResult> ExportReportsToCsv()
         {
             var stats = await _superAdminRepo.GetSystemStatisticsAsync();
-
-            var sb = new StringBuilder();
-            sb.AppendLine("المؤشر,القيمة");
-            sb.AppendLine($"إجمالي المقترحات بالجامعة,{stats.TotalResearches}");
-            sb.AppendLine($"قيد الفحص الشكلي,{stats.UnderScreeningCount}");
-            sb.AppendLine($"مسند للمحكمين,{stats.AssignedToJudgesCount}");
-            sb.AppendLine($"تعديلات مطلوبة,{stats.ModificationsRequiredCount}");
-            sb.AppendLine($"معتمد,{stats.ApprovedCount}");
-            sb.AppendLine($"صادر الشهادة,{stats.CertificatesIssuedCount}");
-            sb.AppendLine($"عدد الكليات,{stats.TotalColleges}");
-            sb.AppendLine($"عدد المحكمين النشطين,{stats.TotalJudges}");
-            sb.AppendLine($"إجمالي الباحثين المسجلين,{stats.TotalResearchers}");
-            sb.AppendLine($"متوسط ساعات الفحص الشكلي,{stats.AverageScreeningHours}");
-            sb.AppendLine($"متوسط أيام التحكيم الأخلاقي,{stats.AverageJudgingDays}");
-            sb.AppendLine($"نسبة الالتزام بالمهلة النظامية,{stats.SlaCompliancePercentage}%");
-
-            if (stats.ResearchesByCollege != null && stats.ResearchesByCollege.Any())
-            {
-                sb.AppendLine("\nالكلية,عدد المقترحات");
-                foreach (var c in stats.ResearchesByCollege)
-                {
-                    sb.AppendLine($"\"{c.Key}\",{c.Value}");
-                }
-            }
-
-            if (stats.ResearchesByCategory != null && stats.ResearchesByCategory.Any())
-            {
-                sb.AppendLine("\nتصنيف البحث,عدد المقترحات");
-                foreach (var cat in stats.ResearchesByCategory)
-                {
-                    sb.AppendLine($"\"{cat.Key}\",{cat.Value}");
-                }
-            }
-
-            var preamble = Encoding.UTF8.GetPreamble();
-            var bytes = preamble.Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            var bytes = _reportExportService.ExportStatisticsToCsv(stats, "تقرير إحصائيات منصة الأخلاقيات بالجامعة");
             return File(bytes, "text/csv; charset=utf-8", $"University_Ethics_Report_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 

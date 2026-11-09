@@ -31,20 +31,20 @@
 
                             @if (type == "textarea")
                             {
-                                <textarea name="DynamicFields[@name]" class="form-control" rows="2" @(isReq ? "required" : "") placeholder="@label"></textarea>
+                                <textarea name="DynamicAnswers[@name]" class="form-control" rows="2" @(isReq ? "required" : "") placeholder="@label"></textarea>
                             }
                             else if (type == "number")
                             {
-                                <input type="number" name="DynamicFields[@name]" class="form-control" @(isReq ? "required" : "") placeholder="@label" />
+                                <input type="number" name="DynamicAnswers[@name]" class="form-control" @(isReq ? "required" : "") placeholder="@label" />
                             }
                             else if (type == "date")
                             {
-                                <input type="date" name="DynamicFields[@name]" class="form-control" @(isReq ? "required" : "") />
+                                <input type="date" name="DynamicAnswers[@name]" class="form-control" @(isReq ? "required" : "") />
                             }
                             else if (type == "yesno")
                             {
                                 var listId = "yesNoList_" + name.Replace(" ", "_");
-                                <input list="@listId" name="DynamicFields[@name]" class="form-control" placeholder="-- اختر (نعم / لا) --" autocomplete="off" @(isReq ? "required" : "") />
+                                <input list="@listId" name="DynamicAnswers[@name]" class="form-control" placeholder="-- اختر (نعم / لا) --" autocomplete="off" @(isReq ? "required" : "") />
                                 <datalist id="@listId">
                                     <option value="نعم"></option>
                                     <option value="لا"></option>
@@ -53,7 +53,7 @@
                             else if (type == "dropdown")
                             {
                                 var listId = "dropdownList_" + name.Replace(" ", "_");
-                                <input list="@listId" name="DynamicFields[@name]" class="form-control" placeholder="-- اختر من القائمة أو ابحث --" autocomplete="off" @(isReq ? "required" : "") />
+                                <input list="@listId" name="DynamicAnswers[@name]" class="form-control" placeholder="-- اختر من القائمة أو ابحث --" autocomplete="off" @(isReq ? "required" : "") />
                                 <datalist id="@listId">
                                     @if (element.TryGetProperty("Options", out var optsProp) && optsProp.ValueKind == JsonValueKind.Array)
                                     {
@@ -66,7 +66,7 @@
                             }
                             else
                             {
-                                <input type="text" name="DynamicFields[@name]" class="form-control" @(isReq ? "required" : "") placeholder="@label" />
+                                <input type="text" name="DynamicAnswers[@name]" class="form-control" @(isReq ? "required" : "") placeholder="@label" />
                             }
                         </div>
                     }

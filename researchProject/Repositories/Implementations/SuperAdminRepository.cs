@@ -168,6 +168,11 @@ namespace researchProject.Repositories.Implementations
 
         public async Task<(bool Succeeded, string? ErrorMessage)> SaveCategoryAsync(ResearchCategory category)
         {
+            if (!await _db.Colleges.AnyAsync(c => c.Id == category.CollegeId))
+            {
+                return (false, "الكلية المحددة غير موجودة.");
+            }
+
             if (category.Id == 0)
             {
                 await _db.ResearchCategories.AddAsync(category);
@@ -328,15 +333,25 @@ namespace researchProject.Repositories.Implementations
                 .OrderBy(u => u.FullName)
                 .ToListAsync();
 
+            var userIds = users.Select(u => u.Id).ToList();
+            var userRoles = await _db.UserRoles
+                .Where(ur => userIds.Contains(ur.UserId))
+                .Join(_db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, RoleName = r.Name })
+                .ToListAsync();
+
+            var roleLookup = userRoles
+                .GroupBy(ur => ur.UserId)
+                .ToDictionary(g => g.Key, g => g.First().RoleName);
+
             var list = new List<UserSummaryViewModel>();
             foreach (var u in users)
             {
-                var roles = await _userManager.GetRolesAsync(u);
+                roleLookup.TryGetValue(u.Id, out var roleName);
                 list.Add(new UserSummaryViewModel
                 {
                     Email = u.Email ?? string.Empty,
                     FullName = string.IsNullOrWhiteSpace(u.FullName) ? (u.UserName ?? u.Email ?? "") : u.FullName,
-                    RoleName = roles.FirstOrDefault() ?? "مستخدم"
+                    RoleName = roleName ?? "مستخدم"
                 });
             }
             return list;
@@ -440,7 +455,8 @@ namespace researchProject.Repositories.Implementations
 
             if (toDate.HasValue)
             {
-                query = query.Where(r => r.CertificateIssuedAt <= toDate.Value);
+                var endOfDay = toDate.Value.Date.AddDays(1);
+                query = query.Where(r => r.CertificateIssuedAt < endOfDay);
             }
 
             return await query.OrderByDescending(r => r.CertificateIssuedAt).ToListAsync();

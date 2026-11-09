@@ -20,6 +20,7 @@ namespace researchProject.Models.DTOs
         public string InformedConsentRating { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "قرار التقييم إلزامي")]
+        [RegularExpression("^(موافق|طلب تعديلات)$", ErrorMessage = "قرار التحكيم غير صالح. يجب اختيار إما (موافق) أو (طلب تعديلات).")]
         [Display(Name = "قرار التحكيم النهائي للجولة")]
         public string Decision { get; set; } = string.Empty;
 

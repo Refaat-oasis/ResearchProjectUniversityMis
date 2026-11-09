@@ -126,6 +126,12 @@ namespace researchProject.Repositories.Implementations
                 return (false, "تم تقديم هذا التقييم وتوقيعه رقمياً مسبقاً ولا يمكن تعديله.");
             }
 
+            // Validation for decision constants (BUG-10)
+            if (dto.Decision != EvaluationDecisionConstants.Approved && dto.Decision != EvaluationDecisionConstants.ModificationsRequired)
+            {
+                return (false, "قرار التحكيم غير صالح. يجب اختيار إما (موافق) أو (طلب تعديلات).");
+            }
+
             // Validation for modifications
             if (dto.Decision == EvaluationDecisionConstants.ModificationsRequired && string.IsNullOrWhiteSpace(dto.ModificationNotes))
             {
@@ -135,6 +141,27 @@ namespace researchProject.Repositories.Implementations
             using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
+                // BUG-18: Verify proposal status and concurrent submissions inside transaction
+                var research = await _db.Researches.FirstOrDefaultAsync(r => r.Id == evaluation.ResearchId);
+                if (research == null || research.WorkflowStatus != ResearchStatusConstants.AssignedToJudges)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, "تم إغلاق التحكيم لهذا المقترح نظراً لاعتماد تقييم محكم آخر أو تغير حالة المقترح.");
+                }
+
+                var concurrentSubmitted = await _db.Evaluations.AnyAsync(e =>
+                    e.ResearchId == evaluation.ResearchId &&
+                    e.RoundNumber == currentMaxRound &&
+                    e.Id != evaluation.Id &&
+                    e.SubmittedAt.HasValue &&
+                    e.Decision != EvaluationDecisionConstants.ClosedDueToOtherJudge);
+
+                if (concurrentSubmitted)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, "تم إغلاق التحكيم لهذا المقترح نظراً لاعتماد تقييم محكم آخر.");
+                }
+
                 evaluation.PrivacyProtectionRating = dto.PrivacyProtectionRating;
                 evaluation.RiskLevel = dto.RiskLevel;
                 evaluation.InformedConsentRating = dto.InformedConsentRating;
