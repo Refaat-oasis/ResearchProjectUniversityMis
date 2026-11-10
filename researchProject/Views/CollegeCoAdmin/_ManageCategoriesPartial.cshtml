@@ -1,0 +1,259 @@
+@model List<researchProject.Models.Entities.ResearchCategory>
+
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <div>
+            <h4 class="card-title-custom">
+                <i class="bi bi-sliders text-primary"></i> تصنيفات الأبحاث ونماذج الحقول التفاعلية للكلية
+            </h4>
+            <div class="text-muted small">إضافة وتعديل وتعطيل تصنيفات المقترحات البحثية وتصميم الحقول الديناميكية الخاصة بكليتك دون تعديل برمجيات المنصة</div>
+        </div>
+        <button class="btn btn-primary-custom btn-sm" onclick="openFieldsBuilder(0, '', '', '[]', true);">
+            <i class="bi bi-plus-lg me-1"></i> إضافة تصنيف جديد
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>اسم التصنيف</th>
+                    <th>الوصف</th>
+                    <th>الحقول الديناميكية</th>
+                    <th>الحالة</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var cat in Model)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold text-dark">@cat.Name</td>
+                            <td class="text-muted small" style="max-width: 280px;">@(cat.Description ?? "-")</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(cat.FieldsDefinitionJson) && cat.FieldsDefinitionJson != "[]")
+                                {
+                                    <span class="badge bg-info-subtle text-info"><i class="bi bi-check2-circle me-1"></i>حقول ديناميكية معرفة</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary">حقول افتراضية فقط</span>
+                                }
+                            </td>
+                            <td>
+                                @if (cat.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>نشط</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger"><i class="bi bi-slash-circle me-1"></i>معطل</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-primary" onclick='openFieldsBuilder(@cat.Id, "@cat.Name", @Html.Raw(Json.Serialize(cat.Description ?? "")), @Html.Raw(Json.Serialize(cat.FieldsDefinitionJson ?? "[]")), @cat.IsActive.ToString().ToLower())' title="تعديل الحقول">
+                                        <i class="bi bi-gear-wide-connected"></i> تعديل
+                                    </button>
+                                    @if (cat.IsActive)
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleCatStatus(@cat.Id, false)" title="تعطيل التصنيف">
+                                            <i class="bi bi-pause-circle"></i> تعطيل
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-success" onclick="toggleCatStatus(@cat.Id, true)" title="تفعيل التصنيف">
+                                            <i class="bi bi-play-circle"></i> تفعيل
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">لا توجد تصنيفات أبحاث مسجلة لكليتك بعد. انقر على "إضافة تصنيف جديد" للبدء.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Category & Dynamic Fields Builder -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addCategoryModalLabel"><i class="bi bi-magic me-2 text-primary"></i>تصميم تصنيف البحث والحقول التفاعلية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="categoryForm" action="/CollegeCoAdmin/SaveCategory" method="post" onsubmit="return saveCategoryWithFields(this);">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" id="catId" value="0" />
+                <input type="hidden" name="FieldsDefinitionJson" id="catFieldsJson" value="[]" />
+                <input type="hidden" name="IsActive" id="catIsActive" value="true" />
+
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">اسم تصنيف البحث <span class="text-danger">*</span></label>
+                            <input type="text" name="Name" id="catName" class="form-control" required placeholder="مثال: أبحاث التجارب السريرية / الدراسات المسحية" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">حالة التصنيف</label>
+                            <select id="catStatusSelect" class="form-select" onchange="$('#catIsActive').val(this.value);">
+                                <option value="true">نشط (متاح للباحثين)</option>
+                                <option value="false">معطل (مخفي)</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">وصف التصنيف</label>
+                            <textarea name="Description" id="catDesc" class="form-control" rows="2" placeholder="وصف موجز لنوع وطبيعة الأبحاث المندرجة تحت هذا التصنيف"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light border p-3 rounded-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-ui-checks me-2 text-primary"></i>الحقول الإضافية المخصصة في استمارة التقديم</h6>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="addFieldRow();">
+                                <i class="bi bi-plus-circle me-1"></i> إضافة حقل جديد
+                            </button>
+                        </div>
+                        <div class="text-muted small mb-3">يمكنك تعريف حقول مخصصة (نص، فقرة، رقم، تاريخ، قائمة منسدلة، نعم/لا) تظهر للباحث فور اختيار هذا التصنيف.</div>
+
+                        <div id="fieldsContainer" class="d-flex flex-column gap-2">
+                            <!-- Dynamic field rows inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom">حفظ التصنيف والحقول</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    var currentFields = [];
+
+    function openFieldsBuilder(id, name, desc, fieldsJson, isActive) {
+        $('#catId').val(id);
+        $('#catName').val(name);
+        $('#catDesc').val(desc);
+        var activeBool = (isActive === true || isActive === 'true');
+        $('#catIsActive').val(activeBool ? 'true' : 'false');
+        $('#catStatusSelect').val(activeBool ? 'true' : 'false');
+
+        try {
+            currentFields = typeof fieldsJson === 'string' ? JSON.parse(fieldsJson) : fieldsJson;
+        } catch (e) {
+            currentFields = [];
+        }
+
+        renderFieldRows();
+        $('#addCategoryModal').modal('show');
+    }
+
+    function addFieldRow() {
+        currentFields.push({
+            Name: 'Field_' + (currentFields.length + 1),
+            Label: 'حقل إضافي ' + (currentFields.length + 1),
+            Type: 'text',
+            IsRequired: true,
+            Options: []
+        });
+        renderFieldRows();
+    }
+
+    function removeFieldRow(idx) {
+        currentFields.splice(idx, 1);
+        renderFieldRows();
+    }
+
+    function renderFieldRows() {
+        var $c = $('#fieldsContainer');
+        $c.empty();
+
+        if (currentFields.length === 0) {
+            $c.html('<div class="text-muted text-center py-3 small">لا توجد حقول إضافية بعد. انقر على "إضافة حقل جديد" لإدراج حقول مخصصة لهذا التصنيف.</div>');
+            return;
+        }
+
+        currentFields.forEach(function (f, i) {
+            var html = '<div class="row g-2 align-items-center bg-white p-2 border rounded shadow-sm">' +
+                '<div class="col-md-3">' +
+                '<input type="text" class="form-control form-control-sm" placeholder="اسم المعرف (Code)" value="' + (f.Name || '') + '" onchange="currentFields[' + i + '].Name = this.value;" dir="ltr" />' +
+                '</div>' +
+                '<div class="col-md-4">' +
+                '<input type="text" class="form-control form-control-sm" placeholder="التسمية العربية للحقل" value="' + (f.Label || '') + '" onchange="currentFields[' + i + '].Label = this.value;" />' +
+                '</div>' +
+                '<div class="col-md-3">' +
+                '<select class="form-select form-select-sm" onchange="currentFields[' + i + '].Type = this.value;">' +
+                '<option value="text"' + (f.Type === 'text' ? ' selected' : '') + '>نص عادي</option>' +
+                '<option value="textarea"' + (f.Type === 'textarea' ? ' selected' : '') + '>نص تفصيلي (فقرة)</option>' +
+                '<option value="number"' + (f.Type === 'number' ? ' selected' : '') + '>رقم</option>' +
+                '<option value="date"' + (f.Type === 'date' ? ' selected' : '') + '>تاريخ</option>' +
+                '<option value="dropdown"' + (f.Type === 'dropdown' ? ' selected' : '') + '>قائمة اختيار</option>' +
+                '<option value="yesno"' + (f.Type === 'yesno' ? ' selected' : '') + '>نعم / لا</option>' +
+                '</select>' +
+                '</div>' +
+                '<div class="col-md-1 text-center">' +
+                '<div class="form-check d-inline-block">' +
+                '<input class="form-check-input" type="checkbox"' + (f.IsRequired ? ' checked' : '') + ' onchange="currentFields[' + i + '].IsRequired = this.checked;" title="إلزامي؟" />' +
+                '</div>' +
+                '</div>' +
+                '<div class="col-md-1 text-center">' +
+                '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFieldRow(' + i + ')"><i class="bi bi-trash"></i></button>' +
+                '</div>' +
+                '</div>';
+            $c.append(html);
+        });
+    }
+
+    function saveCategoryWithFields(form) {
+        $('#catFieldsJson').val(JSON.stringify(currentFields));
+        return handleAjaxFormSubmit(form, function (res) {
+            $('#addCategoryModal').modal('hide');
+            $('.modal-backdrop').remove();
+            loadPartial('/CollegeCoAdmin/ManageCategoriesPartial', '#main-content-container', 'categories');
+        });
+    }
+
+    function toggleCatStatus(catId, isActive) {
+        var actionText = isActive ? 'تفعيل' : 'تعطيل';
+        if (!confirm('هل أنت متأكد من رغبتك في ' + actionText + ' هذا التصنيف؟')) return;
+
+        var token = $('input[name="__RequestVerificationToken"]').first().val();
+        $.ajax({
+            url: '/CollegeCoAdmin/ToggleCategoryStatus',
+            type: 'POST',
+            data: { id: catId, isActive: isActive },
+            headers: { 'X-CSRF-TOKEN': token },
+            success: function (res) {
+                if (res && res.success) {
+                    showToast(res.message, 'success');
+                    loadPartial('/CollegeCoAdmin/ManageCategoriesPartial', '#main-content-container', 'categories');
+                } else {
+                    showToast(res.message || 'فشل تغيير حالة التصنيف.', 'error');
+                }
+            },
+            error: function (xhr) {
+                showToast(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.', 'error');
+            }
+        });
+    }
+</script>
+

@@ -22,6 +22,27 @@ namespace researchProject.Repositories.Implementations
         private readonly IEmailSender _emailSender;
         private readonly IConfiguration _configuration;
         private readonly ICertificateService? _certificateService;
+        private static readonly string[] _allowedExtensions = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg" };
+
+        private static bool CheckAllowedExtension(string fileName)
+        {
+            var ext = Path.GetExtension(fileName ?? "").ToLowerInvariant();
+            return Array.Exists(_allowedExtensions, e => e == ext);
+        }
+
+        private async Task<(string StoredFileName, long FileSize, string RelativePath)> SaveAttachmentSafeAsync(byte[] bytes, IFormFile file, string sFolder)
+        {
+            try
+            {
+                var res = await _fileStorage.SaveFileBytesAsync(bytes, file.FileName, sFolder);
+                if (!string.IsNullOrEmpty(res.StoredFileName))
+                    return res;
+            }
+            catch
+            {
+            }
+            return await _fileStorage.SaveFileAsync(file, sFolder);
+        }
         private readonly INotificationService? _notificationService;
         private readonly ILogger<ResearcherRepository>? _logger;
 
@@ -54,7 +75,7 @@ namespace researchProject.Repositories.Implementations
         public async Task<List<ResearchCategory>> GetCategoriesForCollegeAsync(int collegeId)
         {
             return await _db.ResearchCategories
-                .Where(c => c.CollegeId == collegeId)
+                .Where(c => c.CollegeId == collegeId && c.IsActive)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
         }
@@ -137,6 +158,40 @@ namespace researchProject.Repositories.Implementations
                 }
             }
 
+            if (dto.InformedConsentFile == null || dto.InformedConsentFile.Length == 0)
+            {
+                return (false, "ملف وثيقة الموافقة المستنيرة (Informed Consent) فارغ أو لم يتم إرفاقه. يرجى اختيار ملف صالح غير فارغ.", null);
+            }
+            if (dto.ResearchToolsFile == null || dto.ResearchToolsFile.Length == 0)
+            {
+                return (false, "ملف أدوات وأجهزة البحث (Research Tools) فارغ أو لم يتم إرفاقه. يرجى اختيار ملف صالح غير فارغ.", null);
+            }
+            if (dto.ResearchProposalFile == null || dto.ResearchProposalFile.Length == 0)
+            {
+                return (false, "ملف خطة المقترح البحثي الكاملة (Research Proposal) فارغ أو لم يتم إرفاقه. يرجى اختيار ملف صالح غير فارغ.", null);
+            }
+            if (dto.AdditionalDocumentFile != null && dto.AdditionalDocumentFile.Length == 0)
+            {
+                return (false, "الملف الإضافي المرفق فارغ (حجمه 0 بايت). يرجى اختيار ملف صالح أو إلغاء إرفاقه.", null);
+            }
+
+            if (!CheckAllowedExtension(dto.InformedConsentFile.FileName))
+            {
+                return (false, "نوع ملف وثيقة الموافقة المستنيرة غير مسموح به. الصيغ المسموحة: PDF, DOC, DOCX.", null);
+            }
+            if (!CheckAllowedExtension(dto.ResearchToolsFile.FileName))
+            {
+                return (false, "نوع ملف أدوات وأجهزة البحث غير مسموح به. الصيغ المسموحة: PDF, DOC, DOCX, XLS, XLSX.", null);
+            }
+            if (!CheckAllowedExtension(dto.ResearchProposalFile.FileName))
+            {
+                return (false, "نوع ملف خطة المقترح البحثي غير مسموح به. الصيغ المسموحة: PDF, DOC, DOCX.", null);
+            }
+            if (dto.AdditionalDocumentFile != null && !CheckAllowedExtension(dto.AdditionalDocumentFile.FileName))
+            {
+                return (false, "نوع الملف الإضافي غير مسموح به.", null);
+            }
+
             var slaHours = _configuration.GetValue<int>("Screening:SlaHours", 48);
             var now = DateTime.UtcNow;
 
@@ -152,7 +207,6 @@ namespace researchProject.Repositories.Implementations
                 ScreeningDueAt = now.AddHours(slaHours)
             };
 
-            var subFolder = $"Research_{research.Id}";
             var savedFiles = new List<(string StoredFileName, string SubFolder)>();
 
             using var transaction = await _db.Database.BeginTransactionAsync();
@@ -160,6 +214,8 @@ namespace researchProject.Repositories.Implementations
             {
                 await _db.Researches.AddAsync(research);
                 await _db.SaveChangesAsync();
+
+                var subFolder = $"Research_{research.Id}";
 
                 // Link author in bridge
                 var bridge = new ResearcherResearchesBridge
@@ -170,9 +226,15 @@ namespace researchProject.Repositories.Implementations
                 };
                 await _db.ResearcherResearchesBridge.AddAsync(bridge);
 
-                // Save mandatory attachments outside wwwroot
+                // Save mandatory attachments in DB and backup to storage outside wwwroot
                 // 1. Informed Consent
-                var (storedConsent, consentSize) = await _fileStorage.SaveFileAsync(dto.InformedConsentFile, subFolder);
+                byte[] consentBytes;
+                using (var ms = new MemoryStream())
+                {
+                    await dto.InformedConsentFile.CopyToAsync(ms);
+                    consentBytes = ms.ToArray();
+                }
+                var (storedConsent, consentSize, consentPath) = await SaveAttachmentSafeAsync(consentBytes, dto.InformedConsentFile, subFolder);
                 savedFiles.Add((storedConsent, subFolder));
                 var attConsent = new ResearchAttachment
                 {
@@ -181,13 +243,21 @@ namespace researchProject.Repositories.Implementations
                     Version = 1,
                     OriginalFileName = dto.InformedConsentFile.FileName,
                     StoredFileName = storedConsent,
+                    FilePath = consentPath,
                     FileSize = consentSize,
+                    ContentType = dto.InformedConsentFile.ContentType,
                     UploadedAt = now
                 };
                 await _db.ResearchAttachments.AddAsync(attConsent);
 
                 // 2. Research Tools
-                var (storedTools, toolsSize) = await _fileStorage.SaveFileAsync(dto.ResearchToolsFile, subFolder);
+                byte[] toolsBytes;
+                using (var ms = new MemoryStream())
+                {
+                    await dto.ResearchToolsFile.CopyToAsync(ms);
+                    toolsBytes = ms.ToArray();
+                }
+                var (storedTools, toolsSize, toolsPath) = await SaveAttachmentSafeAsync(toolsBytes, dto.ResearchToolsFile, subFolder);
                 savedFiles.Add((storedTools, subFolder));
                 var attTools = new ResearchAttachment
                 {
@@ -196,13 +266,21 @@ namespace researchProject.Repositories.Implementations
                     Version = 1,
                     OriginalFileName = dto.ResearchToolsFile.FileName,
                     StoredFileName = storedTools,
+                    FilePath = toolsPath,
                     FileSize = toolsSize,
+                    ContentType = dto.ResearchToolsFile.ContentType,
                     UploadedAt = now
                 };
                 await _db.ResearchAttachments.AddAsync(attTools);
 
                 // 3. Research Proposal
-                var (storedProp, propSize) = await _fileStorage.SaveFileAsync(dto.ResearchProposalFile, subFolder);
+                byte[] propBytes;
+                using (var ms = new MemoryStream())
+                {
+                    await dto.ResearchProposalFile.CopyToAsync(ms);
+                    propBytes = ms.ToArray();
+                }
+                var (storedProp, propSize, propPath) = await SaveAttachmentSafeAsync(propBytes, dto.ResearchProposalFile, subFolder);
                 savedFiles.Add((storedProp, subFolder));
                 var attProp = new ResearchAttachment
                 {
@@ -211,7 +289,9 @@ namespace researchProject.Repositories.Implementations
                     Version = 1,
                     OriginalFileName = dto.ResearchProposalFile.FileName,
                     StoredFileName = storedProp,
+                    FilePath = propPath,
                     FileSize = propSize,
+                    ContentType = dto.ResearchProposalFile.ContentType,
                     UploadedAt = now
                 };
                 await _db.ResearchAttachments.AddAsync(attProp);
@@ -219,7 +299,13 @@ namespace researchProject.Repositories.Implementations
                 // 4. Additional Document (Optional)
                 if (dto.AdditionalDocumentFile != null && dto.AdditionalDocumentFile.Length > 0)
                 {
-                    var (storedAdd, addSize) = await _fileStorage.SaveFileAsync(dto.AdditionalDocumentFile, subFolder);
+                    byte[] addBytes;
+                    using (var ms = new MemoryStream())
+                    {
+                        await dto.AdditionalDocumentFile.CopyToAsync(ms);
+                        addBytes = ms.ToArray();
+                    }
+                    var (storedAdd, addSize, addPath) = await SaveAttachmentSafeAsync(addBytes, dto.AdditionalDocumentFile, subFolder);
                     savedFiles.Add((storedAdd, subFolder));
                     var attAdd = new ResearchAttachment
                     {
@@ -228,7 +314,9 @@ namespace researchProject.Repositories.Implementations
                         Version = 1,
                         OriginalFileName = dto.AdditionalDocumentFile.FileName,
                         StoredFileName = storedAdd,
+                        FilePath = addPath,
                         FileSize = addSize,
+                        ContentType = dto.AdditionalDocumentFile.ContentType,
                         UploadedAt = now
                     };
                     await _db.ResearchAttachments.AddAsync(attAdd);
@@ -343,6 +431,11 @@ namespace researchProject.Repositories.Implementations
             int nextRound = 1;
             List<Judge> activeJudges = new();
 
+            if (dto.ModifiedProposalFile == null || dto.ModifiedProposalFile.Length == 0)
+            {
+                return (false, "ملف المقترح البحثي المعدل فارغ أو لم يتم إرفاقه. يرجى اختيار ملف صالح غير فارغ.");
+            }
+
             // Determine latest version of attachments
             var maxVersion = await _db.ResearchAttachments
                 .Where(a => a.ResearchId == research.Id)
@@ -354,8 +447,14 @@ namespace researchProject.Repositories.Implementations
             var savedModifiedFiles = new List<(string StoredFileName, string SubFolder)>();
             try
             {
-                // Save modified proposal file
-                var (storedProposal, propSize) = await _fileStorage.SaveFileAsync(dto.ModifiedProposalFile, subFolder);
+                // Save modified proposal file in DB and backup to storage
+                byte[] modPropBytes;
+                using (var ms = new MemoryStream())
+                {
+                    await dto.ModifiedProposalFile.CopyToAsync(ms);
+                    modPropBytes = ms.ToArray();
+                }
+                var (storedProposal, propSize, proposalPath) = await SaveAttachmentSafeAsync(modPropBytes, dto.ModifiedProposalFile, subFolder);
                 savedModifiedFiles.Add((storedProposal, subFolder));
                 var attProposal = new ResearchAttachment
                 {
@@ -364,14 +463,22 @@ namespace researchProject.Repositories.Implementations
                     Version = newVersion,
                     OriginalFileName = dto.ModifiedProposalFile.FileName,
                     StoredFileName = storedProposal,
+                    FilePath = proposalPath,
                     FileSize = propSize,
+                    ContentType = dto.ModifiedProposalFile.ContentType,
                     UploadedAt = now
                 };
                 await _db.ResearchAttachments.AddAsync(attProposal);
 
                 if (dto.ModifiedToolsFile != null && dto.ModifiedToolsFile.Length > 0)
                 {
-                    var (storedTools, toolsSize) = await _fileStorage.SaveFileAsync(dto.ModifiedToolsFile, subFolder);
+                    byte[] modToolsBytes;
+                    using (var ms = new MemoryStream())
+                    {
+                        await dto.ModifiedToolsFile.CopyToAsync(ms);
+                        modToolsBytes = ms.ToArray();
+                    }
+                    var (storedTools, toolsSize, toolsPath) = await SaveAttachmentSafeAsync(modToolsBytes, dto.ModifiedToolsFile, subFolder);
                     savedModifiedFiles.Add((storedTools, subFolder));
                     var attTools = new ResearchAttachment
                     {
@@ -380,7 +487,9 @@ namespace researchProject.Repositories.Implementations
                         Version = newVersion,
                         OriginalFileName = dto.ModifiedToolsFile.FileName,
                         StoredFileName = storedTools,
+                        FilePath = toolsPath,
                         FileSize = toolsSize,
+                        ContentType = dto.ModifiedToolsFile.ContentType,
                         UploadedAt = now
                     };
                     await _db.ResearchAttachments.AddAsync(attTools);

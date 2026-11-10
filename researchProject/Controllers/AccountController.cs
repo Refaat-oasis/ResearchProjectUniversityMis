@@ -443,6 +443,67 @@ namespace researchProject.Controllers
             return View();
         }
 
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Profile()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            var vm = await _accountRepository.GetProfileViewModelAsync(userId);
+            if (vm == null)
+            {
+                return NotFound("تعذر العثور على الملف الشخصي للمستخدم.");
+            }
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("، ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return Json(new { success = false, message = errors });
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { success = false, message = "غير مصرح." });
+            }
+
+            var (succeeded, errorMessage) = await _accountRepository.UpdateProfileAsync(userId, dto);
+            return Json(new { success = succeeded, message = succeeded ? "تم حفظ البيانات الشخصية بنجاح." : errorMessage });
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("، ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return Json(new { success = false, message = errors });
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { success = false, message = "غير مصرح." });
+            }
+
+            var (succeeded, errorMessage) = await _accountRepository.ChangePasswordAsync(userId, dto);
+            return Json(new { success = succeeded, message = succeeded ? "تم تحديث كلمة المرور بنجاح." : errorMessage });
+        }
+
         private IActionResult RedirectToUserDashboard()
         {
             if (User.IsInRole(RoleConstants.SuperAdmin))

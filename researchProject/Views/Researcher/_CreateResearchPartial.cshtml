@@ -28,16 +28,32 @@
             <div class="col-md-6">
                 <label asp-for="CategoryId" class="form-label"></label> <span class="text-danger">*</span>
                 <input type="hidden" asp-for="CategoryId" id="partialCategoryId" />
-                <input type="text" id="partialCategoryDisplayInput" list="partialCategoriesList" class="form-control" placeholder="ابحث أو اختر نوع وتصنيف البحث..." required autocomplete="off" />
-                <datalist id="partialCategoriesList">
-                    @if (ViewBag.Categories != null)
-                    {
-                        foreach (var cat in ViewBag.Categories)
+                <div class="dedicated-dropdown-wrapper" data-target-input="#partialCategoryId">
+                    <div class="dedicated-dropdown-input-group">
+                        <i class="bi bi-search dedicated-dropdown-icon-right"></i>
+                        <input type="text" class="dedicated-dropdown-input" placeholder="ابحث أو اختر نوع وتصنيف البحث..." required autocomplete="off" />
+                        <div class="dedicated-dropdown-actions-left">
+                            <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                            <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="dedicated-dropdown-menu">
+                        @if (ViewBag.Categories != null)
                         {
-                            <option value="@cat.Name" data-id="@cat.Id"></option>
+                            foreach (var cat in ViewBag.Categories)
+                            {
+                                <div class="dedicated-dropdown-item" data-id="@cat.Id" data-name="@cat.Name">
+                                    <span>@cat.Name</span>
+                                    <span class="dedicated-dropdown-item-badge">معتمد بالكلية</span>
+                                </div>
+                            }
                         }
-                    }
-                </datalist>
+                    </div>
+                </div>
                 <span asp-validation-for="CategoryId" class="text-danger small"></span>
             </div>
 
@@ -100,17 +116,9 @@
 </div>
 
 <script>
-    $('#partialCategoryDisplayInput').on('input change', function() {
-        var val = $(this).val();
-        var match = $('#partialCategoriesList option').filter(function() { return this.value === val; });
-        if (match.length > 0) {
-            var catId = match.data('id');
-            $('#partialCategoryId').val(catId);
-            loadDynamicCategoryFields(catId);
-        } else {
-            $('#partialCategoryId').val('');
-            $('#dynamicFieldsContainer').empty();
-        }
+    $('#partialCategoryId').on('change', function () {
+        var catId = $(this).val();
+        loadDynamicCategoryFields(catId);
     });
 
     function loadDynamicCategoryFields(categoryId) {
@@ -121,11 +129,13 @@
 
         $.get('/Researcher/DynamicCategoryFieldsPartial?categoryId=' + categoryId, function (html) {
             $('#dynamicFieldsContainer').html(html);
+            if (typeof initDedicatedDropdowns === 'function') {
+                initDedicatedDropdowns('#dynamicFieldsContainer');
+            }
         });
     }
 
     function onResearchCreated(res) {
-        alert(res.message);
         if (res.success && res.researchId) {
             loadPartial('/Researcher/ResearchStatusTrackerPartial/' + res.researchId, '#main-content-container', 'my-researches');
         } else {

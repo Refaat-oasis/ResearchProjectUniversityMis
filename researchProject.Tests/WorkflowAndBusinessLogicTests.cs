@@ -131,9 +131,9 @@ namespace researchProject.Tests
             db.Users.AddRange(authorUser, judge1User, judge2User);
             await db.SaveChangesAsync();
 
-            var authorJudgeProfile = new Judge { UserId = authorUser.Id, Specialty = "طب سريري", AcademicTitle = "أستاذ", IsActive = true };
-            var judge1Profile = new Judge { UserId = judge1User.Id, Specialty = "طب سريري", AcademicTitle = "أستاذ", IsActive = true };
-            var judge2Profile = new Judge { UserId = judge2User.Id, Specialty = "علوم اجتماعية", AcademicTitle = "أستاذ", IsActive = true };
+            var authorJudgeProfile = new Judge { UserId = authorUser.Id, Specialty = "طب سريري", AcademicTitle = "أستاذ", CollegeId = college.Id, IsActive = true };
+            var judge1Profile = new Judge { UserId = judge1User.Id, Specialty = "طب سريري", AcademicTitle = "أستاذ", CollegeId = college.Id, IsActive = true };
+            var judge2Profile = new Judge { UserId = judge2User.Id, Specialty = "علوم اجتماعية", AcademicTitle = "أستاذ", CollegeId = college.Id, IsActive = true };
             db.Judges.AddRange(authorJudgeProfile, judge1Profile, judge2Profile);
             await db.SaveChangesAsync();
 
@@ -575,7 +575,7 @@ namespace researchProject.Tests
             var db = CreateInMemoryDb("Researcher_DynamicFieldsValidation");
             var fileStorageMock = new Mock<IFileStorageService>();
             fileStorageMock.Setup(f => f.SaveFileAsync(It.IsAny<IFormFile>(), It.IsAny<string>()))
-                .ReturnsAsync(("mock_file.pdf", 1024));
+                .ReturnsAsync(("mock_file.pdf", 1024, "uploads/attachments/mock_file.pdf"));
 
             var emailMock = new Mock<IEmailSender>();
             var config = CreateTestConfig();
@@ -657,7 +657,7 @@ namespace researchProject.Tests
 
             var repo = new SuperAdminRepository(db, userManagerMock.Object, roleManagerMock.Object, emailMock.Object);
 
-            var (succeeded, _, rawToken) = await repo.InviteJudgeAsync("judge.external@med.org", "طب أسنان", "admin-id");
+            var (succeeded, _, rawToken, _) = await repo.InviteJudgeAsync("judge.external@med.org", "طب أسنان", "admin-id");
 
             Assert.True(succeeded);
             Assert.NotNull(rawToken);

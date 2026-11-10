@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Models.ViewModels;
 
 namespace researchProject.Repositories.Interfaces
 {
@@ -28,5 +30,11 @@ namespace researchProject.Repositories.Interfaces
         Task<(bool Succeeded, string? ErrorMessage)> ValidateVerificationCodeAsync(string emailOrUserId, string code, string purpose, bool markAsUsed = true);
         Task<(bool Succeeded, string? ErrorMessage, string? Code, string? ResolvedEmail)> ResendVerificationCodeAsync(string emailOrUserId, string purpose);
         Task<bool> MarkVerificationCodeAsUsedAsync(string emailOrUserId, string code, string purpose);
+
+        // Account cleanup & profile management
+        Task<int> CleanupUnconfirmedAccountsAsync(TimeSpan? olderThan = null);
+        Task<ProfileViewModel?> GetProfileViewModelAsync(string userId);
+        Task<(bool Succeeded, string? ErrorMessage)> UpdateProfileAsync(string userId, UpdateProfileDto dto);
+        Task<(bool Succeeded, string? ErrorMessage)> ChangePasswordAsync(string userId, ChangePasswordDto dto);
     }
 }

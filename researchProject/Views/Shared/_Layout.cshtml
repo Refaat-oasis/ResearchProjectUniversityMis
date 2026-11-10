@@ -29,7 +29,7 @@
                     <i class="bi bi-shield-check text-warning fs-3"></i>
                     <div>
                         <div>المنصة الإلكترونية لأخلاقيات البحث العلمي</div>
-                        <div class="brand-subtitle">اللجان الفرعية للنزاهة الأكاديمية - جامعة مصر الأكاديمية</div>
+                        <div class="brand-subtitle">اللجان الفرعية للنزاهة الأكاديمية - جامعة أسيوط</div>
                     </div>
                 </a>
             </div>
@@ -75,6 +75,11 @@
                                 <div>@currentUser?.Email</div>
                             </li>
                             <li>
+                                <a asp-controller="Account" asp-action="Profile" class="dropdown-item d-flex align-items-center gap-2 mb-1">
+                                    <i class="bi bi-person-gear text-primary"></i> الملف الشخصي
+                                </a>
+                            </li>
+                            <li>
                                 <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="d-inline">
                                     <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
                                         <i class="bi bi-box-arrow-right"></i> تسجيل الخروج
@@ -93,22 +98,28 @@
         </div>
     </header>
 
-    <!-- Global Alerts -->
+    <!-- Global Top-Right Toast Container (Requirement 1) -->
+    <div id="toast-container" class="app-toast-container" aria-live="polite" aria-atomic="true"></div>
+
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show m-3 shadow-sm border-0" role="alert">
-            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.showToast) {
+                    window.showToast('success', '@Html.Raw(TempData["SuccessMessage"])');
+                }
+            });
+        </script>
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show m-3 shadow-sm border-0" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-            @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.showToast) {
+                    window.showToast('error', '@Html.Raw(TempData["ErrorMessage"])');
+                }
+            });
+        </script>
     }
 
     <!-- Main App Body -->
@@ -170,7 +181,10 @@
                         $.validator.unobtrusive.parse($(this));
                     });
 
-                    // Initialize unified custom datalists in the partial
+                    // Initialize unified dedicated dropdowns & custom datalists in the partial
+                    if (typeof initDedicatedDropdowns === 'function') {
+                        initDedicatedDropdowns(targetSelector);
+                    }
                     if (typeof initCustomDatalists === 'function') {
                         initCustomDatalists(targetSelector);
                     }

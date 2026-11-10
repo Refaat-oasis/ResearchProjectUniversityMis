@@ -30,8 +30,16 @@ namespace researchProject.Models.Entities
         [StringLength(260, ErrorMessage = "اسم الملف المخزن يجب ألا يتجاوز 260 حرفاً")]
         public string StoredFileName { get; set; } = string.Empty;
 
+        [Display(Name = "مسار حفظ الملف")]
+        [StringLength(500, ErrorMessage = "مسار حفظ الملف يجب ألا يتجاوز 500 حرف")]
+        public string FilePath { get; set; } = string.Empty;
+
         [Display(Name = "حجم الملف بالبايت")]
         public long FileSize { get; set; }
+
+        [Display(Name = "نوع المحتوى")]
+        [StringLength(150)]
+        public string? ContentType { get; set; }
 
         [Display(Name = "تاريخ الرفع")]
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;

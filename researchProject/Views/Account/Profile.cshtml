@@ -1,0 +1,318 @@
+@model researchProject.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "الملف الشخصي والأمان";
+}
+
+<div class="page-header-card mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="avatar-circle-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 64px; height: 64px; font-size: 2rem;">
+            <i class="bi bi-person-circle"></i>
+        </div>
+        <div>
+            <h2 class="mb-1 fw-bold text-dark">@Model.FullName</h2>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="text-muted small"><i class="bi bi-envelope me-1"></i>@Model.Email</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill small">
+                    <i class="bi bi-patch-check-fill me-1"></i> بريد مؤكد
+                </span>
+                @foreach (var role in Model.Roles)
+                {
+                    <span class="badge bg-primary px-2 py-1 rounded-pill small">@role</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.CollegeName))
+                {
+                    <span class="badge bg-secondary px-2 py-1 rounded-pill small">@Model.CollegeName</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- 1. Personal Information Card -->
+    <div class="col-lg-6">
+        <div class="card card-custom h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+                    <i class="bi bi-person-lines-fill"></i> البيانات الشخصية والاتصال
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form id="updateProfileForm" asp-action="UpdateProfile" method="post" onsubmit="return handleProfileUpdate(this);">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">الاسم الكامل <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                            <input type="text" name="FullName" class="form-control border-start-0" value="@Model.FullName" required maxlength="150" placeholder="أدخل الاسم الرباعي" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">رقم الهاتف المحمول <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-telephone text-muted"></i></span>
+                            <input type="tel" name="PhoneNumber" class="form-control border-start-0" value="@Model.PhoneNumber" required pattern="^01[0125][0-9]{8}$" placeholder="مثال: 01012345678" />
+                        </div>
+                        <div class="form-text small">رقم هاتف محمول مصري مكون من 11 رقماً يبدأ بـ 01.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">البريد الإلكتروني (غير قابل للتعديل)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope-at text-muted"></i></span>
+                            <input type="email" class="form-control border-start-0 bg-light text-muted" value="@Model.Email" readonly />
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.NationalId))
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted">الرقم القومي الأكاديمي (موثق)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-card-heading text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0 bg-light text-muted font-monospace" value="@Model.NationalId" readonly />
+                            </div>
+                        </div>
+                    }
+
+                    @{
+                        var isAcademicUser = Model.Roles.Contains("Researcher") || Model.Roles.Contains("Judge") || 
+                                             Model.Roles.Contains("باحث أكاديمي") || Model.Roles.Contains("محكم علمي") || 
+                                             !string.IsNullOrEmpty(Model.AcademicDegree) || !string.IsNullOrEmpty(Model.ResearcherType);
+                    }
+                    @if (isAcademicUser)
+                    {
+                        <div class="row g-3 mb-3">
+                            <!-- 1. Academic Degree (الدرجة العلمية) -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">الدرجة العلمية</label>
+                                <input type="hidden" name="AcademicDegree" id="AcademicDegreeInput" value="@Model.AcademicDegree" />
+                                <div class="dedicated-dropdown-wrapper" data-target-input="#AcademicDegreeInput" data-allow-custom="true">
+                                    <div class="dedicated-dropdown-input-group">
+                                        <i class="bi bi-mortarboard dedicated-dropdown-icon-right"></i>
+                                        <input type="text" class="dedicated-dropdown-input" 
+                                               value="@Model.AcademicDegree" 
+                                               placeholder="اختر أو اكتب الدرجة العلمية..." autocomplete="off" />
+                                        <div class="dedicated-dropdown-actions-left">
+                                            <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                            <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                                <i class="bi bi-chevron-down"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="dedicated-dropdown-menu">
+                                        <div class="dedicated-dropdown-item" data-id="بكالوريوس / ليسانس" data-name="بكالوريوس / ليسانس"><span>بكالوريوس / ليسانس</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="دبلوم دراسات عليا" data-name="دبلوم دراسات عليا"><span>دبلوم دراسات عليا</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="ماجستير" data-name="ماجستير"><span>ماجستير</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="دكتوراه" data-name="دكتوراه"><span>دكتوراه</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="أستاذ مساعد" data-name="أستاذ مساعد"><span>أستاذ مساعد</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="أستاذ دكتور" data-name="أستاذ دكتور"><span>أستاذ دكتور</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="باحث ما بعد الدكتوراه" data-name="باحث ما بعد الدكتوراه"><span>باحث ما بعد الدكتوراه</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="استشاري / زمالة" data-name="استشاري / زمالة"><span>استشاري / زمالة</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="خبير ومحكم علمي" data-name="خبير ومحكم علمي"><span>خبير ومحكم علمي</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Researcher Type (فئة الباحث) -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">فئة الباحث / الصفة الأكاديمية</label>
+                                <input type="hidden" name="ResearcherType" id="ResearcherTypeInput" value="@Model.ResearcherType" />
+                                <div class="dedicated-dropdown-wrapper" data-target-input="#ResearcherTypeInput" data-allow-custom="true">
+                                    <div class="dedicated-dropdown-input-group">
+                                        <i class="bi bi-person-badge dedicated-dropdown-icon-right"></i>
+                                        <input type="text" class="dedicated-dropdown-input" 
+                                               value="@Model.ResearcherType" 
+                                               placeholder="اختر أو اكتب فئة الباحث..." autocomplete="off" />
+                                        <div class="dedicated-dropdown-actions-left">
+                                            <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                            <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                                <i class="bi bi-chevron-down"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="dedicated-dropdown-menu">
+                                        <div class="dedicated-dropdown-item" data-id="عضو هيئة تدريس" data-name="عضو هيئة تدريس"><span>عضو هيئة تدريس</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="باحث" data-name="باحث"><span>باحث</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="طالب دراسات عليا" data-name="طالب دراسات عليا"><span>طالب دراسات عليا</span></div>
+                                        <div class="dedicated-dropdown-item" data-id="مستشار خبير" data-name="مستشار خبير"><span>مستشار خبير</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Department) || !string.IsNullOrEmpty(Model.Specialty))
+                    {
+                        <div class="row g-2 mb-3">
+                            @if (!string.IsNullOrEmpty(Model.Department))
+                            {
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-muted">القسم الأكاديمي (موثق)</label>
+                                    <input type="text" class="form-control form-control-sm bg-light text-muted" value="@Model.Department" readonly />
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Specialty))
+                            {
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-muted">التخصص الأكاديمي للتحكيم</label>
+                                    <input type="text" class="form-control form-control-sm bg-light text-muted" value="@Model.Specialty" readonly />
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-accent-custom px-4 py-2 fw-bold" id="updateProfileBtn">
+                            <i class="bi bi-check-lg me-1"></i> حفظ تعديلات البيانات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Security & Change Password Card -->
+    <div class="col-lg-6">
+        <div class="card card-custom h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold text-danger d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-lock-fill"></i> أمان الحساب وتغيير كلمة المرور
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form id="changePasswordForm" asp-action="ChangePassword" method="post" onsubmit="return handleChangePassword(this);">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">كلمة المرور الحالية <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-key text-muted"></i></span>
+                            <input type="password" name="CurrentPassword" class="form-control border-start-0" required placeholder="أدخل كلمة المرور الحالية" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">كلمة المرور الجديدة <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                            <input type="password" name="NewPassword" id="newPasswordInput" class="form-control border-start-0" required minlength="6" placeholder="لا تقل عن 6 أحرف وبها رقم" />
+                        </div>
+                        <div class="form-text small">يجب ألا تقل عن 6 خانات وتحتوي على أرقام.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">تأكيد كلمة المرور الجديدة <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock-fill text-muted"></i></span>
+                            <input type="password" name="ConfirmPassword" id="confirmPasswordInput" class="form-control border-start-0" required placeholder="أعد كتابة كلمة المرور الجديدة" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-bold" id="changePasswordBtn">
+                            <i class="bi bi-shield-check me-1"></i> تحديث كلمة المرور
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function handleProfileUpdate(form) {
+            // Sync any custom inputs in dedicated dropdowns before building FormData
+            $(form).find('.dedicated-dropdown-wrapper').each(function () {
+                var $wrap = $(this);
+                var $txtInput = $wrap.find('.dedicated-dropdown-input');
+                var hiddenSelector = $wrap.data('target-input');
+                var $hid = hiddenSelector ? $(hiddenSelector) : $wrap.find('input[type="hidden"]');
+                if ($txtInput.length && $hid.length && $txtInput.val()) {
+                    $hid.val($txtInput.val().trim());
+                }
+            });
+
+            var formData = new FormData(form);
+            var $btn = $('#updateProfileBtn');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> جاري الحفظ...');
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    $btn.prop('disabled', false).html('<i class="bi bi-check-lg me-1"></i> حفظ تعديلات البيانات');
+                    if (res && res.success) {
+                        window.showToast('success', res.message || 'تم حفظ البيانات الشخصية بنجاح.');
+                    } else {
+                        window.showToast('error', res.message || 'حدث خطأ أثناء حفظ البيانات.');
+                    }
+                },
+                error: function (xhr) {
+                    $btn.prop('disabled', false).html('<i class="bi bi-check-lg me-1"></i> حفظ تعديلات البيانات');
+                    var msg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    try {
+                        var json = JSON.parse(xhr.responseText);
+                        if (json && json.message) msg = json.message;
+                    } catch (e) { }
+                    window.showToast('error', msg);
+                }
+            });
+
+            return false;
+        }
+
+        function handleChangePassword(form) {
+            var newPass = $('#newPasswordInput').val();
+            var confirmPass = $('#confirmPasswordInput').val();
+
+            if (newPass !== confirmPass) {
+                window.showToast('error', 'كلمة المرور الجديدة وتأكيدها غير متطابقين.');
+                return false;
+            }
+
+            var formData = new FormData(form);
+            var $btn = $('#changePasswordBtn');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> جاري التحديث...');
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    $btn.prop('disabled', false).html('<i class="bi bi-shield-check me-1"></i> تحديث كلمة المرور');
+                    if (res && res.success) {
+                        window.showToast('success', res.message || 'تم تحديث كلمة المرور بنجاح.');
+                        form.reset();
+                    } else {
+                        window.showToast('error', res.message || 'حدث خطأ أثناء تغيير كلمة المرور.');
+                    }
+                },
+                error: function (xhr) {
+                    $btn.prop('disabled', false).html('<i class="bi bi-shield-check me-1"></i> تحديث كلمة المرور');
+                    var msg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    try {
+                        var json = JSON.parse(xhr.responseText);
+                        if (json && json.message) msg = json.message;
+                    } catch (e) { }
+                    window.showToast('error', msg);
+                }
+            });
+
+            return false;
+        }
+    </script>
+}
+

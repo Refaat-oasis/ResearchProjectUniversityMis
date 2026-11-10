@@ -43,26 +43,42 @@
                             }
                             else if (type == "yesno")
                             {
-                                var listId = "yesNoList_" + name.Replace(" ", "_");
-                                <input list="@listId" name="DynamicAnswers[@name]" class="form-control" placeholder="-- اختر (نعم / لا) --" autocomplete="off" @(isReq ? "required" : "") />
-                                <datalist id="@listId">
-                                    <option value="نعم"></option>
-                                    <option value="لا"></option>
-                                </datalist>
+                                <select name="DynamicAnswers[@name]" class="form-select" @(isReq ? "required" : "")>
+                                    <option value="">-- اختر (نعم / لا) --</option>
+                                    <option value="نعم">نعم</option>
+                                    <option value="لا">لا</option>
+                                </select>
                             }
                             else if (type == "dropdown")
                             {
-                                var listId = "dropdownList_" + name.Replace(" ", "_");
-                                <input list="@listId" name="DynamicAnswers[@name]" class="form-control" placeholder="-- اختر من القائمة أو ابحث --" autocomplete="off" @(isReq ? "required" : "") />
-                                <datalist id="@listId">
-                                    @if (element.TryGetProperty("Options", out var optsProp) && optsProp.ValueKind == JsonValueKind.Array)
-                                    {
-                                        foreach (var opt in optsProp.EnumerateArray())
+                                var inputId = "dynDrop_" + name.Replace(" ", "_");
+                                <input type="hidden" name="DynamicAnswers[@name]" id="@inputId" />
+                                <div class="dedicated-dropdown-wrapper" data-target-input="#@inputId">
+                                    <div class="dedicated-dropdown-input-group">
+                                        <i class="bi bi-search dedicated-dropdown-icon-right"></i>
+                                        <input type="text" class="dedicated-dropdown-input" placeholder="-- اختر من الخيارات أو ابحث --" @(isReq ? "required" : "") autocomplete="off" />
+                                        <div class="dedicated-dropdown-actions-left">
+                                            <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                            <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                                <i class="bi bi-chevron-down"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="dedicated-dropdown-menu">
+                                        @if (element.TryGetProperty("Options", out var optsProp) && optsProp.ValueKind == JsonValueKind.Array)
                                         {
-                                            <option value="@opt.GetString()"></option>
+                                            foreach (var opt in optsProp.EnumerateArray())
+                                            {
+                                                var optVal = opt.GetString() ?? "";
+                                                <div class="dedicated-dropdown-item" data-id="@optVal" data-name="@optVal">
+                                                    <span>@optVal</span>
+                                                </div>
+                                            }
                                         }
-                                    }
-                                </datalist>
+                                    </div>
+                                </div>
                             }
                             else
                             {

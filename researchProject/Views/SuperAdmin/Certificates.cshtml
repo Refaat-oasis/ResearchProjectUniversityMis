@@ -1,6 +1,6 @@
 @model List<researchProject.Models.Entities.Research>
 @{
-    ViewData["Title"] = "الأرشيف الرقمي الموحد للشهادات الأخلاقية";
+    ViewData["Title"] = "الأرشيف الرقمي الموحد للشهادات ";
     var querySerial = Context.Request.Query["serialNumber"].ToString();
     var queryResearcher = Context.Request.Query["researcherName"].ToString();
     var queryCollege = Context.Request.Query["collegeId"].ToString();
@@ -8,7 +8,7 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-archive text-primary"></i> الأرشيف الرقمي الموحد للشهادات الأخلاقية</h2>
+        <h2><i class="bi bi-archive text-primary"></i> الأرشيف الرقمي الموحد للشهادات</h2>
         <p>قاعدة بيانات موثقة لجميع قرارات وشهادات الموافقة الأخلاقية الصادرة على مستوى كليات الجامعة مع إمكانية التحقق الفوري</p>
     </div>
     <span class="badge bg-light text-dark border p-2">
@@ -33,17 +33,25 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label small fw-bold">الكلية المعنية</label>
-                <input type="hidden" name="collegeId" id="certCollegeId" value="@queryCollege" />
-                <input type="text" list="certCollegesList" id="certCollegeInput" class="form-control" placeholder="ابحث أو اختر الكلية..." autocomplete="off" />
-                <datalist id="certCollegesList">
-                    @if (ViewBag.Colleges != null)
-                    {
-                        foreach (var c in ViewBag.Colleges)
+                <div class="dedicated-dropdown-wrapper">
+                    <input type="hidden" name="collegeId" id="certCollegeId" value="@queryCollege" />
+                    <input type="text" id="certCollegeInput" class="form-control dedicated-dropdown-input" placeholder="ابحث أو اختر الكلية..." autocomplete="off" />
+                    <div class="dedicated-dropdown-menu" id="certCollegesMenu">
+                        <div class="dedicated-dropdown-item" data-value="" data-label="كل الكليات">
+                            <span class="text-muted">كل الكليات</span>
+                        </div>
+                        @if (ViewBag.Colleges != null)
                         {
-                            <option value="@c.Name" data-id="@c.Id">@c.Code</option>
+                            foreach (var c in ViewBag.Colleges)
+                            {
+                                <div class="dedicated-dropdown-item" data-value="@c.Id" data-label="@c.Name">
+                                    <div class="fw-bold">@c.Name</div>
+                                    <small class="text-muted">@c.Code</small>
+                                </div>
+                            }
                         }
-                    }
-                </datalist>
+                    </div>
+                </div>
             </div>
             <div class="col-md-3 d-flex align-items-end gap-2">
                 <button type="submit" class="btn btn-primary-custom flex-grow-1">
@@ -146,25 +154,15 @@
         $(document).ready(function () {
             var initialId = $('#certCollegeId').val();
             if (initialId) {
-                var match = $('#certCollegesList option').filter(function () {
-                    return $(this).data('id') == initialId;
-                });
-                if (match.length > 0) {
-                    $('#certCollegeInput').val(match.val());
+                var $item = $('#certCollegesMenu .dedicated-dropdown-item[data-value="' + initialId + '"]');
+                if ($item.length > 0) {
+                    $('#certCollegeInput').val($item.data('label'));
                 }
             }
 
-            $('#certCollegeInput').on('input change', function () {
-                var selectedVal = $(this).val();
-                var match = $('#certCollegesList option').filter(function () {
-                    return this.value === selectedVal;
-                });
-                if (match.length > 0) {
-                    $('#certCollegeId').val(match.data('id'));
-                } else {
-                    $('#certCollegeId').val('');
-                }
-            });
+            if (typeof initDedicatedDropdowns === 'function') {
+                initDedicatedDropdowns();
+            }
         });
     </script>
 }

@@ -1,6 +1,9 @@
+using Hangfire;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using researchProject.Data;
+using researchProject.Filters;
 using researchProject.Hubs;
 using researchProject.Models.Constants;
 using researchProject.Models.Entities;
@@ -64,14 +67,35 @@ namespace researchProject
 
             // 4. Shared Domain Services
             builder.Services.AddScoped<IEmailSender, EmailSender>();
+            builder.Services.AddScoped<IHangfireEmailDispatcher, HangfireEmailDispatcher>();
             builder.Services.AddScoped<IFileStorageService, FileStorageService>();
             builder.Services.AddScoped<ICertificateService, CertificateService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IAttachmentService, AttachmentService>();
             builder.Services.AddScoped<IReportExportService, ReportExportService>();
+            builder.Services.AddHostedService<researchProject.Services.BackgroundServices.UnconfirmedEmailCleanupBackgroundService>();
             builder.Services.AddSignalR();
 
-            // 4. Dedicated Repositories Per Actor
+            // Hangfire Background Job Processing (2 attempts max with rollback)
+            builder.Services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+                {
+                    CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                    SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                    QueuePollInterval = TimeSpan.Zero,
+                    UseRecommendedIsolationLevel = true,
+                    DisableGlobalLocks = true
+                }));
+
+            builder.Services.AddHangfireServer(options =>
+            {
+                options.WorkerCount = Math.Max(2, Environment.ProcessorCount * 2);
+            });
+
+            // 5. Dedicated Repositories Per Actor
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
             builder.Services.AddScoped<ICollegeCoAdminRepository, CollegeCoAdminRepository>();
@@ -79,10 +103,10 @@ namespace researchProject
             builder.Services.AddScoped<IResearcherRepository, ResearcherRepository>();
             builder.Services.AddScoped<IPublicRepository, PublicRepository>();
 
-            // 5. MVC with Views & Anti-Forgery
+            // 6. MVC with Views, Anti-Forgery, and Comprehensive Audit Log Filter
             builder.Services.AddControllersWithViews(options =>
             {
-                // Auto anti-forgery can be enabled or used per action
+                options.Filters.Add<AuditLogFilter>();
             });
             builder.Services.AddAntiforgery(options =>
             {
@@ -91,7 +115,7 @@ namespace researchProject
 
             var app = builder.Build();
 
-            // 6. Database Migration / Seeding
+            // 7. Database Migration / Seeding
             try
             {
                 await DbSeeder.SeedAsync(app.Services, app.Configuration);
@@ -102,10 +126,12 @@ namespace researchProject
                 logger.LogError(ex, "حدث خطأ أثناء تهيئة قاعدة البيانات والتلقيم الأولي (Seeding).");
             }
 
-            // 7. Request Pipeline
+            // 8. Global Error Handling & Request Pipeline
+            app.UseExceptionHandler("/Error/500");
+            app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
             if (!app.Environment.IsDevelopment())
             {
-                app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
 
@@ -115,6 +141,13 @@ namespace researchProject
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // Hangfire Dashboard (Secured for SuperAdmin only)
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new[] { new HangfireDashboardAuthorizationFilter() },
+                DashboardTitle = "لوحة مهام وإرسال البريد - منصة أخلاقيات البحث العلمي"
+            });
 
             app.MapControllerRoute(
                 name: "default",

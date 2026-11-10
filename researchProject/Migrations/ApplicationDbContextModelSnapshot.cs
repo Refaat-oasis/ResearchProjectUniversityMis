@@ -167,6 +167,9 @@ namespace researchProject.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -178,6 +181,9 @@ namespace researchProject.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -225,6 +231,83 @@ namespace researchProject.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("researchProject.Models.Entities.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ControllerName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExceptionDetails")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ExecutionDurationMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("HttpMethod")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsSuccess")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("UserRole")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("IsSuccess", "Timestamp");
+
+                    b.HasIndex("UserId", "Timestamp");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("researchProject.Models.Entities.College", b =>
                 {
                     b.Property<int>("Id")
@@ -258,6 +341,9 @@ namespace researchProject.Migrations
 
                     b.Property<int>("CollegeId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("SignatureImagePath")
                         .HasMaxLength(500)
@@ -421,8 +507,15 @@ namespace researchProject.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("CollegeId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<string>("ResearcherType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Specialty")
                         .IsRequired()
@@ -434,6 +527,8 @@ namespace researchProject.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CollegeId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -451,6 +546,9 @@ namespace researchProject.Migrations
 
                     b.Property<DateTime?>("AcceptedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("CollegeId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -482,6 +580,8 @@ namespace researchProject.Migrations
                         .HasColumnType("nvarchar(128)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CollegeId");
 
                     b.HasIndex("InvitedByUserId");
 
@@ -619,6 +719,15 @@ namespace researchProject.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
 
@@ -665,6 +774,9 @@ namespace researchProject.Migrations
 
                     b.Property<string>("FieldsDefinitionJson")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -739,6 +851,9 @@ namespace researchProject.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("NationalId")
                         .IsRequired()
                         .HasMaxLength(14)
@@ -756,6 +871,9 @@ namespace researchProject.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CollegeId");
+
+                    b.HasIndex("NationalId")
+                        .IsUnique();
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -891,22 +1009,36 @@ namespace researchProject.Migrations
 
             modelBuilder.Entity("researchProject.Models.Entities.Judge", b =>
                 {
+                    b.HasOne("researchProject.Models.Entities.College", "College")
+                        .WithMany()
+                        .HasForeignKey("CollegeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("researchProject.Models.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("College");
+
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("researchProject.Models.Entities.JudgeInvitation", b =>
                 {
+                    b.HasOne("researchProject.Models.Entities.College", "College")
+                        .WithMany()
+                        .HasForeignKey("CollegeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("researchProject.Models.Entities.ApplicationUser", "InvitedByUser")
                         .WithMany()
                         .HasForeignKey("InvitedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("College");
 
                     b.Navigation("InvitedByUser");
                 });

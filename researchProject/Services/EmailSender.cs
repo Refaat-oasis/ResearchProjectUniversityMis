@@ -1,7 +1,11 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Mail;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -11,16 +15,19 @@ namespace researchProject.Services
     {
         private readonly ILogger<EmailSender> _logger;
         private readonly IConfiguration _configuration;
+        private readonly string _archivePath;
 
-        public EmailSender(ILogger<EmailSender> logger, IConfiguration configuration)
+        public EmailSender(ILogger<EmailSender> logger, IConfiguration configuration, IWebHostEnvironment? env = null)
         {
             _logger = logger;
             _configuration = configuration;
+            var basePath = env?.ContentRootPath ?? AppContext.BaseDirectory;
+            _archivePath = Path.Combine(basePath, "App_Data", "SentEmails");
         }
 
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            _logger.LogInformation("إرسال بريد إلكتروني إلى: {Email} | الموضوع: {Subject}", email, subject);
+            _logger.LogInformation("بدء معالجة إرسال بريد إلكتروني إلى: {Email} | الموضوع: {Subject}", email, subject);
 
             var smtpHost = _configuration["Smtp:Host"] ?? "smtp.gmail.com";
             var smtpPortStr = _configuration["Smtp:Port"] ?? "587";
@@ -29,43 +36,119 @@ namespace researchProject.Services
             var enableSsl = !bool.TryParse(_configuration["Smtp:EnableSsl"], out var ssl) || ssl;
             var senderName = _configuration["Smtp:SenderName"] ?? "منصة أخلاقيات البحث العلمي الجامعية";
 
-            if (!string.IsNullOrEmpty(smtpHost) &&
-                int.TryParse(smtpPortStr, out var smtpPort) &&
-                !string.IsNullOrEmpty(smtpUser) &&
-                !smtpUser.StartsWith("YOUR_") &&
-                !string.IsNullOrEmpty(smtpPass) &&
-                !smtpPass.StartsWith("YOUR_"))
+            var cleanUser = (smtpUser ?? "").Trim();
+            var cleanPass = (smtpPass ?? "").Replace(" ", "").Trim();
+
+            int smtpPort = 587;
+            bool validPort = int.TryParse(smtpPortStr, out smtpPort);
+
+            bool isConfigured = !string.IsNullOrWhiteSpace(smtpHost) &&
+                                validPort &&
+                                !string.IsNullOrWhiteSpace(cleanUser) &&
+                                !cleanUser.StartsWith("YOUR_", StringComparison.OrdinalIgnoreCase) &&
+                                !string.IsNullOrWhiteSpace(cleanPass) &&
+                                !cleanPass.StartsWith("YOUR_", StringComparison.OrdinalIgnoreCase);
+
+            var fullHtml = WrapHtmlInRtlTemplate(subject, htmlMessage);
+            string deliveryStatus = "Simulated";
+            string? errorDetails = null;
+
+            if (isConfigured)
             {
                 try
                 {
                     using var client = new SmtpClient(smtpHost, smtpPort)
                     {
                         EnableSsl = enableSsl,
-                        Credentials = new NetworkCredential(smtpUser, smtpPass),
+                        Credentials = new NetworkCredential(cleanUser, cleanPass),
                         DeliveryMethod = SmtpDeliveryMethod.Network,
-                        Timeout = 10000
+                        Timeout = 15000
                     };
 
-                    var mailMessage = new MailMessage
+                    using var mailMessage = new MailMessage
                     {
-                        From = new MailAddress(smtpUser, senderName),
+                        From = new MailAddress(cleanUser, senderName, Encoding.UTF8),
                         Subject = subject,
-                        Body = WrapHtmlInRtlTemplate(subject, htmlMessage),
+                        SubjectEncoding = Encoding.UTF8,
+                        Body = fullHtml,
+                        BodyEncoding = Encoding.UTF8,
+                        HeadersEncoding = Encoding.UTF8,
                         IsBodyHtml = true
                     };
                     mailMessage.To.Add(email);
 
                     await client.SendMailAsync(mailMessage);
+                    deliveryStatus = "DeliveredViaSmtp";
+                    _logger.LogInformation("✅ تم إرسال البريد الإلكتروني بنجاح عبر SMTP ({Host}:{Port}) إلى: {Email}", smtpHost, smtpPort, email);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "تعذر إرسال البريد عبر Gmail SMTP، تم تسجيله في السجلات فقط.");
+                    deliveryStatus = "Failed";
+                    errorDetails = ex.Message;
+                    _logger.LogError(ex, "❌ تعذر إرسال البريد عبر SMTP ({Host}:{Port}) إلى {Email}. السبب: {Error}\nتنبيه: في حال استخدام Gmail، يرجى التأكد من تفعيل التحقق بخطوتين (2FA) واستخدام كلمة مرور التطبيقات (App Password) المكونة من 16 حرفاً من إعدادات Google Account وليس كلمة مرور الحساب العادية.", smtpHost, smtpPort, email, ex.Message);
                 }
             }
             else
             {
-                // In local dev/test or when credentials pending, log clearly
-                _logger.LogInformation("Gmail SMTP محاكى (في انتظار إدخال بيانات الاعتماد). البريد إلى: {Email}\nالمحتوى: {Message}", email, htmlMessage);
+                deliveryStatus = "SimulatedLocal";
+                _logger.LogWarning("⚠️ إعدادات خادم البريد (Smtp:User / Smtp:Password) غير مجهزة أو تستخدم قيماً افتراضية (YOUR_...). تم تشغيل وضع المحاكاة وحفظ الرسالة محلياً. البريد إلى: {Email}", email);
+            }
+
+            // Always archive a copy locally in App_Data/SentEmails so developers/users never lose verification codes or links
+            await SaveEmailToLocalArchiveAsync(email, subject, fullHtml, deliveryStatus, errorDetails);
+        }
+
+        private async Task SaveEmailToLocalArchiveAsync(string email, string subject, string fullHtml, string deliveryStatus, string? errorDetails)
+        {
+            try
+            {
+                if (!Directory.Exists(_archivePath))
+                {
+                    Directory.CreateDirectory(_archivePath);
+                }
+
+                var now = DateTime.UtcNow;
+                var safeEmail = Regex.Replace(email ?? "unknown", @"[^a-zA-Z0-9_\-]", "_");
+                var safeSubj = Regex.Replace(subject ?? "no_subject", @"[^\u0600-\u06FFa-zA-Z0-9_\-]", "_");
+                if (safeSubj.Length > 30) safeSubj = safeSubj.Substring(0, 30);
+
+                var fileName = $"{now:yyyyMMdd_HHmmss}_{safeEmail}_{safeSubj}.html";
+                var filePath = Path.Combine(_archivePath, fileName);
+
+                var statusBadgeColor = deliveryStatus switch
+                {
+                    "DeliveredViaSmtp" => "#16a34a",
+                    "SimulatedLocal" => "#d97706",
+                    _ => "#dc2626"
+                };
+
+                var statusBadgeText = deliveryStatus switch
+                {
+                    "DeliveredViaSmtp" => "✅ تم الإرسال الفعلي عبر خادم SMTP",
+                    "SimulatedLocal" => "⚠️ محاكاة محلية (في انتظار إدخال بيانات اعتماد SMTP)",
+                    _ => $"❌ فشل الإرسال عبر SMTP ({errorDetails})"
+                };
+
+                var diagnosticBanner = $@"
+<div style='background-color: #0f172a; color: #f8fafc; padding: 12px 18px; font-family: Cairo, Tahoma, sans-serif; font-size: 13px; border-bottom: 3px solid {statusBadgeColor}; direction: rtl; text-align: right;'>
+    <div style='display:flex; justify-content:space-between; align-items:center;'>
+        <span><strong>📨 سجل البريد الصادر (Local Mail Archive)</strong></span>
+        <span style='background-color: {statusBadgeColor}; color:#ffffff; padding:3px 10px; border-radius:12px; font-weight:bold; font-size:12px;'>{statusBadgeText}</span>
+    </div>
+    <div style='margin-top: 6px; color: #94a3b8;'>
+        <strong>المستلم:</strong> {email} &nbsp;|&nbsp; 
+        <strong>الموضوع:</strong> {subject} &nbsp;|&nbsp; 
+        <strong>التوقيت (UTC):</strong> {now:yyyy-MM-dd HH:mm:ss}
+    </div>
+</div>
+";
+
+                var combinedHtml = diagnosticBanner + fullHtml;
+                await File.WriteAllTextAsync(filePath, combinedHtml, Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "تعذر حفظ نسخة البريد الصادر في الأرشيف المحلي.");
             }
         }
 
@@ -87,30 +170,27 @@ namespace researchProject.Services
                     </p>
 
                     <!-- Alert for 15-minute expiration -->
-                    <div style='background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center;'>
+                    <div style='background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;'>
                         <span style='color: #b45309; font-size: 13px; font-weight: 600;'>
                             ⏰ تنبيه: رمز التحقق صالح للاستخدام لمدة <strong>15 دقيقة فقط</strong> من وقت إرسال هذه الرسالة.
                         </span>
                     </div>
 
-                    <!-- 6-digit OTP Box -->
+                    <!-- 6-digit OTP Box (Email Client Safe) -->
                     <div style='background: linear-gradient(135deg, #f8fafc 0%, #eef2f6 100%); border: 2px dashed #3b82f6; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;'>
                         <div style='color: #475569; font-size: 13px; font-weight: bold; margin-bottom: 10px;'>رمز التحقق الرقمي الخاص بك (OTP):</div>
-                        <div id='otpCodeContainer' style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 10px; color: #1e3a8a; user-select: all; -webkit-user-select: all; background:#ffffff; padding:14px 20px; border-radius:10px; border:2px solid #cbd5e1; display:inline-block; margin: 0 auto 14px auto;'>
+                        <div style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e3a8a; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #93c5fd; display:inline-block; margin: 0 auto 10px auto;'>
                             {token}
                         </div>
-                        <div style='margin-top: 10px;'>
-                            <button type='button' onclick='navigator.clipboard.writeText(""{token}""); alert(""تم نسخ الرمز بنجاح!"");' style='cursor:pointer; display:inline-block; background-color:#ffffff; color:#1e40af; border:1px solid #93c5fd; padding:6px 18px; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;'>
-                                📋 انقر هنا لنسخ الرمز
-                            </button>
+                        <div style='color: #64748b; font-size: 12px; margin-top: 6px;'>
+                            * انقر نقراً مزدوجاً على الرمز أعلاه لتحديده ونسخه مباشرة، أو استخدم زر التفعيل المباشر أدناه.
                         </div>
-                        <div style='color: #94a3b8; font-size: 11px; margin-top: 8px;'>* يمكنك أيضاً تحديد الأرقام أعلاه ونسخها مباشرة</div>
                     </div>
 
-                    <!-- 1-Click Verification Link -->
+                    <!-- 1-Click Verification Link with Auto-Fill & Auto-Copy -->
                     <div style='text-align: center; margin: 28px 0;'>
                         <a href='{confirmationLink}' style='display:inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(37,99,235,0.25);'>
-                            🚀 تفعيل الحساب بنقرة واحدة
+                            🚀 تفعيل الحساب وتعبئة الرمز تلقائياً بنقرة واحدة
                         </a>
                     </div>
 
@@ -141,24 +221,21 @@ namespace researchProject.Services
                         </span>
                     </div>
 
-                    <!-- 6-digit OTP Box -->
+                    <!-- 6-digit OTP Box (Email Client Safe) -->
                     <div style='background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px dashed #ea580c; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;'>
                         <div style='color: #9a3412; font-size: 13px; font-weight: bold; margin-bottom: 10px;'>رمز استعادة كلمة المرور (OTP):</div>
-                        <div id='resetOtpContainer' style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 10px; color: #7c2d12; user-select: all; -webkit-user-select: all; background:#ffffff; padding:14px 20px; border-radius:10px; border:2px solid #fdba74; display:inline-block; margin: 0 auto 14px auto;'>
+                        <div style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #7c2d12; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #fdba74; display:inline-block; margin: 0 auto 10px auto;'>
                             {token}
                         </div>
-                        <div style='margin-top: 10px;'>
-                            <button type='button' onclick='navigator.clipboard.writeText(""{token}""); alert(""تم نسخ الرمز بنجاح!"");' style='cursor:pointer; display:inline-block; background-color:#ffffff; color:#c2410c; border:1px solid #fed7aa; padding:6px 18px; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;'>
-                                📋 انقر هنا لنسخ الرمز
-                            </button>
+                        <div style='color: #9a3412; font-size: 12px; margin-top: 6px;'>
+                            * انقر نقراً مزدوجاً على الرمز أعلاه لتحديده ونسخه مباشرة، أو استخدم زر التعيين المباشر أدناه.
                         </div>
-                        <div style='color: #9a3412; font-size: 11px; margin-top: 8px;'>* يمكنك أيضاً تحديد الأرقام أعلاه ونسخها مباشرة</div>
                     </div>
 
-                    <!-- 1-Click Direct Reset Link -->
+                    <!-- 1-Click Direct Reset Link with Auto-Fill -->
                     <div style='text-align: center; margin: 28px 0;'>
                         <a href='{resetLink}' style='display:inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(220,38,38,0.25);'>
-                            🔒 تعيين كلمة المرور الجديدة
+                            🔒 تعيين كلمة المرور الجديدة وتعبئة الرمز تلقائياً
                         </a>
                     </div>
 
@@ -170,17 +247,18 @@ namespace researchProject.Services
             return SendEmailAsync(email, "رمز استعادة كلمة المرور (صالح لـ 15 دقيقة) - منصة أخلاقيات البحث العلمي", body);
         }
 
-        public Task SendJudgeInvitationAsync(string email, string invitationLink, string specialty)
+        public Task SendJudgeInvitationAsync(string email, string invitationLink, string specialty, string? collegeName = null)
         {
+            var collegeTitle = !string.IsNullOrWhiteSpace(collegeName) ? $"بـ {collegeName}" : "";
             var body = $@"
                 <div style='text-align: right;'>
                     <span style='display:inline-block; background-color:#eff6ff; color:#1d4ed8; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; margin-bottom:12px;'>
-                        ⚖️ دعوة تحكيم أكاديمي رسمي
+                        ⚖️ دعوة تحكيم أكاديمي رسمي {collegeTitle}
                     </span>
-                    <h3 style='margin: 0 0 10px 0; color:#0f172a; font-size:20px;'>دعوة للانضمام إلى هيئة المحكمين</h3>
+                    <h3 style='margin: 0 0 10px 0; color:#0f172a; font-size:20px;'>دعوة للانضمام إلى هيئة المحكمين {collegeTitle}</h3>
                     <p style='color:#475569; font-size:14px; line-height:1.6;'>
                         تحية طيبة وبعد،<br/>
-                        يسر لجنة أخلاقيات البحث العلمي والنزاهة الأكاديمية دعوتكم رسمياً للانضمام إلى نخبة المحكمين المعتمدين في تخصص:
+                        يسر لجنة أخلاقيات البحث العلمي والنزاهة الأكاديمية {collegeTitle} دعوتكم رسمياً للانضمام إلى نخبة المحكمين المعتمدين في تخصص:
                         <strong style='color:#1e3a8a;'>{specialty}</strong>.
                     </p>
                     <div style='text-align: center; margin: 30px 0;'>
@@ -191,7 +269,7 @@ namespace researchProject.Services
                     <p style='color:#94a3b8; font-size:12px;'>ملاحظة: هذا الرابط الأمني صالح للاستخدام لمدة 7 أيام عمل.</p>
                 </div>";
 
-            return SendEmailAsync(email, "دعوة للانضمام إلى هيئة المحكمين - منصة أخلاقيات البحث العلمي", body);
+            return SendEmailAsync(email, $"دعوة للانضمام إلى هيئة المحكمين {collegeTitle} - منصة أخلاقيات البحث العلمي", body);
         }
 
         public Task SendStatusChangedNotificationAsync(string email, string researchTitle, string oldStatus, string newStatus, string? notes = null)
@@ -238,13 +316,28 @@ namespace researchProject.Services
         public Task SendTemporaryPasswordAsync(string email, string tempPassword)
         {
             var body = $@"
-                <div style='text-align: right;'>
-                    <h3 style='margin: 0 0 10px 0; color:#0f172a; font-size:18px;'>بيانات حساب مدير اللجنة الفرعية</h3>
-                    <p style='color:#475569; font-size:14px;'>تم إنشاء حساب إداري لكم بصلاحية منسق لجنة أخلاقيات البحث العلمي بالكلية.</p>
-                    <div style='background:#f1f5f9; padding:15px; border-radius:8px; margin:15px 0;'>
-                        <div>كلمة المرور المؤقتة: <strong style='font-family:monospace; font-size:16px; background:#fff; padding:2px 8px; border-radius:4px;'>{tempPassword}</strong></div>
+                <div style='text-align: right; font-family: Cairo, Tahoma, Arial, sans-serif;'>
+                    <div style='display:inline-block; background-color:#eff6ff; color:#1d4ed8; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:12px; border:1px solid #bfdbfe;'>
+                        🛡️ بيانات الحساب الإداري الجديد
                     </div>
-                    <p style='color:#dc2626; font-size:13px; font-weight:bold;'>يرجى تسجيل الدخول وتغيير كلمة المرور فوراً حفاظاً على أمان النظام.</p>
+                    <h3 style='margin: 0 0 10px 0; color:#0f172a; font-size:20px; font-weight:700;'>بيانات حساب مدير اللجنة الفرعية</h3>
+                    <p style='color:#475569; font-size:14px; line-height:1.6;'>
+                        تم إنشاء حساب إداري لكم بصلاحية منسق لجنة أخلاقيات البحث العلمي بالكلية. يرجى استخدام كلمة المرور المؤقتة أدناه لتسجيل الدخول:
+                    </p>
+                    <div style='background: #f8fafc; border: 2px dashed #0284c7; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;'>
+                        <div style='color: #475569; font-size: 13px; font-weight: bold; margin-bottom: 8px;'>كلمة المرور المؤقتة:</div>
+                        <div style='font-family: ""Courier New"", Monaco, monospace; font-size: 26px; font-weight: 800; color: #0369a1; background: #ffffff; padding: 10px 24px; border-radius: 8px; border: 1px solid #bae6fd; display: inline-block; user-select: all; -webkit-user-select: all; -moz-user-select: all;'>
+                            {tempPassword}
+                        </div>
+                        <div style='color: #64748b; font-size: 12px; margin-top: 6px;'>
+                            * انقر نقراً مزدوجاً على كلمة المرور أعلاه لتحديدها ونسخها مباشرة
+                        </div>
+                    </div>
+                    <div style='background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;'>
+                        <span style='color: #dc2626; font-size: 13px; font-weight: 600;'>
+                            ⚠️ تنبيه أمني: يرجى تسجيل الدخول وتغيير كلمة المرور فوراً من صفحة الملف الشخصي حفاظاً على سرية البيانات.
+                        </span>
+                    </div>
                 </div>";
 
             return SendEmailAsync(email, "بيانات الحساب الإداري - منصة أخلاقيات البحث العلمي", body);

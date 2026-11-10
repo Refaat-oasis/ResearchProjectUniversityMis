@@ -18,6 +18,9 @@ using researchProject.Data;
 using researchProject.Models.Constants;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Services;
+using researchProject.Services.Implementations;
+using researchProject.Services.Interfaces;
 using researchProject.Repositories.Implementations;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
@@ -354,7 +357,8 @@ namespace researchProject.Tests
             await db.SaveChangesAsync();
 
             var repo = new CollegeCoAdminRepository(db, certMock.Object, emailMock.Object, CreateTestConfig(), loggerMock.Object);
-            var controller = new CollegeCoAdminController(repo, emailMock.Object);
+            var hangfireMock = new Mock<IHangfireEmailDispatcher>();
+            var controller = new CollegeCoAdminController(repo, emailMock.Object, hangfireMock.Object);
 
             // Mock User ClaimsPrincipal
             var claims = new List<Claim>
@@ -475,7 +479,7 @@ namespace researchProject.Tests
 
             var fileStorageMock = new Mock<IFileStorageService>();
             fileStorageMock.Setup(f => f.SaveFileAsync(It.IsAny<IFormFile>(), It.IsAny<string>()))
-                .ReturnsAsync(("stored_file.pdf", 2048));
+                .ReturnsAsync(("stored_file.pdf", 2048, "uploads/attachments/stored_file.pdf"));
 
             var loggerMock = new Mock<ILogger<CollegeCoAdminRepository>>();
             var config = CreateTestConfig();
@@ -666,7 +670,8 @@ namespace researchProject.Tests
             await db.SaveChangesAsync();
 
             var repo = new SuperAdminRepository(db, userManagerMock.Object, roleManagerMock.Object, emailMock.Object);
-            var controller = new SuperAdminController(repo, emailMock.Object);
+            var hangfireMock = new Mock<IHangfireEmailDispatcher>();
+            var controller = new SuperAdminController(repo, emailMock.Object, hangfireMock.Object);
 
             var claims = new List<Claim>
             {
@@ -688,6 +693,331 @@ namespace researchProject.Tests
             Assert.Contains("إجمالي المقترحات بالجامعة", content);
             Assert.Contains("كلية طب الأسنان", content);
             Assert.Contains("علاج جذور", content);
+        }
+
+        [Fact]
+        public async Task AttachmentDownload_FromDatabase_ReturnsStreamAndMatchesBytes()
+        {
+            var db = CreateInMemoryDb("AttachmentDownload_DbTest");
+            var fileStorageMock = new Mock<IFileStorageService>();
+            var userStoreMock = new Mock<IUserStore<ApplicationUser>>();
+            var userManagerMock = new Mock<UserManager<ApplicationUser>>(userStoreMock.Object, null, null, null, null, null, null, null, null);
+
+            var college = new College { Name = "كلية الطب", Code = "MED" };
+            db.Colleges.Add(college);
+            await db.SaveChangesAsync();
+
+            var authorUser = new ApplicationUser { Id = "author-usr", FullName = "باحث", Email = "author@univ.edu.eg" };
+            db.Users.Add(authorUser);
+            await db.SaveChangesAsync();
+
+            var researcher = new Researcher
+            {
+                UserId = authorUser.Id,
+                CollegeId = college.Id,
+                ResearcherType = ResearcherTypeConstants.FacultyMember,
+                AcademicDegree = "أستاذ",
+                Department = "جراحة",
+                NationalId = "29012345678901"
+            };
+            db.Researchers.Add(researcher);
+
+            var research = new Research
+            {
+                Title = "بحث اختبار تنزيل المرفق",
+                CollegeId = college.Id,
+                AcademicSpecialty = "جراحة",
+                WorkflowStatus = ResearchStatusConstants.UnderFormalScreening,
+                SubmittedAt = DateTime.UtcNow
+            };
+            db.Researches.Add(research);
+            await db.SaveChangesAsync();
+
+            var bridge = new ResearcherResearchesBridge
+            {
+                ResearchId = research.Id,
+                ResearcherId = researcher.Id,
+                IsMainAuthor = true
+            };
+            db.ResearcherResearchesBridge.Add(bridge);
+
+            var expectedBytes = Encoding.UTF8.GetBytes("محتوى ملف الموافقة المستنيرة المخزن بقاعدة البيانات");
+            var attachment = new ResearchAttachment
+            {
+                ResearchId = research.Id,
+                AttachmentType = AttachmentTypeConstants.InformedConsent,
+                Version = 1,
+                OriginalFileName = "consent.pdf",
+                StoredFileName = "consent_db_test.pdf",
+                FilePath = "uploads/attachments/Research_88/consent_db_test.pdf",
+                ContentType = "application/pdf",
+                FileSize = expectedBytes.Length,
+                UploadedAt = DateTime.UtcNow
+            };
+            db.ResearchAttachments.Add(attachment);
+            await db.SaveChangesAsync();
+
+            fileStorageMock.Setup(f => f.GetFileStreamAsync("consent_db_test.pdf", $"Research_{research.Id}"))
+                .ReturnsAsync(new MemoryStream(expectedBytes));
+
+            userManagerMock.Setup(m => m.FindByIdAsync(authorUser.Id)).ReturnsAsync(authorUser);
+            userManagerMock.Setup(m => m.IsInRoleAsync(authorUser, RoleConstants.Researcher)).ReturnsAsync(true);
+            userManagerMock.Setup(m => m.IsInRoleAsync(authorUser, RoleConstants.SuperAdmin)).ReturnsAsync(false);
+            userManagerMock.Setup(m => m.IsInRoleAsync(authorUser, RoleConstants.CollegeCoAdmin)).ReturnsAsync(false);
+            userManagerMock.Setup(m => m.IsInRoleAsync(authorUser, RoleConstants.Judge)).ReturnsAsync(false);
+
+            var attService = new AttachmentService(db, fileStorageMock.Object, userManagerMock.Object);
+
+            var (isAuthorized, fileExists, fileStream, contentType, fileName) = await attService.GetAttachmentDownloadAsync(attachment.Id, authorUser.Id);
+
+            Assert.True(isAuthorized);
+            Assert.True(fileExists);
+            Assert.NotNull(fileStream);
+            Assert.Equal("application/pdf", contentType);
+            Assert.Equal("consent.pdf", fileName);
+
+            using var ms = new MemoryStream();
+            await fileStream!.CopyToAsync(ms);
+            var downloadedBytes = ms.ToArray();
+            Assert.Equal(expectedBytes, downloadedBytes);
+        }
+
+        [Fact]
+        public async Task SuggestJudges_ExcludesJudgesFromOtherColleges()
+        {
+            var db = CreateInMemoryDb("SuggestJudges_CollegeIsolationTest");
+            var certMock = new Mock<ICertificateService>();
+            var emailMock = new Mock<IEmailSender>();
+            var loggerMock = new Mock<ILogger<CollegeCoAdminRepository>>();
+
+            var collegeMed = new College { Name = "كلية الطب", Code = "MED" };
+            var collegePharm = new College { Name = "كلية الصيدلة", Code = "PHARM" };
+            db.Colleges.AddRange(collegeMed, collegePharm);
+            await db.SaveChangesAsync();
+
+            var uMed = new ApplicationUser { Id = "u-med-judge", FullName = "محكم طب", Email = "jmed@univ.edu.eg" };
+            var uPharm = new ApplicationUser { Id = "u-pharm-judge", FullName = "محكم صيدلة", Email = "jpharm@univ.edu.eg" };
+            var uAuthor = new ApplicationUser { Id = "u-med-author", FullName = "باحث طب", Email = "authormed@univ.edu.eg" };
+            db.Users.AddRange(uMed, uPharm, uAuthor);
+            await db.SaveChangesAsync();
+
+            var jMed = new Judge { UserId = uMed.Id, Specialty = "علم الأدوية", AcademicTitle = "أستاذ", CollegeId = collegeMed.Id, IsActive = true };
+            var jPharm = new Judge { UserId = uPharm.Id, Specialty = "علم الأدوية", AcademicTitle = "أستاذ", CollegeId = collegePharm.Id, IsActive = true };
+            db.Judges.AddRange(jMed, jPharm);
+
+            var researcher = new Researcher
+            {
+                UserId = uAuthor.Id,
+                CollegeId = collegeMed.Id,
+                ResearcherType = ResearcherTypeConstants.FacultyMember,
+                AcademicDegree = "أستاذ",
+                Department = "فارماكولوجي",
+                NationalId = "29012345678902"
+            };
+            db.Researchers.Add(researcher);
+
+            var research = new Research
+            {
+                Title = "بحث تجارب الأدوية بكلية الطب",
+                CollegeId = collegeMed.Id,
+                AcademicSpecialty = "علم الأدوية",
+                WorkflowStatus = ResearchStatusConstants.UnderFormalScreening,
+                SubmittedAt = DateTime.UtcNow
+            };
+            db.Researches.Add(research);
+            await db.SaveChangesAsync();
+
+            var bridge = new ResearcherResearchesBridge
+            {
+                ResearchId = research.Id,
+                ResearcherId = researcher.Id,
+                IsMainAuthor = true
+            };
+            db.ResearcherResearchesBridge.Add(bridge);
+            await db.SaveChangesAsync();
+
+            var repo = new CollegeCoAdminRepository(db, certMock.Object, emailMock.Object, CreateTestConfig(), loggerMock.Object);
+
+            var suggestions = await repo.SuggestJudgesAsync(research.Id, collegeMed.Id);
+
+            // Must contain ONLY the judge from CollegeMed, and strictly EXCLUDE CollegePharm
+            Assert.Single(suggestions);
+            Assert.Equal(jMed.Id, suggestions[0].Id);
+            Assert.DoesNotContain(suggestions, j => j.Id == jPharm.Id);
+        }
+
+        [Fact]
+        public async Task InviteJudge_BindsInvitationToCoAdminCollege()
+        {
+            var db = CreateInMemoryDb("InviteJudge_CollegeBindingTest");
+            var certMock = new Mock<ICertificateService>();
+            var emailMock = new Mock<IEmailSender>();
+            var loggerMock = new Mock<ILogger<CollegeCoAdminRepository>>();
+
+            var collegeDent = new College { Name = "كلية طب الأسنان", Code = "DENT" };
+            db.Colleges.Add(collegeDent);
+            await db.SaveChangesAsync();
+
+            var coAdminUser = new ApplicationUser { Id = "coadmin-dent", FullName = "مدير أسنان", Email = "coadmin.dent@univ.edu.eg" };
+            db.Users.Add(coAdminUser);
+            await db.SaveChangesAsync();
+
+            var coAdmin = new CollegeCoAdmin
+            {
+                UserId = coAdminUser.Id,
+                CollegeId = collegeDent.Id,
+                IsActive = true
+            };
+            db.CollegeCoAdmins.Add(coAdmin);
+            await db.SaveChangesAsync();
+
+            var repo = new CollegeCoAdminRepository(db, certMock.Object, emailMock.Object, CreateTestConfig(), loggerMock.Object);
+
+            var (succeeded, errorMessage, rawToken, _) = await repo.InviteJudgeAsync("outside.judge@external.edu", "جراحة الفم", coAdminUser.Id);
+
+            Assert.True(succeeded);
+            Assert.NotNull(rawToken);
+
+            var invitation = await db.JudgeInvitations.FirstOrDefaultAsync(i => i.Email == "outside.judge@external.edu");
+            Assert.NotNull(invitation);
+            Assert.Equal(collegeDent.Id, invitation.CollegeId);
+            Assert.Equal("outside.judge@external.edu", invitation.Email);
+        }
+
+        [Fact]
+        public async Task CreateResearch_RejectsEmpty0ByteFileWithFriendlyError()
+        {
+            var db = CreateInMemoryDb("CreateResearch_EmptyFileTest");
+            var fileStorageMock = new Mock<IFileStorageService>();
+            var emailMock = new Mock<IEmailSender>();
+            var certMock = new Mock<ICertificateService>();
+
+            var college = new College { Name = "كلية العلوم", Code = "SCI" };
+            var cat = new ResearchCategory { Name = "أبحاث تجريبية", College = college };
+            db.Colleges.Add(college);
+            db.ResearchCategories.Add(cat);
+            var user = new ApplicationUser { Id = "researcher-user-empty", FullName = "منى بكير", Email = "mona@univ.edu.eg" };
+            db.Users.Add(user);
+            var researcher = new Researcher
+            {
+                UserId = user.Id,
+                College = college,
+                ResearcherType = ResearcherTypeConstants.FacultyMember,
+                AcademicDegree = "أستاذ مساعد",
+                Department = "كيمياء",
+                NationalId = "29801011234567"
+            };
+            db.Researchers.Add(researcher);
+            await db.SaveChangesAsync();
+
+            var repo = new ResearcherRepository(db, fileStorageMock.Object, emailMock.Object, CreateTestConfig(), certMock.Object);
+
+            var validFile = new Mock<IFormFile>();
+            validFile.Setup(f => f.FileName).Returns("valid.pdf");
+            validFile.Setup(f => f.Length).Returns(1024);
+
+            var emptyFile = new Mock<IFormFile>();
+            emptyFile.Setup(f => f.FileName).Returns("empty.docx");
+            emptyFile.Setup(f => f.Length).Returns(0); // 0-byte file!
+
+            var dto = new ResearchCreateDto
+            {
+                Title = "بحث تجريبي",
+                CollegeId = college.Id,
+                CategoryId = cat.Id,
+                AcademicSpecialty = "كيمياء حيوية",
+                InformedConsentFile = validFile.Object,
+                ResearchToolsFile = emptyFile.Object, // Empty!
+                ResearchProposalFile = validFile.Object
+            };
+
+            var (succeeded, errorMsg, researchId) = await repo.CreateResearchWithAttachmentsAsync(dto, user.Id);
+
+            Assert.False(succeeded);
+            Assert.Null(researchId);
+            Assert.Contains("أدوات وأجهزة البحث", errorMsg);
+            Assert.Contains("فارغ", errorMsg);
+        }
+
+        [Fact]
+        public async Task InviteJudge_ExternalEmailNormalizationAndDuplicateSuperseding()
+        {
+            var db = CreateInMemoryDb("InviteJudge_NormalizationTest");
+            var certMock = new Mock<ICertificateService>();
+            var emailMock = new Mock<IEmailSender>();
+            var loggerMock = new Mock<ILogger<CollegeCoAdminRepository>>();
+
+            var college = new College { Name = "كلية الصيدلة", Code = "PHARM" };
+            db.Colleges.Add(college);
+            var user = new ApplicationUser { Id = "admin-pharm", FullName = "أحمد رفعت", Email = "ahmed.refaat@univ.edu.eg" };
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+
+            var coAdmin = new CollegeCoAdmin { UserId = user.Id, CollegeId = college.Id, IsActive = true };
+            db.CollegeCoAdmins.Add(coAdmin);
+            await db.SaveChangesAsync();
+
+            var repo = new CollegeCoAdminRepository(db, certMock.Object, emailMock.Object, CreateTestConfig(), loggerMock.Object);
+
+            // First invitation with uppercase spaces
+            var (succ1, _, rawToken1, _) = await repo.InviteJudgeAsync("  AntigravityUser45@Gmail.Com  ", "علوم انسان", user.Id);
+            Assert.True(succ1);
+
+            var inv1 = await db.JudgeInvitations.FirstOrDefaultAsync(i => i.Email == "antigravityuser45@gmail.com");
+            Assert.NotNull(inv1);
+            Assert.Equal(InvitationStatusConstants.Pending, inv1.Status);
+            Assert.Equal(college.Id, inv1.CollegeId);
+
+            // Second invitation to same email supersedes the old one
+            var (succ2, _, rawToken2, _) = await repo.InviteJudgeAsync("antigravityuser45@gmail.com", "علوم انسان", user.Id);
+            Assert.True(succ2);
+
+            var oldInv = await db.JudgeInvitations.FindAsync(inv1.Id);
+            Assert.Equal("Superseded", oldInv?.Status);
+
+            var newInv = await db.JudgeInvitations.FirstOrDefaultAsync(i => i.Email == "antigravityuser45@gmail.com" && i.Status == InvitationStatusConstants.Pending);
+            Assert.NotNull(newInv);
+            Assert.NotEqual(inv1.Id, newInv.Id);
+        }
+
+        [Fact]
+        public async Task EmailSender_ArchivesLocally_WhenCredentialsSimulatedOrUnconfigured()
+        {
+            var loggerMock = new Mock<ILogger<EmailSender>>();
+            var tempDir = Path.Combine(Path.GetTempPath(), "test_mail_" + Guid.NewGuid().ToString("N"));
+            var envMock = new Mock<IWebHostEnvironment>();
+            envMock.Setup(e => e.ContentRootPath).Returns(tempDir);
+
+            var inMemoryConfig = new Dictionary<string, string?>
+            {
+                { "Smtp:Host", "smtp.gmail.com" },
+                { "Smtp:Port", "587" },
+                { "Smtp:User", "YOUR_GMAIL_ADDRESS@gmail.com" },
+                { "Smtp:Password", "YOUR_GMAIL_APP_PASSWORD" }
+            };
+            var config = new ConfigurationBuilder().AddInMemoryCollection(inMemoryConfig).Build();
+
+            var sender = new EmailSender(loggerMock.Object, config, envMock.Object);
+
+            var testEmail = "antigravityuser45@gmail.com";
+            var testSubj = "دعوة تحكيم اختبار";
+            var testBody = "<p>رابط الدعوة التجريبي: https://localhost:7274/test</p>";
+
+            await sender.SendEmailAsync(testEmail, testSubj, testBody);
+
+            var sentDir = Path.Combine(tempDir, "App_Data", "SentEmails");
+            Assert.True(Directory.Exists(sentDir));
+
+            var files = Directory.GetFiles(sentDir, "*.html");
+            Assert.Single(files);
+
+            var fileContent = await File.ReadAllTextAsync(files[0]);
+            Assert.Contains(testEmail, fileContent);
+            Assert.Contains("رابط الدعوة التجريبي", fileContent);
+            Assert.Contains("محاكاة محلية", fileContent);
+
+            // Cleanup
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
         }
     }
 }

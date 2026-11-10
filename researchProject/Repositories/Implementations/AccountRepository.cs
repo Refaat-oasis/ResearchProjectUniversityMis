@@ -11,6 +11,7 @@ using researchProject.Data;
 using researchProject.Models.Constants;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Models.ViewModels;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
 
@@ -51,7 +52,23 @@ namespace researchProject.Repositories.Implementations
 
             if (!user.EmailConfirmed)
             {
+                if (user.CreatedAt <= DateTime.UtcNow.AddDays(-1))
+                {
+                    // Expired unconfirmed user - delete
+                    var oldResearcher = await _db.Researchers.FirstOrDefaultAsync(r => r.UserId == user.Id);
+                    if (oldResearcher != null) _db.Researchers.Remove(oldResearcher);
+                    var oldCodes = await _db.EmailVerificationCodes.Where(c => c.Email == user.Email || c.UserId == user.Id).ToListAsync();
+                    if (oldCodes.Any()) _db.EmailVerificationCodes.RemoveRange(oldCodes);
+                    await _db.SaveChangesAsync();
+                    await _userManager.DeleteAsync(user);
+                    return (false, false, false, "انتهت صلاحية تفعيل الحساب لتجاوزه 24 ساعة دون تأكيد. تم حذف الحساب ويمكنك إعادة التسجيل من جديد.", new List<string>());
+                }
                 return (false, false, false, "يرجى تأكيد بريدك الإلكتروني من خلال الرابط المرسل إليك قبل تسجيل الدخول.", new List<string>());
+            }
+
+            if (!user.IsActive || (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow))
+            {
+                return (false, true, false, "تم تعطيل هذا الحساب من قِبل إدارة النظام. يرجى التواصل مع إدارة المنصة.", new List<string>());
             }
 
             var result = await _signInManager.PasswordSignInAsync(user.UserName ?? email, password, rememberMe, lockoutOnFailure: true);
@@ -81,10 +98,30 @@ namespace researchProject.Repositories.Implementations
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
             if (existingUser != null)
             {
-                return (false, "البريد الإلكتروني مسجل مسبقاً في النظام.", null, null);
+                if (!existingUser.EmailConfirmed && existingUser.CreatedAt <= DateTime.UtcNow.AddDays(-1))
+                {
+                    // Expired unconfirmed user - delete stale records so user can register freshly
+                    var oldResearcher = await _db.Researchers.FirstOrDefaultAsync(r => r.UserId == existingUser.Id);
+                    if (oldResearcher != null) _db.Researchers.Remove(oldResearcher);
+                    var oldCodes = await _db.EmailVerificationCodes.Where(c => c.Email == existingUser.Email || c.UserId == existingUser.Id).ToListAsync();
+                    if (oldCodes.Any()) _db.EmailVerificationCodes.RemoveRange(oldCodes);
+                    await _db.SaveChangesAsync();
+                    await _userManager.DeleteAsync(existingUser);
+                }
+                else
+                {
+                    return (false, "البريد الإلكتروني مسجل مسبقاً في النظام.", null, null);
+                }
             }
 
-            // 2. Check College exists
+            // 2. Check National ID uniqueness
+            var nationalIdExists = await _db.Researchers.AnyAsync(r => r.NationalId == dto.NationalId);
+            if (nationalIdExists)
+            {
+                return (false, "الرقم القومي المدخل مسجل بالفعل لباحث آخر في المنصة.", null, null);
+            }
+
+            // 3. Check College exists
             var collegeExists = await _db.Colleges.AnyAsync(c => c.Id == dto.CollegeId);
             if (!collegeExists)
             {
@@ -276,6 +313,7 @@ namespace researchProject.Repositories.Implementations
                         UserId = user.Id,
                         Specialty = invitation.Specialty ?? "عام",
                         AcademicTitle = academicTitle ?? "خبير ومحكم علمي",
+                        CollegeId = invitation.CollegeId,
                         IsActive = true
                     };
                     await _db.Judges.AddAsync(judgeProfile);
@@ -283,6 +321,10 @@ namespace researchProject.Repositories.Implementations
                 else
                 {
                     judgeProfile.IsActive = true;
+                    if (invitation.CollegeId.HasValue)
+                    {
+                        judgeProfile.CollegeId = invitation.CollegeId;
+                    }
                     if (!string.IsNullOrEmpty(invitation.Specialty))
                     {
                         judgeProfile.Specialty = invitation.Specialty;
@@ -676,7 +718,164 @@ namespace researchProject.Repositories.Implementations
             var (ok, err, code, _) = await GenerateVerificationCodeAsync(normEmail, purpose, user?.Id);
             return (ok, err, code, normEmail);
         }
-        
+
+        public async Task<int> CleanupUnconfirmedAccountsAsync(TimeSpan? olderThan = null)
+        {
+            var cutoff = DateTime.UtcNow - (olderThan ?? TimeSpan.FromHours(24));
+            var unconfirmedUsers = await _userManager.Users
+                .Where(u => !u.EmailConfirmed && u.CreatedAt <= cutoff)
+                .ToListAsync();
+
+            int deletedCount = 0;
+            foreach (var user in unconfirmedUsers)
+            {
+                var researcher = await _db.Researchers.FirstOrDefaultAsync(r => r.UserId == user.Id);
+                if (researcher != null)
+                {
+                    _db.Researchers.Remove(researcher);
+                }
+
+                var codes = await _db.EmailVerificationCodes
+                    .Where(c => c.Email == user.Email || c.UserId == user.Id)
+                    .ToListAsync();
+                if (codes.Any())
+                {
+                    _db.EmailVerificationCodes.RemoveRange(codes);
+                }
+
+                await _db.SaveChangesAsync();
+
+                var deleteResult = await _userManager.DeleteAsync(user);
+                if (deleteResult.Succeeded)
+                {
+                    deletedCount++;
+                }
+            }
+
+            return deletedCount;
+        }
+
+        public async Task<ProfileViewModel?> GetProfileViewModelAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return null;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var vm = new ProfileViewModel
+            {
+                UserId = user.Id,
+                FullName = user.FullName,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                Roles = roles
+            };
+
+            var researcher = await _db.Researchers.Include(r => r.College).FirstOrDefaultAsync(r => r.UserId == userId);
+            if (researcher != null)
+            {
+                vm.CollegeName = researcher.College?.Name;
+                vm.Department = researcher.Department;
+                vm.AcademicDegree = researcher.AcademicDegree;
+                vm.ResearcherType = researcher.ResearcherType;
+                vm.NationalId = researcher.NationalId;
+            }
+
+            var judge = await _db.Judges.Include(j => j.College).FirstOrDefaultAsync(j => j.UserId == userId);
+            if (judge != null)
+            {
+                vm.CollegeName ??= judge.College?.Name;
+                vm.Specialty = judge.Specialty;
+                if (string.IsNullOrEmpty(vm.AcademicDegree))
+                {
+                    vm.AcademicDegree = judge.AcademicTitle;
+                }
+                if (string.IsNullOrEmpty(vm.ResearcherType))
+                {
+                    vm.ResearcherType = judge.ResearcherType;
+                }
+            }
+
+            var coAdmin = await _db.CollegeCoAdmins.Include(c => c.College).FirstOrDefaultAsync(c => c.UserId == userId);
+            if (coAdmin != null)
+            {
+                vm.CollegeName ??= coAdmin.College?.Name;
+                vm.HasSignature = !string.IsNullOrWhiteSpace(coAdmin.SignatureImagePath);
+            }
+
+            return vm;
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> UpdateProfileAsync(string userId, UpdateProfileDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return (false, "المستخدم غير موجود.");
+            }
+
+            user.FullName = dto.FullName.Trim();
+            user.PhoneNumber = dto.PhoneNumber.Trim();
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("، ", result.Errors.Select(e => e.Description));
+                return (false, $"فشل تحديث البيانات: {errors}");
+            }
+
+            // Update Researcher Profile if exists
+            var researcher = await _db.Researchers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (researcher != null)
+            {
+                if (!string.IsNullOrWhiteSpace(dto.AcademicDegree))
+                {
+                    researcher.AcademicDegree = dto.AcademicDegree.Trim();
+                }
+                if (!string.IsNullOrWhiteSpace(dto.ResearcherType))
+                {
+                    researcher.ResearcherType = dto.ResearcherType.Trim();
+                }
+            }
+
+            // Update Judge Profile if exists
+            var judge = await _db.Judges.FirstOrDefaultAsync(j => j.UserId == userId);
+            if (judge != null)
+            {
+                if (!string.IsNullOrWhiteSpace(dto.AcademicDegree))
+                {
+                    judge.AcademicTitle = dto.AcademicDegree.Trim();
+                }
+                if (!string.IsNullOrWhiteSpace(dto.ResearcherType))
+                {
+                    judge.ResearcherType = dto.ResearcherType.Trim();
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            await RefreshSignInAsync(userId);
+            return (true, null);
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> ChangePasswordAsync(string userId, ChangePasswordDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return (false, "المستخدم غير موجود.");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("، ", result.Errors.Select(e => 
+                    e.Code == "PasswordMismatch" ? "كلمة المرور الحالية غير صحيحة." : e.Description));
+                return (false, errors);
+            }
+
+            await RefreshSignInAsync(userId);
+            return (true, null);
+        }
 
         public static string HashToken(string token)
         {

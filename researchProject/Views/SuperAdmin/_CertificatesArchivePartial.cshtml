@@ -24,17 +24,25 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">الكلية</label>
-                    <input type="hidden" id="arcCollege" />
-                    <input type="text" list="arcCollegesList" id="arcCollegeInput" class="form-control form-control-sm" placeholder="ابحث أو اختر الكلية..." autocomplete="off" />
-                    <datalist id="arcCollegesList">
-                        @if (ViewBag.Colleges != null)
-                        {
-                            foreach (var c in ViewBag.Colleges)
+                    <div class="dedicated-dropdown-wrapper">
+                        <input type="hidden" id="arcCollege" />
+                        <input type="text" id="arcCollegeInput" class="form-control form-control-sm dedicated-dropdown-input" placeholder="ابحث أو اختر الكلية..." autocomplete="off" />
+                        <div class="dedicated-dropdown-menu" id="arcCollegesMenu">
+                            <div class="dedicated-dropdown-item" data-value="" data-label="كل الكليات">
+                                <span class="text-muted">كل الكليات</span>
+                            </div>
+                            @if (ViewBag.Colleges != null)
                             {
-                                <option value="@c.Name" data-id="@c.Id">@c.Code</option>
+                                foreach (var c in ViewBag.Colleges)
+                                {
+                                    <div class="dedicated-dropdown-item" data-value="@c.Id" data-label="@c.Name">
+                                        <div class="fw-bold">@c.Name</div>
+                                        <small class="text-muted">@c.Code</small>
+                                    </div>
+                                }
                             }
-                        }
-                    </datalist>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary-custom btn-sm w-100">
@@ -100,17 +108,9 @@
 </div>
 
 <script>
-    $('#arcCollegeInput').on('input change', function () {
-        var selectedVal = $(this).val();
-        var match = $('#arcCollegesList option').filter(function () {
-            return this.value === selectedVal;
-        });
-        if (match.length > 0) {
-            $('#arcCollege').val(match.data('id'));
-        } else {
-            $('#arcCollege').val('');
-        }
-    });
+    if (typeof initDedicatedDropdowns === 'function') {
+        initDedicatedDropdowns();
+    }
 
     function searchArchive(e) {
         e.preventDefault();

@@ -19,7 +19,7 @@ namespace researchProject.Repositories.Interfaces
         Task<List<UserSummaryViewModel>> GetAssignableUsersForInvitationAsync();
         Task<(bool Succeeded, string? ErrorMessage)> AssignJudgesToResearchAsync(int researchId, int collegeId, List<int> judgeIds, string actingUserId);
 
-        Task<(bool Succeeded, string? ErrorMessage, string? RawToken)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId);
+        Task<(bool Succeeded, string? ErrorMessage, string? RawToken, int? InvitationId)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId);
 
         Task<List<Research>> GetApprovedResearchesForIssuanceAsync(int collegeId);
         Task<(bool Succeeded, string? ErrorMessage, string? SerialNumber)> IssueEthicalCertificateAsync(int researchId, string coAdminUserId, string baseUrl);
@@ -27,5 +27,11 @@ namespace researchProject.Repositories.Interfaces
         Task<(bool Succeeded, string? ErrorMessage)> UploadSignatureFileAsync(string coAdminUserId, IFormFile signatureFile);
 
         Task<SystemStatisticsViewModel> GetCollegeStatisticsAsync(int collegeId);
+
+        // Category & Dynamic Fields Management for College CoAdmin
+        Task<List<ResearchCategory>> GetCategoriesForCollegeAsync(int collegeId);
+        Task<ResearchCategory?> GetCategoryWithFieldsAsync(int categoryId, int collegeId);
+        Task<(bool Succeeded, string? ErrorMessage)> SaveCategoryAsync(CategorySaveDto dto, int collegeId);
+        Task<(bool Succeeded, string? ErrorMessage)> ToggleCategoryStatusAsync(int categoryId, int collegeId, bool isActive);
     }
 }

@@ -18,6 +18,9 @@ namespace researchProject.Models.Entities
         [StringLength(500, ErrorMessage = "مسار التوقيع يجب ألا يتجاوز 500 حرف")]
         public string? SignatureImagePath { get; set; }
 
+        [Display(Name = "حالة الحساب")]
+        public bool IsActive { get; set; } = true;
+
         // Navigation properties
         public virtual ApplicationUser User { get; set; } = null!;
         public virtual College College { get; set; } = null!;

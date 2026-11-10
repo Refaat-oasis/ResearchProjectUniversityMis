@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using researchProject.Models.Constants;
+using researchProject.Models.DTOs;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
 
@@ -18,15 +19,18 @@ namespace researchProject.Controllers
     {
         private readonly ICollegeCoAdminRepository _coAdminRepo;
         private readonly IEmailSender _emailSender;
+        private readonly IHangfireEmailDispatcher _hangfireEmailDispatcher;
         private readonly IReportExportService _reportExportService;
 
         public CollegeCoAdminController(
             ICollegeCoAdminRepository coAdminRepo,
             IEmailSender emailSender,
+            IHangfireEmailDispatcher hangfireEmailDispatcher,
             IReportExportService? reportExportService = null)
         {
             _coAdminRepo = coAdminRepo;
             _emailSender = emailSender;
+            _hangfireEmailDispatcher = hangfireEmailDispatcher;
             _reportExportService = reportExportService ?? new ReportExportService();
         }
 
@@ -128,28 +132,45 @@ namespace researchProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> InviteJudge(string email, string? specialty)
+        public async Task<IActionResult> InviteJudge([FromForm] string? email, [FromForm] string? specialty)
         {
-            if (string.IsNullOrWhiteSpace(email))
+            var cleanEmail = (email ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(cleanEmail) && Request?.HasFormContentType == true && Request.Form.ContainsKey("email"))
+            {
+                cleanEmail = (Request.Form["email"].ToString() ?? "").Trim();
+            }
+            if (string.IsNullOrWhiteSpace(specialty) && Request?.HasFormContentType == true && Request.Form.ContainsKey("specialty"))
+            {
+                specialty = Request.Form["specialty"].ToString();
+            }
+
+            if (string.IsNullOrWhiteSpace(cleanEmail))
             {
                 return Json(new { success = false, message = "البريد الإلكتروني إلزامي." });
             }
 
+            var emailValidator = new System.ComponentModel.DataAnnotations.EmailAddressAttribute();
+            if (!emailValidator.IsValid(cleanEmail))
+            {
+                return Json(new { success = false, message = "صيغة البريد الإلكتروني المدخل غير صالحة." });
+            }
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            var (succeeded, errorMessage, rawToken) = await _coAdminRepo.InviteJudgeAsync(email, specialty, userId);
+            var (succeeded, errorMessage, rawToken, invitationId) = await _coAdminRepo.InviteJudgeAsync(cleanEmail, specialty, userId);
 
             if (!succeeded)
             {
                 return Json(new { success = false, message = errorMessage ?? "فشل إرسال الدعوة." });
             }
 
-            var link = Url.Action("AcceptJudgeInvitation", "Account", new { token = rawToken }, Request.Scheme);
-            if (!string.IsNullOrEmpty(link))
+            var scheme = Request?.Scheme ?? "https";
+            var link = Url.Action("AcceptJudgeInvitation", "Account", new { token = rawToken }, scheme);
+            if (!string.IsNullOrEmpty(link) && invitationId.HasValue)
             {
-                await _emailSender.SendJudgeInvitationAsync(email, link, specialty ?? "عام");
+                _hangfireEmailDispatcher.EnqueueJudgeInvitationEmail(invitationId.Value, cleanEmail, cleanEmail, link, userId);
             }
 
-            return Json(new { success = true, message = "تم إرسال دعوة المحكم بنجاح عبر البريد الإلكتروني." });
+            return Json(new { success = true, message = "تم جدولة إرسال دعوة المحكم بنجاح عبر البريد الإلكتروني." });
         }
 
         [HttpGet]
@@ -203,6 +224,56 @@ namespace researchProject.Controllers
             var stats = await _coAdminRepo.GetCollegeStatisticsAsync(collegeId);
             var bytes = _reportExportService.ExportStatisticsToCsv(stats, "تقرير إحصائيات كلية");
             return File(bytes, "text/csv; charset=utf-8", $"College_Ethics_Report_{DateTime.UtcNow:yyyyMMdd}.csv");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Categories()
+        {
+            var collegeId = await GetCurrentCollegeIdAsync();
+            var categories = await _coAdminRepo.GetCategoriesForCollegeAsync(collegeId);
+            return View(categories);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ManageCategoriesPartial()
+        {
+            var collegeId = await GetCurrentCollegeIdAsync();
+            var categories = await _coAdminRepo.GetCategoriesForCollegeAsync(collegeId);
+            return PartialView("_ManageCategoriesPartial", categories);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveCategory(CategorySaveDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+            {
+                return Json(new { success = false, message = "اسم التصنيف مطلوب ولا يمكن تركه فارغاً." });
+            }
+
+            var collegeId = await GetCurrentCollegeIdAsync();
+            dto.CollegeId = collegeId; // Lock strictly to the CoAdmin's college
+            var (succeeded, errorMessage) = await _coAdminRepo.SaveCategoryAsync(dto, collegeId);
+            if (!succeeded)
+            {
+                return Json(new { success = false, message = errorMessage ?? "فشل حفظ تصنيف البحث." });
+            }
+
+            return Json(new { success = true, message = "تم حفظ تصنيف البحث والحقول التفاعلية بنجاح." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleCategoryStatus(int id, bool isActive)
+        {
+            var collegeId = await GetCurrentCollegeIdAsync();
+            var (succeeded, errorMessage) = await _coAdminRepo.ToggleCategoryStatusAsync(id, collegeId, isActive);
+            if (!succeeded)
+            {
+                return Json(new { success = false, message = errorMessage ?? "فشل تغيير حالة تفعيل التصنيف." });
+            }
+
+            return Json(new { success = true, message = isActive ? "تم تفعيل تصنيف البحث بنجاح وإتاحته للباحثين." : "تم تعطيل تصنيف البحث وإخفاؤه من نموذج التقديم." });
         }
 
         private async Task<int> GetCurrentCollegeIdAsync()

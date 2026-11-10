@@ -137,30 +137,39 @@
                 </h6>
 
                 <div class="row g-3">
-                    <datalist id="ethicsRatingList">
-                        <option value="@EthicsRatingConstants.Appropriate"></option>
-                        <option value="@EthicsRatingConstants.NeedsModification"></option>
-                        <option value="@EthicsRatingConstants.Inappropriate"></option>
-                    </datalist>
-
                     <!-- 1. Privacy Protection -->
                     <div class="col-md-4">
                         <label class="form-label">1. حماية الخصوصية وسرية البيانات <span class="text-danger">*</span></label>
-                        <input list="ethicsRatingList" name="PrivacyProtectionRating" class="form-control" placeholder="اختر أو اكتب التقييم..." required autocomplete="off" />
+                        <select name="PrivacyProtectionRating" class="form-select" required>
+                            <option value="">-- اختر التقييم الأخلاقي --</option>
+                            <option value="@EthicsRatingConstants.Appropriate">@EthicsRatingConstants.Appropriate</option>
+                            <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
+                            <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
+                        </select>
                         <div class="form-text small">تدابير حماية وتجهيل هوية المشاركين بالبحث.</div>
                     </div>
 
                     <!-- 2. Risk Level -->
                     <div class="col-md-4">
                         <label class="form-label">2. نسبة المخاطر والموازنة <span class="text-danger">*</span></label>
-                        <input list="ethicsRatingList" name="RiskLevel" class="form-control" placeholder="اختر أو اكتب التقييم..." required autocomplete="off" />
+                        <select name="RiskLevel" class="form-select" required>
+                            <option value="">-- اختر مستوى المخاطر --</option>
+                            <option value="@EthicsRatingConstants.Appropriate">@EthicsRatingConstants.Appropriate</option>
+                            <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
+                            <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
+                        </select>
                         <div class="form-text small">مستوى الأمان الحيوي والتدابير الوقائية.</div>
                     </div>
 
                     <!-- 3. Informed Consent -->
                     <div class="col-md-4">
                         <label class="form-label">3. إجراءات الموافقة المستنيرة <span class="text-danger">*</span></label>
-                        <input list="ethicsRatingList" name="InformedConsentRating" class="form-control" placeholder="اختر أو اكتب التقييم..." required autocomplete="off" />
+                        <select name="InformedConsentRating" class="form-select" required>
+                            <option value="">-- اختر تقييم الموافقة --</option>
+                            <option value="@EthicsRatingConstants.Appropriate">@EthicsRatingConstants.Appropriate</option>
+                            <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
+                            <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
+                        </select>
                         <div class="form-text small">وضوح استمارة الموافقة وحرية المشاركة.</div>
                     </div>
                 </div>
@@ -233,7 +242,7 @@
         e.preventDefault();
         var form = document.getElementById('evaluationForm');
         handleAjaxFormSubmit(form, function (res) {
-            alert(res.message);
+            showToast(res.message, 'success');
             loadPartial('/Judge/AssignedResearchesPartial', '#main-content-container', 'assigned-researches');
         });
         return false;

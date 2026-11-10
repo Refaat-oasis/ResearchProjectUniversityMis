@@ -25,6 +25,7 @@ namespace researchProject.Data
         public DbSet<ResearchStatusHistory> ResearchStatusHistories => Set<ResearchStatusHistory>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<EmailVerificationCode> EmailVerificationCodes => Set<EmailVerificationCode>();
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -38,6 +39,14 @@ namespace researchProject.Data
             builder.Entity<Notification>()
                 .HasIndex(n => new { n.UserId, n.CreatedAt });
 
+            // Index on AuditLogs for fast querying by date, user and status
+            builder.Entity<AuditLog>()
+                .HasIndex(a => a.Timestamp);
+            builder.Entity<AuditLog>()
+                .HasIndex(a => new { a.UserId, a.Timestamp });
+            builder.Entity<AuditLog>()
+                .HasIndex(a => new { a.IsSuccess, a.Timestamp });
+
             // 1. Profile table 1:1 unique indexes on UserId
             builder.Entity<CollegeCoAdmin>()
                 .HasIndex(c => c.UserId)
@@ -45,6 +54,10 @@ namespace researchProject.Data
 
             builder.Entity<Researcher>()
                 .HasIndex(r => r.UserId)
+                .IsUnique();
+
+            builder.Entity<Researcher>()
+                .HasIndex(r => r.NationalId)
                 .IsUnique();
 
             builder.Entity<Judge>()
@@ -157,10 +170,22 @@ namespace researchProject.Data
                 .HasForeignKey(j => j.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Judge>()
+                .HasOne(j => j.College)
+                .WithMany()
+                .HasForeignKey(j => j.CollegeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<JudgeInvitation>()
                 .HasOne(i => i.InvitedByUser)
                 .WithMany()
                 .HasForeignKey(i => i.InvitedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<JudgeInvitation>()
+                .HasOne(i => i.College)
+                .WithMany()
+                .HasForeignKey(i => i.CollegeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<ResearchStatusHistory>()

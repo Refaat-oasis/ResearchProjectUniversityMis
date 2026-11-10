@@ -35,6 +35,9 @@ namespace researchProject.Models.Entities
         [StringLength(14, MinimumLength = 14, ErrorMessage = "الرقم القومي يجب أن يتكون من 14 رقماً")]
         public string NationalId { get; set; } = string.Empty;
 
+        [Display(Name = "حالة الحساب")]
+        public bool IsActive { get; set; } = true;
+
         // Navigation properties
         public virtual ApplicationUser User { get; set; } = null!;
         public virtual College College { get; set; } = null!;

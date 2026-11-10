@@ -21,5 +21,8 @@ namespace researchProject.Models.DTOs
 
         [Display(Name = "تعريف الحقول الديناميكية بصيغة JSON")]
         public string? FieldsDefinitionJson { get; set; }
+
+        [Display(Name = "حالة التفعيل")]
+        public bool IsActive { get; set; } = true;
     }
 }
