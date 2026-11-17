@@ -5,9 +5,9 @@
     <div class="card-header-custom flex-wrap gap-3">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-hourglass-split" style="color: var(--brand-brass, #9A6B26);"></i> طابور الفحص الشكلي للمقترحات (Screening Queue)
+                <i class="bi bi-hourglass-split" style="color: var(--brand-brass, #B88E38);"></i> طابور الفحص الشكلي للمقترحات (Screening Queue)
             </h4>
-            <div class="small mt-1" style="color: var(--ink-secondary, #4A525A);">مراجعة الأوراق إدارياً والتأكد من استيفاء المرفقات خلال المهلة النظامية (24 - 48 ساعة)</div>
+            <div class="small mt-1" style="color: var(--ink-secondary, #475569);">مراجعة الأوراق إدارياً والتأكد من استيفاء المرفقات خلال المهلة النظامية (24 - 48 ساعة)</div>
         </div>
         <span class="status-stamp status-screening">
             <span class="font-mono-tabular me-1">@(Model?.Count ?? 0)</span> مقترحات بانتظار الفحص
@@ -40,16 +40,16 @@
 
                         <tr style="@(isOverdue ? "border-right: 3px solid #8C1D24;" : "")">
                             <td class="font-mono-tabular text-muted">@index</td>
-                            <td class="fw-bold" style="max-width: 260px; color: var(--ink-primary, #121619);">@r.Title</td>
+                            <td class="fw-bold" style="max-width: 260px; color: var(--ink-primary, #0E2235);">@r.Title</td>
                             <td>
                                 <div class="fw-medium">@r.Category?.Name</div>
-                                <div class="small" style="color: var(--ink-secondary, #4A525A);">@r.AcademicSpecialty</div>
+                                <div class="small" style="color: var(--ink-secondary, #475569);">@r.AcademicSpecialty</div>
                             </td>
                             <td>@mainAuthor</td>
-                            <td class="small" style="color: var(--ink-secondary, #4A525A);">
+                            <td class="small" style="color: var(--ink-secondary, #475569);">
                                 <span class="font-mono-tabular" dir="ltr">@r.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</span>
                             </td>
-                            <td class="small fw-bold" style="color: var(--ink-primary, #121619);">
+                            <td class="small fw-bold" style="color: var(--ink-primary, #0E2235);">
                                 <span class="font-mono-tabular" dir="ltr">@r.ScreeningDueAt.ToString("yyyy/MM/dd HH:mm")</span>
                             </td>
                             <td>
@@ -80,8 +80,8 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-5" style="color: var(--ink-muted, #767E85);">
-                            <i class="bi bi-check2-circle fs-3 d-block mb-2" style="color: var(--brand-sovereign, #14342B);"></i>
+                        <td colspan="8" class="text-center py-5" style="color: var(--ink-muted, #64748B);">
+                            <i class="bi bi-check2-circle fs-3 d-block mb-2" style="color: var(--brand-sovereign, #0E2235);"></i>
                             لا توجد أبحاث بانتظار الفحص الشكلي حالياً، تم إنجاز جميع المهام!
                         </td>
                     </tr>

@@ -5,9 +5,9 @@
     <div class="card-header-custom flex-wrap gap-3">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-file-earmark-medical" style="color: var(--brand-brass, #9A6B26);"></i> المقترحات البحثية المسندة للتحكيم الأخلاقي
+                <i class="bi bi-file-earmark-medical" style="color: var(--brand-brass, #B88E38);"></i> المقترحات البحثية المسندة للتحكيم الأخلاقي
             </h4>
-            <div class="small mt-1" style="color: var(--ink-secondary, #4A525A);">تقييم الجوانب الأخلاقية للمقترحات البحثية المسندة إليكم بصفتكم محكماً علمياً مستقلاً</div>
+            <div class="small mt-1" style="color: var(--ink-secondary, #475569);">تقييم الجوانب الأخلاقية للمقترحات البحثية المسندة إليكم بصفتكم محكماً علمياً مستقلاً</div>
         </div>
         <span class="status-stamp status-assigned">
             <span class="font-mono-tabular me-1">@(Model?.Count ?? 0)</span> مهمة تحكيم
@@ -36,18 +36,18 @@
                     {
                         bool isDone = ev.SubmittedAt.HasValue;
 
-                        <tr style="@(isDone ? "" : "border-right: 3px solid #9A6B26;")">
+                        <tr style="@(isDone ? "" : "border-right: 3px solid #B88E38;")">
                             <td class="font-mono-tabular text-muted">@index</td>
-                            <td class="fw-bold" style="max-width: 260px; color: var(--ink-primary, #121619);">@ev.Research?.Title</td>
+                            <td class="fw-bold" style="max-width: 260px; color: var(--ink-primary, #0E2235);">@ev.Research?.Title</td>
                             <td>
-                                <span style="display: inline-block; padding: 2px 8px; font-size: 0.8rem; background: var(--bg-subtle, #EDEBE4); color: var(--ink-primary, #121619); border: 1px solid var(--border-hairline, #D8D5CC); border-radius: 3px;">@ev.Research?.College?.Name</span>
+                                <span style="display: inline-block; padding: 2px 8px; font-size: 0.8rem; background: var(--bg-subtle, #F3F5F8); color: var(--ink-primary, #0E2235); border: 1px solid var(--border-hairline, #E2E8F0); border-radius: 3px;">@ev.Research?.College?.Name</span>
                             </td>
                             <td>
                                 <div class="fw-medium">@ev.Research?.Category?.Name</div>
-                                <div class="small" style="color: var(--ink-secondary, #4A525A);">@ev.Research?.AcademicSpecialty</div>
+                                <div class="small" style="color: var(--ink-secondary, #475569);">@ev.Research?.AcademicSpecialty</div>
                             </td>
                             <td>
-                                <span style="display: inline-block; padding: 2px 8px; font-size: 0.8rem; font-weight: 600; background: var(--bg-subtle, #EDEBE4); color: var(--ink-primary, #121619); border: 1px solid var(--border-hairline, #D8D5CC); border-radius: 3px;">
+                                <span style="display: inline-block; padding: 2px 8px; font-size: 0.8rem; font-weight: 600; background: var(--bg-subtle, #F3F5F8); color: var(--ink-primary, #0E2235); border: 1px solid var(--border-hairline, #E2E8F0); border-radius: 3px;">
                                     الجولة <span class="font-mono-tabular">@ev.RoundNumber</span>
                                 </span>
                             </td>
@@ -79,7 +79,7 @@
                                 }
                                 else
                                 {
-                                    <span class="small font-mono-tabular" style="color: var(--ink-muted, #767E85);">-</span>
+                                    <span class="small font-mono-tabular" style="color: var(--ink-muted, #64748B);">-</span>
                                 }
                             </td>
                             <td>
@@ -111,8 +111,8 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-5" style="color: var(--ink-muted, #767E85);">
-                            <i class="bi bi-check-circle fs-3 d-block mb-2" style="color: var(--brand-sovereign, #14342B);"></i>
+                        <td colspan="8" class="text-center py-5" style="color: var(--ink-muted, #64748B);">
+                            <i class="bi bi-check-circle fs-3 d-block mb-2" style="color: var(--brand-sovereign, #0E2235);"></i>
                             لا توجد أبحاث جديدة مسندة إليكم حالياً للتحكيم.
                         </td>
                     </tr>
