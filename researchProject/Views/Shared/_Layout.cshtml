@@ -112,6 +112,32 @@
                                     <i class="bi bi-person-gear text-primary"></i> الملف الشخصي
                                 </a>
                             </li>
+                            @if (User.IsInRole(researchProject.Models.Constants.RoleConstants.Developer))
+                            {
+                                <li>
+                                    <a asp-controller="Developer" asp-action="AuditLogs" class="dropdown-item d-flex align-items-center gap-2 mb-1">
+                                        <i class="bi bi-shield-check text-success"></i> سجل العمليات (Audit Logs)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Developer" asp-action="Hangfire" class="dropdown-item d-flex align-items-center gap-2 mb-1">
+                                        <i class="bi bi-cpu text-info"></i> لوحة مهام Hangfire
+                                    </a>
+                                </li>
+                            }
+                            @if (User.IsInRole(researchProject.Models.Constants.RoleConstants.SuperAdmin))
+                            {
+                                <li>
+                                    <a asp-controller="SuperAdmin" asp-action="Index" class="dropdown-item d-flex align-items-center gap-2 mb-1">
+                                        <i class="bi bi-speedometer2 text-warning"></i> لوحة الإدارة العامة
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="SuperAdmin" asp-action="AuditLogs" class="dropdown-item d-flex align-items-center gap-2 mb-1">
+                                        <i class="bi bi-shield-lock text-primary"></i> سجل رقابة العمليات
+                                    </a>
+                                </li>
+                            }
                             <li><hr class="dropdown-divider my-1"></li>
                             <li>
                                 <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="d-inline">

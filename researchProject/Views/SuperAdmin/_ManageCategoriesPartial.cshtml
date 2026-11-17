@@ -8,7 +8,7 @@
             </h4>
             <div class="small" style="color: var(--ink-muted);">تحديد نوع الأبحاث (بشري، حيواني، سريري، استبيانات) وبناء الحقول التفاعلية الإضافية لكل تصنيف دون تعديل كود النظام</div>
         </div>
-        <button class="btn btn-primary-custom btn-sm" onclick="openFieldsBuilder(0, 0, '', '', '[]');">
+        <button class="btn btn-primary-custom btn-sm btn-add-cat-partial">
             <i class="bi bi-plus-lg me-1"></i> إضافة تصنيف جديد
         </button>
     </div>
@@ -59,11 +59,18 @@
                             </td>
                             <td>
                                 <div class="table-actions-inline">
-                                    <button class="btn btn-sm btn-outline-primary" onclick='openFieldsBuilder(@cat.Id, @cat.CollegeId, "@cat.Name", @Html.Raw(Json.Serialize(cat.Description ?? "")), @Html.Raw(Json.Serialize(cat.FieldsDefinitionJson ?? "[]")))' title="تعديل وتصميم الحقول">
+                                    <button class="btn btn-sm btn-outline-primary btn-edit-cat-partial"
+                                            data-id="@cat.Id"
+                                            data-college-id="@cat.CollegeId"
+                                            data-name="@cat.Name"
+                                            data-description="@(cat.Description ?? "")"
+                                            data-fields="@(cat.FieldsDefinitionJson ?? "[]")"
+                                            title="تعديل وتصميم الحقول">
                                         <i class="bi bi-gear-wide-connected"></i> تعديل وتصميم الحقول
                                     </button>
-                                    <button class="btn btn-sm @(cat.IsActive ? "btn-outline-danger" : "btn-outline-success") ms-1"
-                                            onclick="toggleCategoryStatusPartial(@cat.Id, @(!cat.IsActive ? "true" : "false"))">
+                                    <button class="btn btn-sm @(cat.IsActive ? "btn-outline-danger" : "btn-outline-success") ms-1 btn-toggle-cat-partial"
+                                            data-id="@cat.Id"
+                                            data-target-status="@(!cat.IsActive ? "true" : "false")">
                                         <i class="bi @(cat.IsActive ? "bi-eye-slash" : "bi-eye") me-1"></i>
                                         @(cat.IsActive ? "تعطيل" : "تفعيل")
                                     </button>
@@ -192,6 +199,14 @@
         renderFieldRows();
     }
 
+    function updateFieldOptions(idx, val) {
+        if (!val) {
+            currentFields[idx].Options = [];
+        } else {
+            currentFields[idx].Options = val.split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+        }
+    }
+
     function renderFieldRows() {
         var $c = $('#fieldsContainer');
         $c.empty();
@@ -202,7 +217,11 @@
         }
 
         currentFields.forEach(function (f, i) {
-            var html = '<div class="row g-2 align-items-center bg-white p-2 border mx-0" style="border-color: var(--border-hairline) !important;">' +
+            var isDropdown = f.Type === 'dropdown';
+            var optionsVal = Array.isArray(f.Options) ? f.Options.join(', ') : (f.Options || '');
+
+            var html = '<div class="bg-white p-2 border mx-0 mb-2 rounded" style="border-color: var(--border-hairline) !important;">' +
+                '<div class="row g-2 align-items-center">' +
                 '<div class="col-12 col-md-3">' +
                 '<input type="text" class="form-control form-control-sm font-mono-tabular" placeholder="اسم المعرف (Code)" value="' + (f.Name || '') + '" onchange="currentFields[' + i + '].Name = this.value;" dir="ltr" />' +
                 '</div>' +
@@ -210,12 +229,12 @@
                 '<input type="text" class="form-control form-control-sm" placeholder="التسمية العربية للحقل" value="' + (f.Label || '') + '" onchange="currentFields[' + i + '].Label = this.value;" />' +
                 '</div>' +
                 '<div class="col-8 col-md-3">' +
-                '<select class="form-select form-select-sm" onchange="currentFields[' + i + '].Type = this.value;">' +
+                '<select class="form-select form-select-sm" onchange="currentFields[' + i + '].Type = this.value; renderFieldRows();">' +
                 '<option value="text"' + (f.Type === 'text' ? ' selected' : '') + '>نص عادي</option>' +
                 '<option value="textarea"' + (f.Type === 'textarea' ? ' selected' : '') + '>نص تفصيلي (فقرة)</option>' +
                 '<option value="number"' + (f.Type === 'number' ? ' selected' : '') + '>رقم</option>' +
                 '<option value="date"' + (f.Type === 'date' ? ' selected' : '') + '>تاريخ</option>' +
-                '<option value="dropdown"' + (f.Type === 'dropdown' ? ' selected' : '') + '>قائمة اختيار</option>' +
+                '<option value="dropdown"' + (isDropdown ? ' selected' : '') + '>قائمة اختيار (MCQ)</option>' +
                 '<option value="yesno"' + (f.Type === 'yesno' ? ' selected' : '') + '>نعم / لا</option>' +
                 '</select>' +
                 '</div>' +
@@ -228,9 +247,44 @@
                 '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFieldRow(' + i + ')"><i class="bi bi-trash"></i></button>' +
                 '</div>' +
                 '</div>';
+
+            if (isDropdown) {
+                html += '<div class="row g-2 align-items-center mt-1 pt-2 border-top">' +
+                    '<div class="col-12">' +
+                    '<div class="d-flex align-items-center gap-2 bg-light p-2 rounded border border-dashed">' +
+                    '<span class="badge bg-primary text-nowrap"><i class="bi bi-list-check me-1"></i>خيارات القائمة:</span>' +
+                    '<input type="text" class="form-control form-control-sm" placeholder="أدخل الخيارات مفصولة بفاصلة (مثال: خيار 1, خيار 2, خيار 3)" value="' + optionsVal + '" onchange="updateFieldOptions(' + i + ', this.value);" />' +
+                    '</div>' +
+                    '<div class="text-muted small mt-1 ps-2"><i class="bi bi-info-circle me-1"></i>اكتب الخيارات وافصل بين كل خيار والآخر بفاصلة (,) لتظهر كقائمة منسدلة للباحث.</div>' +
+                    '</div>' +
+                    '</div>';
+            }
+
+            html += '</div>';
             $c.append(html);
         });
     }
+
+    $(document).off('click', '.btn-add-cat-partial').on('click', '.btn-add-cat-partial', function () {
+        openFieldsBuilder(0, 0, '', '', '[]');
+    });
+
+    $(document).off('click', '.btn-edit-cat-partial').on('click', '.btn-edit-cat-partial', function () {
+        var $btn = $(this);
+        openFieldsBuilder(
+            $btn.data('id'),
+            $btn.data('college-id'),
+            $btn.data('name'),
+            $btn.data('description'),
+            $btn.data('fields')
+        );
+    });
+
+    $(document).off('click', '.btn-toggle-cat-partial').on('click', '.btn-toggle-cat-partial', function () {
+        var id = $(this).data('id');
+        var status = $(this).data('target-status') === true || $(this).data('target-status') === 'true';
+        toggleCategoryStatusPartial(id, status);
+    });
 
     function toggleCategoryStatusPartial(id, isActive) {
         var actionText = isActive ? 'تفعيل' : 'تعطيل وإخفاء';

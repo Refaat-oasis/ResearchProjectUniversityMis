@@ -506,6 +506,8 @@ namespace researchProject.Controllers
 
         private IActionResult RedirectToUserDashboard()
         {
+            if (User.IsInRole(RoleConstants.Developer))
+                return RedirectToAction("AuditLogs", "Developer");
             if (User.IsInRole(RoleConstants.SuperAdmin))
                 return RedirectToAction("Index", "SuperAdmin");
             if (User.IsInRole(RoleConstants.CollegeCoAdmin))
@@ -520,6 +522,8 @@ namespace researchProject.Controllers
 
         private IActionResult RedirectToRoleDashboard(IList<string> roles)
         {
+            if (roles.Contains(RoleConstants.Developer))
+                return RedirectToAction("AuditLogs", "Developer");
             if (roles.Contains(RoleConstants.SuperAdmin))
                 return RedirectToAction("Index", "SuperAdmin");
             if (roles.Contains(RoleConstants.CollegeCoAdmin))

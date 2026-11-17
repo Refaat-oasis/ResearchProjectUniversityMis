@@ -2773,12 +2773,67 @@ select:focus-visible {
     background-color: var(--bg-canvas);
 }
 
+@keyframes authPanelFadeSlide {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .auth-split-shell {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-hairline);
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-card-hover);
+    animation: authPanelFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: box-shadow 0.3s ease;
+}
+
+.auth-scrollable-body {
+    max-height: calc(85vh - 200px);
+    min-height: 380px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-brass, #C89D46) #f1f5f9;
+}
+
+.auth-scrollable-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.auth-scrollable-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.auth-scrollable-body::-webkit-scrollbar-thumb {
+    background: var(--accent-brass, #C89D46);
+    border-radius: 8px;
+}
+
+.auth-scrollable-body::-webkit-scrollbar-thumb:hover {
+    background: #b38634;
+}
+
+.auth-campus-plate-mirrored {
+    border-inline-end: none !important;
+    border-inline-start: 2px solid var(--accent-brass) !important;
+}
+
+@media (max-width: 991.98px) {
+    .auth-campus-plate-mirrored {
+        border-inline-start: none !important;
+        border-top: 2px solid var(--accent-brass) !important;
+    }
+    .auth-scrollable-body {
+        max-height: none;
+        overflow-y: visible;
+    }
 }
 
 .auth-campus-plate {

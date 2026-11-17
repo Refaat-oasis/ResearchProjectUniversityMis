@@ -55,10 +55,15 @@
                             <td><span class="font-mono-tabular">@(c.ResearchCategories?.Count ?? 0)</span> تصنيف</td>
                             <td>
                                 <div class="table-actions-inline">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="manageDepartments(@c.Id, '@c.Name')">
+                                    <button class="btn btn-sm btn-outline-primary btn-manage-depts"
+                                            data-id="@c.Id"
+                                            data-name="@c.Name">
                                         <i class="bi bi-diagram-3"></i> الأقسام (<span class="font-mono-tabular">@deptsCount</span>)
                                     </button>
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="editCollege(@c.Id, '@c.Name', '@c.Code')">
+                                    <button class="btn btn-sm btn-outline-secondary btn-edit-college"
+                                            data-id="@c.Id"
+                                            data-name="@c.Name"
+                                            data-code="@c.Code">
                                         <i class="bi bi-pencil"></i> تعديل
                                     </button>
                                 </div>
@@ -194,6 +199,19 @@
     <script>
         var currentCollegeId = 0;
 
+        $(document).on('click', '.btn-manage-depts', function () {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            manageDepartments(id, name);
+        });
+
+        $(document).on('click', '.btn-edit-college', function () {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            var code = $(this).data('code');
+            editCollege(id, name, code);
+        });
+
         function editCollege(id, name, code) {
             $('#editCollegeId').val(id);
             $('#editCollegeName').val(name);
@@ -225,8 +243,11 @@
                     tr.append($('<td class="fw-bold">').text(item.name));
                     var actionsTd = $('<td>');
                     var actionsWrap = $('<div class="table-actions-inline">');
-                    actionsWrap.append('<button class="btn btn-outline-primary btn-sm" onclick="startEditDept(' + item.id + ', \'' + item.name.replace(/'/g, "\\'") + '\')"><i class="bi bi-pencil"></i> تعديل</button>');
-                    actionsWrap.append('<button class="btn btn-outline-danger btn-sm" onclick="deleteDept(' + item.id + ')"><i class="bi bi-trash"></i> حذف</button>');
+                    var editBtn = $('<button class="btn btn-outline-primary btn-sm me-1"><i class="bi bi-pencil"></i> تعديل</button>')
+                        .on('click', function () { startEditDept(item.id, item.name); });
+                    var delBtn = $('<button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> حذف</button>')
+                        .on('click', function () { deleteDept(item.id); });
+                    actionsWrap.append(editBtn).append(delBtn);
                     actionsTd.append(actionsWrap);
                     tr.append(actionsTd);
                     tbody.append(tr);

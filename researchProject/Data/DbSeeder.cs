@@ -36,7 +36,8 @@ namespace researchProject.Data
                 RoleConstants.SuperAdmin, 
                 RoleConstants.CollegeCoAdmin, 
                 RoleConstants.Judge, 
-                RoleConstants.Researcher 
+                RoleConstants.Researcher,
+                RoleConstants.Developer
             };
 
             foreach (var role in roles)

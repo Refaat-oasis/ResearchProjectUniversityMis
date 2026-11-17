@@ -42,8 +42,70 @@ namespace researchProject.Repositories.Implementations
             _emailSender = emailSender;
         }
 
+        private async Task EnsureConfiguredUserAsync(string? email, string configuredEmail, string configuredPass, string configuredName, string roleName)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(configuredEmail)) return;
+            if (string.Equals(email.Trim(), configuredEmail.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                if (!await _roleManager.RoleExistsAsync(roleName))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(roleName));
+                }
+
+                var user = await _userManager.FindByEmailAsync(configuredEmail);
+                if (user == null)
+                {
+                    user = new ApplicationUser
+                    {
+                        UserName = configuredEmail,
+                        Email = configuredEmail,
+                        FullName = configuredName,
+                        EmailConfirmed = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    var createRes = await _userManager.CreateAsync(user, configuredPass);
+                    if (createRes.Succeeded)
+                    {
+                        await _userManager.AddToRoleAsync(user, roleName);
+                    }
+                }
+                else
+                {
+                    if (!await _userManager.IsInRoleAsync(user, roleName))
+                    {
+                        await _userManager.AddToRoleAsync(user, roleName);
+                    }
+                    if (!user.EmailConfirmed || !user.IsActive)
+                    {
+                        user.EmailConfirmed = true;
+                        user.IsActive = true;
+                        await _userManager.UpdateAsync(user);
+                    }
+                }
+            }
+        }
+
         public async Task<(bool Succeeded, bool IsLockedOut, bool RequiresTwoFactor, string? ErrorMessage, IList<string> Roles)> LoginAsync(string email, string password, bool rememberMe)
         {
+            // Sync/Ensure system accounts (SuperAdmin and Developer) from configuration / environment variables on-demand
+            var adminEmail = _configuration["AdminUser:Email"];
+            var adminPass = _configuration["AdminUser:Password"];
+            var adminName = _configuration["AdminUser:FullName"] ?? "مدير النظام العام للمنصة";
+
+            var devEmail = _configuration["DeveloperUser:Email"];
+            var devPass = _configuration["DeveloperUser:Password"];
+            var devName = _configuration["DeveloperUser:FullName"] ?? "مهندس تطوير المنصة";
+
+            if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPass))
+            {
+                await EnsureConfiguredUserAsync(email, adminEmail, adminPass, adminName, RoleConstants.SuperAdmin);
+            }
+            if (!string.IsNullOrWhiteSpace(devEmail) && !string.IsNullOrWhiteSpace(devPass))
+            {
+                await EnsureConfiguredUserAsync(email, devEmail, devPass, devName, RoleConstants.Developer);
+            }
+
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {

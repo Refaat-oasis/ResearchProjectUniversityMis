@@ -8,7 +8,7 @@
             </h4>
             <div class="text-muted small">إضافة وتعديل وتعطيل تصنيفات المقترحات البحثية وتصميم الحقول الديناميكية الخاصة بكليتك دون تعديل برمجيات المنصة</div>
         </div>
-        <button class="btn btn-primary-custom btn-sm" onclick="openFieldsBuilder(0, '', '', '[]', true);">
+        <button class="btn btn-primary-custom btn-sm btn-add-cat-coadmin">
             <i class="bi bi-plus-lg me-1"></i> إضافة تصنيف جديد
         </button>
     </div>
@@ -57,21 +57,21 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
-                                    <button class="btn btn-sm btn-outline-primary" onclick='openFieldsBuilder(@cat.Id, "@cat.Name", @Html.Raw(Json.Serialize(cat.Description ?? "")), @Html.Raw(Json.Serialize(cat.FieldsDefinitionJson ?? "[]")), @cat.IsActive.ToString().ToLower())' title="تعديل الحقول">
+                                    <button class="btn btn-sm btn-outline-primary btn-edit-cat-coadmin"
+                                            data-id="@cat.Id"
+                                            data-name="@cat.Name"
+                                            data-description="@(cat.Description ?? "")"
+                                            data-fields="@(cat.FieldsDefinitionJson ?? "[]")"
+                                            data-is-active="@cat.IsActive.ToString().ToLower()"
+                                            title="تعديل الحقول">
                                         <i class="bi bi-gear-wide-connected"></i> تعديل
                                     </button>
-                                    @if (cat.IsActive)
-                                    {
-                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleCatStatus(@cat.Id, false)" title="تعطيل التصنيف">
-                                            <i class="bi bi-pause-circle"></i> تعطيل
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-sm btn-outline-success" onclick="toggleCatStatus(@cat.Id, true)" title="تفعيل التصنيف">
-                                            <i class="bi bi-play-circle"></i> تفعيل
-                                        </button>
-                                    }
+                                    <button class="btn btn-sm @(cat.IsActive ? "btn-outline-danger" : "btn-outline-success") btn-toggle-cat-coadmin"
+                                            data-id="@cat.Id"
+                                            data-target-status="@(!cat.IsActive ? "true" : "false")"
+                                            title="@(cat.IsActive ? "تعطيل التصنيف" : "تفعيل التصنيف")">
+                                        <i class="bi @(cat.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i> @(cat.IsActive ? "تعطيل" : "تفعيل")
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -183,6 +183,14 @@
         renderFieldRows();
     }
 
+    function updateFieldOptions(idx, val) {
+        if (!val) {
+            currentFields[idx].Options = [];
+        } else {
+            currentFields[idx].Options = val.split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+        }
+    }
+
     function renderFieldRows() {
         var $c = $('#fieldsContainer');
         $c.empty();
@@ -193,20 +201,24 @@
         }
 
         currentFields.forEach(function (f, i) {
-            var html = '<div class="row g-2 align-items-center bg-white p-2 border rounded shadow-sm">' +
+            var isDropdown = f.Type === 'dropdown';
+            var optionsVal = Array.isArray(f.Options) ? f.Options.join(', ') : (f.Options || '');
+
+            var html = '<div class="bg-white p-2 border rounded shadow-sm mb-2">' +
+                '<div class="row g-2 align-items-center">' +
                 '<div class="col-md-3">' +
-                '<input type="text" class="form-control form-control-sm" placeholder="اسم المعرف (Code)" value="' + (f.Name || '') + '" onchange="currentFields[' + i + '].Name = this.value;" dir="ltr" />' +
+                '<input type="text" class="form-control form-control-sm font-mono-tabular" placeholder="اسم المعرف (Code)" value="' + (f.Name || '') + '" onchange="currentFields[' + i + '].Name = this.value;" dir="ltr" />' +
                 '</div>' +
                 '<div class="col-md-4">' +
                 '<input type="text" class="form-control form-control-sm" placeholder="التسمية العربية للحقل" value="' + (f.Label || '') + '" onchange="currentFields[' + i + '].Label = this.value;" />' +
                 '</div>' +
                 '<div class="col-md-3">' +
-                '<select class="form-select form-select-sm" onchange="currentFields[' + i + '].Type = this.value;">' +
+                '<select class="form-select form-select-sm" onchange="currentFields[' + i + '].Type = this.value; renderFieldRows();">' +
                 '<option value="text"' + (f.Type === 'text' ? ' selected' : '') + '>نص عادي</option>' +
                 '<option value="textarea"' + (f.Type === 'textarea' ? ' selected' : '') + '>نص تفصيلي (فقرة)</option>' +
                 '<option value="number"' + (f.Type === 'number' ? ' selected' : '') + '>رقم</option>' +
                 '<option value="date"' + (f.Type === 'date' ? ' selected' : '') + '>تاريخ</option>' +
-                '<option value="dropdown"' + (f.Type === 'dropdown' ? ' selected' : '') + '>قائمة اختيار</option>' +
+                '<option value="dropdown"' + (isDropdown ? ' selected' : '') + '>قائمة اختيار (MCQ)</option>' +
                 '<option value="yesno"' + (f.Type === 'yesno' ? ' selected' : '') + '>نعم / لا</option>' +
                 '</select>' +
                 '</div>' +
@@ -219,9 +231,44 @@
                 '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFieldRow(' + i + ')"><i class="bi bi-trash"></i></button>' +
                 '</div>' +
                 '</div>';
+
+            if (isDropdown) {
+                html += '<div class="row g-2 align-items-center mt-1 pt-2 border-top">' +
+                    '<div class="col-12">' +
+                    '<div class="d-flex align-items-center gap-2 bg-light p-2 rounded border border-dashed">' +
+                    '<span class="badge bg-primary text-nowrap"><i class="bi bi-list-check me-1"></i>خيارات القائمة:</span>' +
+                    '<input type="text" class="form-control form-control-sm" placeholder="أدخل الخيارات مفصولة بفاصلة (مثال: خيار 1, خيار 2, خيار 3)" value="' + optionsVal + '" onchange="updateFieldOptions(' + i + ', this.value);" />' +
+                    '</div>' +
+                    '<div class="text-muted small mt-1 ps-2"><i class="bi bi-info-circle me-1"></i>اكتب الخيارات وافصل بين كل خيار والآخر بفاصلة (,) لتظهر كقائمة منسدلة للباحث.</div>' +
+                    '</div>' +
+                    '</div>';
+            }
+
+            html += '</div>';
             $c.append(html);
         });
     }
+
+    $(document).off('click', '.btn-add-cat-coadmin').on('click', '.btn-add-cat-coadmin', function () {
+        openFieldsBuilder(0, '', '', '[]', true);
+    });
+
+    $(document).off('click', '.btn-edit-cat-coadmin').on('click', '.btn-edit-cat-coadmin', function () {
+        var $btn = $(this);
+        openFieldsBuilder(
+            $btn.data('id'),
+            $btn.data('name'),
+            $btn.data('description'),
+            $btn.data('fields'),
+            $btn.data('is-active')
+        );
+    });
+
+    $(document).off('click', '.btn-toggle-cat-coadmin').on('click', '.btn-toggle-cat-coadmin', function () {
+        var id = $(this).data('id');
+        var status = $(this).data('target-status') === true || $(this).data('target-status') === 'true';
+        toggleCatStatus(id, status);
+    });
 
     function saveCategoryWithFields(form) {
         $('#catFieldsJson').val(JSON.stringify(currentFields));

@@ -8,6 +8,7 @@ namespace researchProject.Models.Constants
         public const string CollegeCoAdmin = nameof(UserRole.CollegeCoAdmin);
         public const string Judge = nameof(UserRole.Judge);
         public const string Researcher = nameof(UserRole.Researcher);
+        public const string Developer = nameof(UserRole.Developer);
     }
 }
 

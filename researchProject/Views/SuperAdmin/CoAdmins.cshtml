@@ -57,13 +57,17 @@
                             </td>
                             <td>
                                 <div class="table-actions-inline">
-                                    <button class="btn btn-sm @(isActive ? "btn-outline-danger" : "btn-outline-success")"
-                                            onclick="toggleCoAdminStatus(@a.Id, @(!isActive ? "true" : "false"))">
+                                    <button class="btn btn-sm @(isActive ? "btn-outline-danger" : "btn-outline-success") btn-toggle-coadmin"
+                                            data-id="@a.Id"
+                                            data-target-status="@(!isActive ? "true" : "false")">
                                         <i class="bi @(isActive ? "bi-person-x" : "bi-person-check") me-1"></i>
                                         @(isActive ? "تعطيل" : "تفعيل")
                                     </button>
-                                    <button class="btn btn-sm btn-outline-primary ms-1"
-                                            onclick="openReassignModal(@a.Id, @a.CollegeId, '@a.User?.FullName', '@(a.College?.Name ?? "")')">
+                                    <button class="btn btn-sm btn-outline-primary ms-1 btn-reassign-coadmin"
+                                            data-id="@a.Id"
+                                            data-college-id="@a.CollegeId"
+                                            data-fullname="@(a.User?.FullName ?? "")"
+                                            data-college-name="@(a.College?.Name ?? "")">
                                         <i class="bi bi-arrow-left-right me-1"></i>
                                         تغيير الكلية
                                     </button>
@@ -286,6 +290,20 @@
 
 @section Scripts {
     <script>
+        $(document).on('click', '.btn-toggle-coadmin', function () {
+            var id = $(this).data('id');
+            var status = $(this).data('target-status') === true || $(this).data('target-status') === 'true';
+            toggleCoAdminStatus(id, status);
+        });
+
+        $(document).on('click', '.btn-reassign-coadmin', function () {
+            var id = $(this).data('id');
+            var collegeId = $(this).data('college-id');
+            var fullname = $(this).data('fullname');
+            var collegeName = $(this).data('college-name');
+            openReassignModal(id, collegeId, fullname, collegeName);
+        });
+
         function openReassignModal(coAdminId, currentCollegeId, adminName, currentCollegeName) {
             $('#reassignCoAdminId').val(coAdminId);
             $('#reassignAdminName').text(adminName);

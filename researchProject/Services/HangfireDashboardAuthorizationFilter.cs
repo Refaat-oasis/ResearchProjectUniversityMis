@@ -20,7 +20,7 @@ namespace researchProject.Services
                 return false;
             }
 
-            return httpContext.User.IsInRole(RoleConstants.SuperAdmin);
+            return httpContext.User.IsInRole(RoleConstants.SuperAdmin) || httpContext.User.IsInRole(RoleConstants.Developer);
         }
     }
 }
