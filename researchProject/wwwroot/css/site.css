@@ -3,10 +3,11 @@
    ========================================================================== */
 
 :root {
-    /* Modern University Typography: Noto Kufi Arabic + Tajawal + JetBrains Mono */
-    --font-display: 'Noto Kufi Arabic', 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-sans: 'Tajawal', 'Noto Kufi Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    /* Authentic Egyptian University Typography: Cairo */
+    --font-display: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-sans: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-code: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
 
     /* Cool Slate & Academic Surface Palette (Unified with Home Page) */
     --bg-canvas: #F8FAFC;
@@ -146,13 +147,19 @@ h3, .h3,
     letter-spacing: 0;
 }
 
-.font-mono-tabular,
+.font-mono-tabular {
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
 code,
 pre,
 kbd,
 .mono-code {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
+    font-family: var(--font-code);
+    direction: ltr;
+    unicode-bidi: isolate;
 }
 
 .font-mono-tabular::placeholder {

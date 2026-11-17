@@ -50,9 +50,9 @@
                                 }
                             </td>
                             <td>
-                                <span class="status-stamp status-assigned font-mono-tabular">@deptsCount قسم</span>
+                                <span class="status-stamp status-assigned"><span class="font-mono-tabular">@deptsCount</span> قسم</span>
                             </td>
-                            <td class="font-mono-tabular">@(c.ResearchCategories?.Count ?? 0) تصنيف</td>
+                            <td><span class="font-mono-tabular">@(c.ResearchCategories?.Count ?? 0)</span> تصنيف</td>
                             <td>
                                 <div class="table-actions-inline">
                                     <button class="btn btn-sm btn-outline-primary" onclick="manageDepartments(@c.Id, '@c.Name')">

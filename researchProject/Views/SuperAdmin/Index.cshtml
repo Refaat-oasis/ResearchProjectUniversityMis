@@ -9,8 +9,9 @@
         <h1 class="page-title">لوحة المؤشرات المركزية للجامعة</h1>
         <p>نظرة شاملة ومحدثة على حركة وأداء لجان أخلاقيات البحث العلمي بكافة الكليات</p>
     </div>
-    <span class="role-stamp font-mono-tabular">
-        تاريخ التحديث: @DateTime.UtcNow.ToString("yyyy/MM/dd HH:mm") UTC
+    <span class="role-stamp">
+        <span>تاريخ التحديث:</span>
+        <span class="font-mono-tabular" dir="ltr">@DateTime.UtcNow.ToString("yyyy/MM/dd HH:mm") UTC</span>
     </span>
 </div>
 
@@ -50,7 +51,7 @@
                 <div class="progress" style="height: 5px;">
                     <div class="progress-bar" role="progressbar" style="width: @Model.SlaCompliancePercentage%;"></div>
                 </div>
-                <div class="small mt-2 text-secondary">متوسط زمن الفحص الشكلي: <strong class="font-mono-tabular">@Model.AverageScreeningHours ساعة</strong></div>
+                <div class="small mt-2 text-secondary">متوسط زمن الفحص الشكلي: <strong><span class="font-mono-tabular">@Model.AverageScreeningHours</span> ساعة</strong></div>
             </div>
         </div>
 
@@ -59,15 +60,15 @@
                 <h2 class="card-title-custom fs-6 mb-3 pb-2 border-bottom">هيئة المحكمين والباحثين</h2>
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                     <span class="text-secondary">المحكمون النشطون:</span>
-                    <strong class="font-mono-tabular">@Model.TotalJudges محكم معتمد</strong>
+                    <strong><span class="font-mono-tabular">@Model.TotalJudges</span> محكم معتمد</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                     <span class="text-secondary">الباحثون المسجلون:</span>
-                    <strong class="font-mono-tabular">@Model.TotalResearchers باحث</strong>
+                    <strong><span class="font-mono-tabular">@Model.TotalResearchers</span> باحث</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 small">
                     <span class="text-secondary">متوسط أيام التحكيم:</span>
-                    <strong class="font-mono-tabular">@Model.AverageJudgingDays يوم</strong>
+                    <strong><span class="font-mono-tabular">@Model.AverageJudgingDays</span> يوم</strong>
                 </div>
             </div>
         </div>
@@ -77,15 +78,15 @@
                 <h2 class="card-title-custom fs-6 mb-3 pb-2 border-bottom">كليات الجامعة واللجان</h2>
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                     <span class="text-secondary">إجمالي الكليات المشتركة:</span>
-                    <strong class="font-mono-tabular">@Model.TotalColleges كلية</strong>
+                    <strong><span class="font-mono-tabular">@Model.TotalColleges</span> كلية</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                     <span class="text-secondary">أبحاث تطلبت تعديلات:</span>
-                    <strong class="font-mono-tabular">@Model.ModificationsRequiredCount مقترح</strong>
+                    <strong><span class="font-mono-tabular">@Model.ModificationsRequiredCount</span> مقترح</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 small">
                     <span class="text-secondary">أبحاث معتمدة نهائياً:</span>
-                    <strong class="font-mono-tabular">@Model.ApprovedCount مقترح</strong>
+                    <strong><span class="font-mono-tabular">@Model.ApprovedCount</span> مقترح</strong>
                 </div>
             </div>
         </div>
@@ -105,7 +106,7 @@
                 <div class="col-12 col-md-6">
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                         <span class="fw-medium">@item.Key</span>
-                        <span class="role-stamp font-mono-tabular">@item.Value مقترحات</span>
+                        <span class="role-stamp"><span class="font-mono-tabular">@item.Value</span> مقترحات</span>
                     </div>
                 </div>
             }

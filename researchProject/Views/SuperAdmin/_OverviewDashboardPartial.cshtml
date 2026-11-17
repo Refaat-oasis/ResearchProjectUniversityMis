@@ -7,8 +7,9 @@
             <h3 class="card-title-custom mb-1">لوحة المؤشرات المركزية للجامعة</h3>
             <p class="small mb-0 text-muted">نظرة شاملة ومحدثة على حركة وأداء لجان أخلاقيات البحث العلمي بكافة الكليات</p>
         </div>
-        <span class="role-stamp font-mono-tabular">
-            تاريخ التحديث: @DateTime.UtcNow.ToString("yyyy/MM/dd HH:mm") UTC
+        <span class="role-stamp">
+            <span>تاريخ التحديث:</span>
+            <span class="font-mono-tabular" dir="ltr">@DateTime.UtcNow.ToString("yyyy/MM/dd HH:mm") UTC</span>
         </span>
     </div>
 
@@ -47,7 +48,7 @@
                 <div class="progress" style="height: 5px;">
                     <div class="progress-bar" role="progressbar" style="width: @Model.SlaCompliancePercentage%;"></div>
                 </div>
-                <div class="small mt-2 text-secondary">متوسط زمن الفحص الشكلي: <strong class="font-mono-tabular">@Model.AverageScreeningHours ساعة</strong></div>
+                <div class="small mt-2 text-secondary">متوسط زمن الفحص الشكلي: <strong><span class="font-mono-tabular">@Model.AverageScreeningHours</span> ساعة</strong></div>
             </div>
         </div>
 
@@ -56,15 +57,15 @@
                 <h6 class="fw-semibold mb-3 pb-2 border-bottom">هيئة المحكمين والباحثين</h6>
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                     <span class="text-secondary">المحكمون النشطون:</span>
-                    <strong class="font-mono-tabular">@Model.TotalJudges محكم معتمد</strong>
+                    <strong><span class="font-mono-tabular">@Model.TotalJudges</span> محكم معتمد</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                     <span class="text-secondary">الباحثون المسجلون:</span>
-                    <strong class="font-mono-tabular">@Model.TotalResearchers باحث</strong>
+                    <strong><span class="font-mono-tabular">@Model.TotalResearchers</span> باحث</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 small">
                     <span class="text-secondary">عدد الكليات المشاركة:</span>
-                    <strong class="font-mono-tabular">@Model.TotalColleges كلية</strong>
+                    <strong><span class="font-mono-tabular">@Model.TotalColleges</span> كلية</strong>
                 </div>
             </div>
         </div>

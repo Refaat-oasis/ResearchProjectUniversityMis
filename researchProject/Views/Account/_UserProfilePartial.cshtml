@@ -33,7 +33,7 @@
         <div class="col-md-6 col-lg-4">
             <div class="dossier-panel-subtle h-100">
                 <div class="text-muted small">رقم الهاتف</div>
-                <div class="font-mono-tabular fw-bold fs-6 text-dark mt-1" dir="ltr">@(string.IsNullOrEmpty(Model.PhoneNumber) ? "غير مسجل" : Model.PhoneNumber)</div>
+                <div class="fw-bold fs-6 text-dark mt-1 @(!string.IsNullOrEmpty(Model.PhoneNumber) ? "font-mono-tabular" : "")" dir="@(!string.IsNullOrEmpty(Model.PhoneNumber) ? "ltr" : "rtl")">@(string.IsNullOrEmpty(Model.PhoneNumber) ? "غير مسجل" : Model.PhoneNumber)</div>
             </div>
         </div>
     </div>
