@@ -5,15 +5,15 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-patch-check-fill text-success"></i> شهاداتي الأخلاقية المعتمدة</h2>
+        <h2>شهاداتي الأخلاقية المعتمدة</h2>
         <p>سجل الشهادات الأخلاقية الرسمية الصادرة لمقترحاتك البحثية المعتمدة من لجان النزاهة الأكاديمية</p>
     </div>
 </div>
 
-<div class="liquid-glass-card">
+<div class="card-custom archival-card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table table-hover ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>الرقم المسلسل للشهادة</th>
@@ -31,20 +31,24 @@
                     foreach (var r in Model)
                     {
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold font-monospace text-success" dir="ltr">@r.CertificateSerialNumber</td>
-                            <td class="fw-bold" style="max-width: 280px;">@r.Title</td>
-                            <td><span class="badge bg-light text-dark border">@r.College?.Name</span></td>
-                            <td class="text-muted small">@(r.CertificateIssuedAt?.ToString("yyyy/MM/dd") ?? "-")</td>
+                            <td class="font-mono-tabular text-muted">@index</td>
+                            <td class="fw-semibold font-mono-tabular text-nowrap" dir="ltr">@r.CertificateSerialNumber</td>
+                            <td class="fw-medium" style="min-width: 200px; max-width: 280px;">@r.Title</td>
+                            <td class="text-nowrap small">@r.College?.Name</td>
+                            <td class="text-muted small font-mono-tabular text-nowrap" dir="ltr">@(r.CertificateIssuedAt?.ToString("yyyy/MM/dd") ?? "-")</td>
                             <td>
-                                <a href="@r.CertificateQrCodeUrl" target="_blank" class="badge bg-primary text-decoration-none">
-                                    <i class="bi bi-qr-code me-1"></i> فحص رسمي
-                                </a>
+                                <div class="table-actions-inline">
+                                    <a href="@r.CertificateQrCodeUrl" target="_blank" class="btn btn-sm btn-outline-secondary text-decoration-none">
+                                        <i class="bi bi-qr-code"></i> فحص رسمي
+                                    </a>
+                                </div>
                             </td>
                             <td>
-                                <a asp-action="DownloadCertificate" asp-route-researchId="@r.Id" target="_blank" class="btn btn-sm btn-success fw-bold">
-                                    <i class="bi bi-download me-1"></i> تحميل الشهادة
-                                </a>
+                                <div class="table-actions-inline">
+                                    <a asp-action="DownloadCertificate" asp-route-researchId="@r.Id" target="_blank" class="btn btn-sm btn-primary-custom fw-medium">
+                                        <i class="bi bi-download"></i> تحميل الشهادة
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -54,7 +58,6 @@
                 {
                     <tr>
                         <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="bi bi-award fs-1 d-block mb-3 text-secondary"></i>
                             لا توجد شهادات أخلاقية صادرة لك حتى الآن. بمجرد اعتماد أبحاثك من لجان الأخلاقيات، ستظهر شهاداتك هنا.
                         </td>
                     </tr>
@@ -63,4 +66,3 @@
         </table>
     </div>
 </div>
-

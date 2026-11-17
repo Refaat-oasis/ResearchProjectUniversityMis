@@ -1,18 +1,18 @@
 @model researchProject.Models.ViewModels.SystemStatisticsViewModel
 
-<div class="card card-custom">
+<div class="card card-custom archival-card">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-graph-up-arrow text-primary"></i> تقارير ومؤشرات الاعتماد المؤسسي والجودة
+                <i class="bi bi-graph-up-arrow"></i> تقارير ومؤشرات الاعتماد المؤسسي والجودة
             </h4>
-            <div class="text-muted small">تقارير إحصائية دقيقة تخدم متطلبات الجودة والاعتماد الأكاديمي ولجان الأخلاقيات</div>
+            <div class="small" style="color: var(--ink-muted);">تقارير إحصائية دقيقة تخدم متطلبات الجودة والاعتماد الأكاديمي ولجان الأخلاقيات</div>
         </div>
-        <div class="d-flex gap-2">
-            <a href="/SuperAdmin/ExportReportsToCsv" class="btn btn-success btn-sm">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="/SuperAdmin/ExportReportsToCsv" class="btn btn-primary-custom btn-sm">
                 <i class="bi bi-file-earmark-excel me-1"></i> تصدير إكسيل (Excel)
             </a>
-            <button class="btn btn-outline-success btn-sm" onclick="window.print();">
+            <button class="btn btn-outline-primary btn-sm" onclick="window.print();">
                 <i class="bi bi-printer me-1"></i> طباعة التقرير / PDF
             </button>
         </div>
@@ -20,128 +20,100 @@
 
     <div class="row g-4 mb-4">
         <!-- By College Distribution -->
-        <div class="col-md-6">
-            <div class="border rounded p-3 bg-light">
-                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-buildings me-2 text-primary"></i>توزيع الأبحاث حسب كليات الجامعة</h6>
-                <table class="table table-sm table-hover bg-white rounded">
-                    <thead>
-                        <tr>
-                            <th>الكلية</th>
-                            <th class="text-center">عدد المقترحات</th>
-                            <th class="text-center">النسبة المئوية</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.ResearchesByCollege.Any())
-                        {
-                            foreach (var item in Model.ResearchesByCollege)
+        <div class="col-12 col-md-6">
+            <div class="dossier-panel-subtle h-100">
+                <h6 class="fw-bold mb-3" style="color: var(--ink-primary);"><i class="bi bi-buildings me-2"></i>توزيع الأبحاث حسب كليات الجامعة</h6>
+                <div class="table-responsive">
+                    <table class="table ledger-table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>الكلية</th>
+                                <th class="text-center">عدد المقترحات</th>
+                                <th class="text-center">النسبة المئوية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ResearchesByCollege.Any())
                             {
-                                var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches).ToString("0.0") : "0";
-                                <tr>
-                                    <td class="fw-bold">@item.Key</td>
-                                    <td class="text-center"><span class="badge bg-primary">@item.Value</span></td>
-                                    <td class="text-center text-muted">@pct%</td>
-                                </tr>
+                                foreach (var item in Model.ResearchesByCollege)
+                                {
+                                    var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches).ToString("0.0") : "0";
+                                    <tr>
+                                        <td class="fw-bold">@item.Key</td>
+                                        <td class="text-center"><span class="status-stamp status-assigned font-mono-tabular">@item.Value</span></td>
+                                        <td class="text-center font-mono-tabular" style="color: var(--ink-muted);">@pct%</td>
+                                    </tr>
+                                }
                             }
-                        }
-                        else
-                        {
-                            <tr><td colspan="3" class="text-center text-muted">لا توجد بيانات.</td></tr>
-                        }
-                    </tbody>
-                </table>
+                            else
+                            {
+                                <tr><td colspan="3" class="text-center" style="color: var(--ink-muted);">لا توجد بيانات.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- By Category Distribution -->
-        <div class="col-md-6">
-            <div class="border rounded p-3 bg-light">
-                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-sliders me-2 text-primary"></i>توزيع الأبحاث حسب التصنيف والنوع</h6>
-                <table class="table table-sm table-hover bg-white rounded">
-                    <thead>
-                        <tr>
-                            <th>تصنيف البحث</th>
-                            <th class="text-center">عدد المقترحات</th>
-                            <th class="text-center">النسبة المئوية</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.ResearchesByCategory.Any())
-                        {
-                            foreach (var item in Model.ResearchesByCategory)
+        <div class="col-12 col-md-6">
+            <div class="dossier-panel-subtle h-100">
+                <h6 class="fw-bold mb-3" style="color: var(--ink-primary);"><i class="bi bi-sliders me-2"></i>توزيع الأبحاث حسب التصنيف والنوع</h6>
+                <div class="table-responsive">
+                    <table class="table ledger-table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>تصنيف البحث</th>
+                                <th class="text-center">عدد المقترحات</th>
+                                <th class="text-center">النسبة المئوية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ResearchesByCategory.Any())
                             {
-                                var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches).ToString("0.0") : "0";
-                                <tr>
-                                    <td class="fw-bold">@item.Key</td>
-                                    <td class="text-center"><span class="badge bg-info text-dark">@item.Value</span></td>
-                                    <td class="text-center text-muted">@pct%</td>
-                                </tr>
+                                foreach (var item in Model.ResearchesByCategory)
+                                {
+                                    var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches).ToString("0.0") : "0";
+                                    <tr>
+                                        <td class="fw-bold">@item.Key</td>
+                                        <td class="text-center"><span class="status-stamp status-screening font-mono-tabular">@item.Value</span></td>
+                                        <td class="text-center font-mono-tabular" style="color: var(--ink-muted);">@pct%</td>
+                                    </tr>
+                                }
                             }
-                        }
-                        else
-                        {
-                            <tr><td colspan="3" class="text-center text-muted">لا توجد بيانات.</td></tr>
-                        }
-                    </tbody>
-                </table>
+                            else
+                            {
+                                <tr><td colspan="3" class="text-center" style="color: var(--ink-muted);">لا توجد بيانات.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Key Performance Indicators (KPIs) -->
-    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-speedometer text-primary me-2"></i>مؤشرات قياس الأداء الرئيسية (KPIs)</h6>
-    <div class="row g-3 align-items-stretch">
-        <div class="col-md-3 d-flex">
-            <div class="kpi-metric-card border rounded bg-white text-center w-100 flex-fill">
-                <div class="kpi-header-box">
-                    <span><i class="bi bi-stopwatch text-primary me-1"></i>متوسط زمن الفحص الشكلي</span>
-                </div>
-                <div class="kpi-value-box">
-                    <span class="kpi-number text-primary">@Model.AverageScreeningHours.ToString("0.0")</span>
-                </div>
-                <div class="kpi-footer-box">
-                    <div class="kpi-subtext" title="ساعة (الحد الأقصى: 48 ساعة)">ساعة (الحد الأقصى: 48 ساعة)</div>
-                </div>
-            </div>
+    <h6 class="fw-bold mb-3" style="color: var(--ink-primary);"><i class="bi bi-speedometer me-2"></i>مؤشرات قياس الأداء الرئيسية (KPIs)</h6>
+    <div class="kpi-ledger-grid mb-0">
+        <div class="kpi-ledger-cell">
+            <div class="kpi-ledger-label"><i class="bi bi-stopwatch me-1"></i>متوسط زمن الفحص الشكلي</div>
+            <div class="kpi-ledger-value" style="color: var(--brand-sovereign);">@Model.AverageScreeningHours.ToString("0.0")</div>
+            <div class="kpi-ledger-sub" title="ساعة (الحد الأقصى: 48 ساعة)">ساعة (الحد الأقصى: 48 ساعة)</div>
         </div>
-        <div class="col-md-3 d-flex">
-            <div class="kpi-metric-card border rounded bg-white text-center w-100 flex-fill">
-                <div class="kpi-header-box">
-                    <span><i class="bi bi-calendar-check text-info me-1"></i>متوسط زمن التحكيم الأخلاقي</span>
-                </div>
-                <div class="kpi-value-box">
-                    <span class="kpi-number text-info">@Model.AverageJudgingDays.ToString("0.0")</span>
-                </div>
-                <div class="kpi-footer-box">
-                    <div class="kpi-subtext" title="أيام عمل لكل مقترح">أيام عمل لكل مقترح</div>
-                </div>
-            </div>
+        <div class="kpi-ledger-cell">
+            <div class="kpi-ledger-label"><i class="bi bi-calendar-check me-1"></i>متوسط زمن التحكيم الأخلاقي</div>
+            <div class="kpi-ledger-value" style="color: #1D3A5F;">@Model.AverageJudgingDays.ToString("0.0")</div>
+            <div class="kpi-ledger-sub" title="أيام عمل لكل مقترح">أيام عمل لكل مقترح</div>
         </div>
-        <div class="col-md-3 d-flex">
-            <div class="kpi-metric-card border rounded bg-white text-center w-100 flex-fill">
-                <div class="kpi-header-box">
-                    <span><i class="bi bi-shield-check text-success me-1"></i>الامتثال لاتفاقية مستوى الخدمة</span>
-                </div>
-                <div class="kpi-value-box">
-                    <span class="kpi-number text-success">@Model.SlaCompliancePercentage.ToString("0.0")%</span>
-                </div>
-                <div class="kpi-footer-box">
-                    <div class="kpi-subtext" title="أبحاث فُحصت خلال المهلة">أبحاث فُحصت خلال المهلة</div>
-                </div>
-            </div>
+        <div class="kpi-ledger-cell">
+            <div class="kpi-ledger-label"><i class="bi bi-shield-check me-1"></i>الامتثال لاتفاقية مستوى الخدمة</div>
+            <div class="kpi-ledger-value" style="color: var(--brand-sovereign);">@Model.SlaCompliancePercentage.ToString("0.0")%</div>
+            <div class="kpi-ledger-sub" title="أبحاث فُحصت خلال المهلة">أبحاث فُحصت خلال المهلة</div>
         </div>
-        <div class="col-md-3 d-flex">
-            <div class="kpi-metric-card border rounded bg-white text-center w-100 flex-fill">
-                <div class="kpi-header-box">
-                    <span><i class="bi bi-patch-check text-warning me-1"></i>إجمالي الشهادات المعتمدة الصادرة</span>
-                </div>
-                <div class="kpi-value-box">
-                    <span class="kpi-number text-dark">@Model.CertificatesIssuedCount</span>
-                </div>
-                <div class="kpi-footer-box">
-                    <div class="kpi-subtext" title="شهادة أخلاقية رقمية">شهادة أخلاقية رقمية</div>
-                </div>
-            </div>
+        <div class="kpi-ledger-cell">
+            <div class="kpi-ledger-label"><i class="bi bi-patch-check me-1"></i>إجمالي الشهادات المعتمدة الصادرة</div>
+            <div class="kpi-ledger-value" style="color: var(--brand-brass);">@Model.CertificatesIssuedCount</div>
+            <div class="kpi-ledger-sub" title="شهادة أخلاقية رقمية">شهادة أخلاقية رقمية</div>
         </div>
     </div>
 </div>

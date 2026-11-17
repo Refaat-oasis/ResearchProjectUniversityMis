@@ -1,13 +1,84 @@
 @model researchProject.Models.Entities.Evaluation
 @using researchProject.Models.Constants
 
-<div class="card card-custom">
-    <div class="card-header-custom">
+<style>
+    .dossier-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        background-color: var(--border-hairline, #E2E8F0);
+        border: 1px solid var(--border-hairline, #E2E8F0);
+        border-radius: var(--radius-md, 4px);
+        overflow: hidden;
+        margin: 0;
+    }
+    .dossier-meta-cell {
+        background-color: var(--bg-surface, #FFFFFF);
+        padding: 14px 16px;
+    }
+    .dossier-meta-cell--subtle {
+        background-color: var(--bg-canvas, #F8FAFC);
+    }
+    .dossier-meta-cell--full {
+        grid-column: 1 / -1;
+    }
+    @@media (max-width: 767.98px) {
+        .dossier-meta-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .eval-choice-tile {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 16px;
+        border: 1px solid var(--border-hairline, #E2E8F0);
+        border-radius: 4px;
+        background-color: var(--bg-surface, #FFFFFF);
+        cursor: pointer;
+        transition: border-color 0.15s ease, background-color 0.15s ease;
+        width: 100%;
+    }
+    .eval-choice-tile:hover {
+        background-color: var(--bg-hover, #F2EFE9);
+        border-color: var(--ink-secondary, #475569);
+    }
+    .eval-choice-tile--approve:has(input:checked) {
+        border: 2px solid #0E2235;
+        padding: 13px 15px;
+        background-color: #EEF7F3;
+    }
+    .eval-choice-tile--modify:has(input:checked) {
+        border: 2px solid #8C1D24;
+        padding: 13px 15px;
+        background-color: #FDF1F2;
+    }
+    .eval-attestation-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        border: 1px solid var(--border-hairline, #E2E8F0);
+        border-right: 3px solid var(--brand-brass, #B88E38);
+        border-radius: 4px;
+        background-color: var(--bg-canvas, #F8FAFC);
+        padding: 14px 16px;
+        cursor: pointer;
+        width: 100%;
+    }
+    .eval-attestation-box:has(input:checked) {
+        border-color: #0E2235;
+        border-right: 3px solid #0E2235;
+        background-color: #EEF7F3;
+    }
+</style>
+
+<div class="card card-custom archival-card">
+    <div class="card-header-custom flex-wrap gap-3">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-clipboard2-pulse text-primary"></i> نموذج التقييم والتحكيم الأخلاقي (الجولة @Model.RoundNumber)
+                <i class="bi bi-clipboard2-pulse" style="color: var(--brand-brass);"></i> نموذج التقييم والتحكيم الأخلاقي (الجولة <span class="font-mono-tabular">@Model.RoundNumber</span>)
             </h4>
-            <div class="text-muted small">« @Model.Research?.Title » - @Model.Research?.College?.Name</div>
+            <div class="small mt-1" style="color: var(--ink-secondary);">« @Model.Research?.Title » - @Model.Research?.College?.Name</div>
         </div>
         <div>
             <button class="btn btn-outline-secondary btn-sm" onclick="loadPartial('/Judge/AssignedResearchesPartial', '#main-content-container', 'assigned-researches');">
@@ -17,11 +88,13 @@
     </div>
 
     <!-- Research Documents Review -->
-    <div class="card bg-light border p-3 mb-4">
-        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-paperclip me-2 text-primary"></i>المستندات وخطة البحث المطلوب تحكيمها</h6>
+    <div class="dossier-panel">
+        <h6 class="fw-bold mb-3 pb-2 text-primary" style="border-bottom: 1px solid var(--border-hairline);">
+            <i class="bi bi-paperclip me-2" style="color: var(--brand-brass);"></i>المستندات وخطة البحث المطلوب تحكيمها
+        </h6>
         <div class="table-responsive">
-            <table class="table table-sm table-bordered bg-white mb-0 align-middle">
-                <thead class="table-light">
+            <table class="table ledger-table table-sm mb-0 align-middle">
+                <thead>
                     <tr>
                         <th>نوع المستند</th>
                         <th>النسخة</th>
@@ -36,9 +109,13 @@
                         {
                             <tr>
                                 <td class="fw-bold text-primary">@att.AttachmentType</td>
-                                <td><span class="badge bg-secondary">V @att.Version</span></td>
+                                <td>
+                                    <span class="font-mono-tabular" dir="ltr" style="display: inline-block; padding: 2px 8px; font-size: 0.78rem; font-weight: 600; background: var(--bg-subtle); color: var(--ink-primary); border: 1px solid var(--border-hairline); border-radius: 3px;">V @att.Version</span>
+                                </td>
                                 <td>@att.OriginalFileName</td>
-                                <td class="small text-muted">@att.UploadedAt.ToString("yyyy/MM/dd")</td>
+                                <td class="small" style="color: var(--ink-secondary);">
+                                    <span class="font-mono-tabular" dir="ltr">@att.UploadedAt.ToString("yyyy/MM/dd")</span>
+                                </td>
                             </tr>
                         }
                     }
@@ -51,15 +128,15 @@
     {
         @if (Model.Decision == EvaluationDecisionConstants.ClosedDueToOtherJudge || Model.Decision == "مغلق لاكتمال التحكيم")
         {
-            <div class="alert alert-secondary border-secondary p-3 mb-4 rounded-3">
+            <div class="dossier-panel mb-0" style="border-right: 3px solid var(--ink-secondary); background: var(--bg-subtle);">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <i class="bi bi-lock-fill text-secondary fs-4"></i>
-                    <h5 class="fw-bold text-secondary mb-0">تم إغلاق التحكيم لهذا المقترح</h5>
+                    <i class="bi bi-lock-fill fs-5" style="color: var(--ink-secondary);"></i>
+                    <h5 class="fw-bold mb-0" style="color: var(--ink-primary);">تم إغلاق التحكيم لهذا المقترح</h5>
                 </div>
-                <div class="small text-muted mb-2">
+                <div class="small mb-3" style="color: var(--ink-secondary);">
                     تم اعتماد تقييم محكم آخر مسند لنفس المقترح في هذه الجولة، وبناءً عليه تم إغلاق جولة التحكيم واعتماد النتيجة تلقائياً.
                 </div>
-                <div class="badge bg-secondary-subtle text-secondary border">
+                <div class="status-stamp status-inactive" style="background: var(--bg-surface);">
                     <i class="bi bi-info-circle me-1"></i> الحالة: مغلق لاكتمال التحكيم بواسطة محكم آخر
                 </div>
             </div>
@@ -67,62 +144,52 @@
         else
         {
             <!-- Read-Only View of Submitted Evaluation -->
-            <div class="alert alert-success border-success p-3 mb-4">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <i class="bi bi-patch-check-fill text-success fs-4"></i>
-                    <h5 class="fw-bold text-success mb-0">تم تقديم هذا التقييم وتوقيعه رقمياً بنجاح</h5>
+            <div class="alert alert-success mb-4" style="border-right: 3px solid var(--brand-sovereign);">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-patch-check-fill fs-5"></i>
+                    <h5 class="fw-bold mb-0">تم تقديم هذا التقييم وتوقيعه رقمياً بنجاح</h5>
                 </div>
-                <div class="small text-muted">
-                    تاريخ وتوقيت التوقيع الرقمي: <strong>@Model.SignedAt?.ToString("yyyy/MM/dd HH:mm:ss") UTC</strong>
+                <div class="small">
+                    تاريخ وتوقيت التوقيع الرقمي: <strong class="font-mono-tabular" dir="ltr">@Model.SignedAt?.ToString("yyyy/MM/dd HH:mm:ss") UTC</strong>
                 </div>
             </div>
 
-            <div class="row g-3 mb-3">
-                <div class="col-md-4">
-                    <div class="p-3 border rounded bg-white">
-                        <div class="text-muted small">تقييم حماية الخصوصية:</div>
-                        <div class="fw-bold text-dark mt-1">@Model.PrivacyProtectionRating</div>
-                    </div>
+            <dl class="dossier-meta-grid">
+                <div class="dossier-meta-cell">
+                    <dt class="small fw-semibold mb-1 text-muted">تقييم حماية الخصوصية:</dt>
+                    <dd class="fw-bold mb-0" style="color: var(--ink-primary);">@Model.PrivacyProtectionRating</dd>
                 </div>
-                <div class="col-md-4">
-                    <div class="p-3 border rounded bg-white">
-                        <div class="text-muted small">تقييم نسبة المخاطر:</div>
-                        <div class="fw-bold text-dark mt-1">@Model.RiskLevel</div>
-                    </div>
+                <div class="dossier-meta-cell">
+                    <dt class="small fw-semibold mb-1 text-muted">تقييم نسبة المخاطر:</dt>
+                    <dd class="fw-bold mb-0" style="color: var(--ink-primary);">@Model.RiskLevel</dd>
                 </div>
-                <div class="col-md-4">
-                    <div class="p-3 border rounded bg-white">
-                        <div class="text-muted small">تقييم الموافقة المستنيرة:</div>
-                        <div class="fw-bold text-dark mt-1">@Model.InformedConsentRating</div>
-                    </div>
+                <div class="dossier-meta-cell">
+                    <dt class="small fw-semibold mb-1 text-muted">تقييم الموافقة المستنيرة:</dt>
+                    <dd class="fw-bold mb-0" style="color: var(--ink-primary);">@Model.InformedConsentRating</dd>
                 </div>
-                <div class="col-12">
-                    <div class="p-3 border rounded bg-white">
-                        <div class="text-muted small">قرار التحكيم النهائي:</div>
-                        <div class="fs-5 fw-bold @(Model.Decision == EvaluationDecisionConstants.Approved ? "text-success" : "text-danger") mt-1">
+                <div class="dossier-meta-cell dossier-meta-cell--subtle dossier-meta-cell--full">
+                    <dt class="small fw-semibold mb-1 text-muted">قرار التحكيم النهائي:</dt>
+                    <dd class="mb-0 mt-1">
+                        <span class="status-stamp @(Model.Decision == EvaluationDecisionConstants.Approved ? "status-approved" : "status-modifications")" style="font-size: 0.95rem;">
                             @Model.Decision
-                        </div>
-                    </div>
+                        </span>
+                    </dd>
                 </div>
                 @if (!string.IsNullOrWhiteSpace(Model.ModificationNotes))
                 {
-                    <div class="col-12">
-                        <div class="p-3 border rounded bg-white">
-                            <div class="text-muted small">الملاحظات والتعديلات المطلوبة:</div>
-                            <div class="text-dark mt-1">@Model.ModificationNotes</div>
-                        </div>
+                    <div class="dossier-meta-cell dossier-meta-cell--full">
+                        <dt class="small fw-semibold mb-1 text-muted">الملاحظات والتعديلات المطلوبة:</dt>
+                        <dd class="mb-0" style="color: var(--ink-primary);">@Model.ModificationNotes</dd>
                     </div>
                 }
                 @if (!string.IsNullOrWhiteSpace(Model.Recommendations))
                 {
-                    <div class="col-12">
-                        <div class="p-3 border rounded bg-white">
-                            <div class="text-muted small">التوصيات:</div>
-                            <div class="text-dark mt-1">@Model.Recommendations</div>
-                        </div>
+                    <div class="dossier-meta-cell dossier-meta-cell--full">
+                        <dt class="small fw-semibold mb-1 text-muted">التوصيات:</dt>
+                        <dd class="mb-0" style="color: var(--ink-primary);">@Model.Recommendations</dd>
                     </div>
                 }
-            </div>
+            </dl>
         }
     }
     else
@@ -131,14 +198,14 @@
         <form id="evaluationForm" action="/Judge/SubmitEvaluation" method="post" onsubmit="return submitEvaluation(event);">
             <input type="hidden" name="EvaluationId" value="@Model.Id" />
 
-            <div class="card p-3 mb-4 border">
-                <h6 class="fw-bold text-primary mb-3">
-                    <i class="bi bi-shield-check me-2"></i>معايير التقييم الأخلاقي الثلاثة (إلزامية)
+            <div class="dossier-panel-subtle mb-4">
+                <h6 class="fw-bold mb-3 pb-2 text-primary" style="border-bottom: 1px solid var(--border-hairline);">
+                    <i class="bi bi-shield-check me-2" style="color: var(--brand-brass);"></i>معايير التقييم الأخلاقي الثلاثة (إلزامية)
                 </h6>
 
                 <div class="row g-3">
                     <!-- 1. Privacy Protection -->
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                         <label class="form-label">1. حماية الخصوصية وسرية البيانات <span class="text-danger">*</span></label>
                         <select name="PrivacyProtectionRating" class="form-select" required>
                             <option value="">-- اختر التقييم الأخلاقي --</option>
@@ -146,11 +213,11 @@
                             <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
                             <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
                         </select>
-                        <div class="form-text small">تدابير حماية وتجهيل هوية المشاركين بالبحث.</div>
+                        <div class="form-text small" style="color: var(--ink-secondary);">تدابير حماية وتجهيل هوية المشاركين بالبحث.</div>
                     </div>
 
                     <!-- 2. Risk Level -->
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                         <label class="form-label">2. نسبة المخاطر والموازنة <span class="text-danger">*</span></label>
                         <select name="RiskLevel" class="form-select" required>
                             <option value="">-- اختر مستوى المخاطر --</option>
@@ -158,11 +225,11 @@
                             <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
                             <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
                         </select>
-                        <div class="form-text small">مستوى الأمان الحيوي والتدابير الوقائية.</div>
+                        <div class="form-text small" style="color: var(--ink-secondary);">مستوى الأمان الحيوي والتدابير الوقائية.</div>
                     </div>
 
                     <!-- 3. Informed Consent -->
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                         <label class="form-label">3. إجراءات الموافقة المستنيرة <span class="text-danger">*</span></label>
                         <select name="InformedConsentRating" class="form-select" required>
                             <option value="">-- اختر تقييم الموافقة --</option>
@@ -170,28 +237,34 @@
                             <option value="@EthicsRatingConstants.NeedsModification">@EthicsRatingConstants.NeedsModification</option>
                             <option value="@EthicsRatingConstants.Inappropriate">@EthicsRatingConstants.Inappropriate</option>
                         </select>
-                        <div class="form-text small">وضوح استمارة الموافقة وحرية المشاركة.</div>
+                        <div class="form-text small" style="color: var(--ink-secondary);">وضوح استمارة الموافقة وحرية المشاركة.</div>
                     </div>
                 </div>
             </div>
 
             <!-- Decision -->
-            <div class="card p-3 mb-4 border">
-                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-gavel me-2 text-primary"></i>قرار التحكيم للجولة الحالية</h6>
-                
+            <div class="dossier-panel" style="border-top: 3px solid var(--brand-sovereign);">
+                <h6 class="fw-bold mb-3 pb-2" style="color: var(--ink-primary); border-bottom: 1px solid var(--border-hairline);">
+                    <i class="bi bi-gavel me-2" style="color: var(--brand-brass);"></i>قرار التحكيم للجولة الحالية
+                </h6>
+
                 <div class="mb-3">
-                    <label class="form-label fw-bold">القرار النهائي <span class="text-danger">*</span></label>
-                    <div class="d-flex gap-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="Decision" id="decApprove" value="@EvaluationDecisionConstants.Approved" required onchange="toggleModNotes();">
-                            <label class="form-check-label text-success fw-bold" for="decApprove">
-                                <i class="bi bi-check-circle me-1"></i> موافق (استيفاء المعايير الأخلاقية)
+                    <label class="form-label fw-bold mb-2">القرار النهائي <span class="text-danger">*</span></label>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="eval-choice-tile eval-choice-tile--approve" for="decApprove">
+                                <input class="form-check-input m-0 mt-1 flex-shrink-0" type="radio" name="Decision" id="decApprove" value="@EvaluationDecisionConstants.Approved" required onchange="toggleModNotes();">
+                                <span class="fw-bold text-success">
+                                    <i class="bi bi-check-circle me-1"></i> موافق (استيفاء المعايير الأخلاقية)
+                                </span>
                             </label>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="Decision" id="decModify" value="@EvaluationDecisionConstants.ModificationsRequired" required onchange="toggleModNotes();">
-                            <label class="form-check-label text-danger fw-bold" for="decModify">
-                                <i class="bi bi-exclamation-triangle me-1"></i> طلب تعديلات (استيفاء ملاحظات ملزمة)
+                        <div class="col-12 col-md-6">
+                            <label class="eval-choice-tile eval-choice-tile--modify" for="decModify">
+                                <input class="form-check-input m-0 mt-1 flex-shrink-0" type="radio" name="Decision" id="decModify" value="@EvaluationDecisionConstants.ModificationsRequired" required onchange="toggleModNotes();">
+                                <span class="fw-bold text-danger">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> طلب تعديلات (استيفاء ملاحظات ملزمة)
+                                </span>
                             </label>
                         </div>
                     </div>
@@ -202,20 +275,20 @@
                     <textarea name="ModificationNotes" id="modNotesField" class="form-control" rows="3" placeholder="اكتب التعديلات المطلوبة بدقة (سيتم إرسالها للباحث دون كشف هويتكم)..."></textarea>
                 </div>
 
-                <div class="mb-2">
+                <div class="mb-0">
                     <label class="form-label">توصيات إضافية للجنة (اختياري)</label>
                     <textarea name="Recommendations" class="form-control" rows="2" placeholder="أي توصيات عامة للجنة الفرعية بالكلية"></textarea>
                 </div>
             </div>
 
             <!-- Digital Signature Agreement -->
-            <div class="p-3 bg-light rounded border mb-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="signAgreement" required>
-                    <label class="form-check-label small fw-bold" for="signAgreement">
+            <div class="mb-4">
+                <label class="eval-attestation-box" for="signAgreement">
+                    <input class="form-check-input m-0 mt-1 flex-shrink-0" type="checkbox" id="signAgreement" required>
+                    <span class="small fw-bold" style="color: var(--ink-primary);">
                         أقر أنا المحكم العلمي بأنني قمت بفحص هذا المقترح بشكل مستقل وتجرد تام دون تضارب مصالح، وأصادق على صحة هذا التقييم بتوقيعي الرقمي الموثق.
-                    </label>
-                </div>
+                    </span>
+                </label>
             </div>
 
             <div class="d-flex justify-content-end">

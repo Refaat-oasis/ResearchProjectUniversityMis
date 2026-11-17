@@ -531,5 +531,40 @@ namespace researchProject.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> ProfilePartial()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            var profile = await _accountRepository.GetUserProfileAsync(userId);
+            if (profile == null) return NotFound("المستخدم غير موجود.");
+
+            return PartialView("_UserProfilePartial", profile);
+        }
+
+        [Authorize(Roles = RoleConstants.Judge)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BecomeResearcher([FromBody] JudgeToResearcherDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("، ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return Json(new { success = false, message = errors });
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            var (succeeded, errorMessage) = await _accountRepository.AddResearcherRoleToJudgeAsync(userId, dto);
+            if (!succeeded)
+            {
+                return Json(new { success = false, message = errorMessage });
+            }
+
+            // Refresh user claims & cookies immediately
+            await _accountRepository.RefreshSignInAsync(userId);
+
+            return Json(new { success = true, message = "تهانينا! تم تفعيل دور الباحث الأكاديمي لحسابك بنجاح. يمكنك الآن تقديم مقترحاتك البحثية من بوابتك الأكاديمية." });
+        }
     }
 }

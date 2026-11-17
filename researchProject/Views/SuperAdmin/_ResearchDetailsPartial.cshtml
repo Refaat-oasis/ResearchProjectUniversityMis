@@ -2,13 +2,25 @@
 @using System.Text.Json
 @using researchProject.Models.Constants
 
-<div class="card card-custom">
+@{
+    string statusBadgeClass = Model.WorkflowStatus switch
+    {
+        ResearchStatusConstants.UnderFormalScreening => "status-screening",
+        ResearchStatusConstants.AssignedToJudges => "status-assigned",
+        ResearchStatusConstants.ModificationsRequired => "status-modifications",
+        ResearchStatusConstants.Approved => "status-approved",
+        ResearchStatusConstants.CertificateIssued => "status-issued",
+        _ => "status-assigned"
+    };
+}
+
+<div class="card card-custom archival-card">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-file-earmark-text text-primary"></i> تفاصيل المقترح البحثي: « @Model.Title »
+                <i class="bi bi-file-earmark-text"></i> تفاصيل المقترح البحثي: « @Model.Title »
             </h4>
-            <div class="text-muted small">@Model.College?.Name - @Model.Category?.Name (التخصص: @Model.AcademicSpecialty)</div>
+            <div class="small" style="color: var(--ink-muted);">@Model.College?.Name - @Model.Category?.Name (التخصص: @Model.AcademicSpecialty)</div>
         </div>
         <div>
             <button class="btn btn-outline-secondary btn-sm" onclick="loadPartial('/SuperAdmin/AllUniversityResearchesPartial', '#main-content-container', 'all-researches');">
@@ -19,29 +31,29 @@
 
     <!-- Overview Metadata -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded border">
-                <div class="text-muted small">حالة سير العمل:</div>
-                <div class="fw-bold mt-1">
-                    <span class="badge-status status-assigned">@Model.WorkflowStatus</span>
+        <div class="col-12 col-md-4">
+            <div class="dossier-panel-subtle h-100">
+                <div class="small" style="color: var(--ink-muted);">حالة سير العمل:</div>
+                <div class="fw-bold mt-2">
+                    <span class="status-stamp @statusBadgeClass">@Model.WorkflowStatus</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded border">
-                <div class="text-muted small">تاريخ التقديم:</div>
-                <div class="fw-bold mt-1">@Model.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</div>
+        <div class="col-12 col-md-4">
+            <div class="dossier-panel-subtle h-100">
+                <div class="small" style="color: var(--ink-muted);">تاريخ التقديم:</div>
+                <div class="fw-bold mt-2 font-mono-tabular" style="color: var(--ink-primary);">@Model.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded border">
-                <div class="text-muted small">الباحثون المشاركون:</div>
-                <div class="mt-1">
+        <div class="col-12 col-md-4">
+            <div class="dossier-panel-subtle h-100">
+                <div class="small" style="color: var(--ink-muted);">الباحثون المشاركون:</div>
+                <div class="mt-2 d-flex flex-wrap gap-1">
                     @if (Model.ResearcherResearchesBridges != null)
                     {
                         foreach (var b in Model.ResearcherResearchesBridges)
                         {
-                            <span class="badge bg-secondary-subtle text-secondary me-1">
+                            <span class="status-stamp">
                                 @b.Researcher?.User?.FullName @(b.IsMainAuthor ? "(رئيسي)" : "")
                             </span>
                         }
@@ -54,8 +66,8 @@
     <!-- Dynamic Category Answers -->
     @if (!string.IsNullOrWhiteSpace(Model.DynamicFieldsJson))
     {
-        <div class="card bg-light border p-3 mb-4">
-            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-ui-checks me-2 text-primary"></i>إجابات الحقول الإضافية للتصنيف</h6>
+        <div class="dossier-panel-subtle mb-4">
+            <h6 class="fw-bold mb-3" style="color: var(--ink-primary);"><i class="bi bi-ui-checks me-2"></i>إجابات الحقول الإضافية للتصنيف</h6>
             <div class="row g-2">
                 @{
                     try
@@ -65,10 +77,10 @@
                         {
                             foreach (var item in answers)
                             {
-                                <div class="col-md-4">
-                                    <div class="bg-white p-2 border rounded small">
-                                        <div class="text-muted">@item.Key:</div>
-                                        <div class="fw-bold text-dark">@item.Value</div>
+                                <div class="col-12 col-md-4">
+                                    <div class="bg-white p-2 border small" style="border-color: var(--border-hairline) !important;">
+                                        <div style="color: var(--ink-muted);">@item.Key:</div>
+                                        <div class="fw-bold" style="color: var(--ink-primary);">@item.Value</div>
                                     </div>
                                 </div>
                             }
@@ -81,10 +93,10 @@
     }
 
     <!-- Attachments Table -->
-    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-paperclip me-2 text-primary"></i>وثائق ومرفقات المقترح</h6>
+    <h6 class="fw-bold mb-2" style="color: var(--ink-primary);"><i class="bi bi-paperclip me-2"></i>وثائق ومرفقات المقترح</h6>
     <div class="table-responsive mb-4">
-        <table class="table table-bordered table-sm align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table table-sm align-middle">
+            <thead>
                 <tr>
                     <th>نوع المستند</th>
                     <th>النسخة</th>
@@ -100,30 +112,32 @@
                     {
                         <tr>
                             <td class="fw-bold">@att.AttachmentType</td>
-                            <td><span class="badge bg-secondary">V @att.Version</span></td>
+                            <td><span class="status-stamp font-mono-tabular">V @att.Version</span></td>
                             <td>@att.OriginalFileName</td>
-                            <td class="text-muted small">@att.UploadedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td class="font-mono-tabular small" style="color: var(--ink-muted);">@att.UploadedAt.ToString("yyyy/MM/dd HH:mm")</td>
                             <td class="text-center">
-                                <a href="/Attachment/Download/@att.Id" class="btn btn-sm btn-outline-primary" target="_blank" title="تحميل الملف">
-                                    <i class="bi bi-download me-1"></i> تحميل
-                                </a>
+                                <div class="table-actions-inline">
+                                    <a href="/Attachment/Download/@att.Id" class="btn btn-sm btn-outline-primary" target="_blank" title="تحميل الملف">
+                                        <i class="bi bi-download"></i> تحميل
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     }
                 }
                 else
                 {
-                    <tr><td colspan="5" class="text-center py-2 text-muted">لا توجد مرفقات.</td></tr>
+                    <tr><td colspan="5" class="text-center py-2" style="color: var(--ink-muted);">لا توجد مرفقات.</td></tr>
                 }
             </tbody>
         </table>
     </div>
 
     <!-- Evaluations History (Rounds) -->
-    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-clipboard2-check me-2 text-primary"></i>تقييمات المحكمين وجولات التحكيم</h6>
+    <h6 class="fw-bold mb-2" style="color: var(--ink-primary);"><i class="bi bi-clipboard2-check me-2"></i>تقييمات المحكمين وجولات التحكيم</h6>
     <div class="table-responsive mb-4">
-        <table class="table table-bordered table-sm align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table table-sm align-middle">
+            <thead>
                 <tr>
                     <th>الجولة</th>
                     <th>المحكم</th>
@@ -141,7 +155,7 @@
                     foreach (var ev in Model.Evaluations.OrderByDescending(e => e.RoundNumber))
                     {
                         <tr>
-                            <td class="fw-bold">الجولة @ev.RoundNumber</td>
+                            <td class="fw-bold">الجولة <span class="font-mono-tabular">@ev.RoundNumber</span></td>
                             <td>@ev.Judge?.User?.FullName</td>
                             <td>@(ev.PrivacyProtectionRating ?? "-")</td>
                             <td>@(ev.RiskLevel ?? "-")</td>
@@ -149,44 +163,44 @@
                             <td>
                                 @if (ev.Decision == EvaluationDecisionConstants.Approved)
                                 {
-                                    <span class="badge bg-success">@ev.Decision</span>
+                                    <span class="status-stamp status-approved">@ev.Decision</span>
                                 }
                                 else if (ev.Decision == EvaluationDecisionConstants.ModificationsRequired)
                                 {
-                                    <span class="badge bg-danger">@ev.Decision</span>
+                                    <span class="status-stamp status-modifications">@ev.Decision</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-warning text-dark">@ev.Decision</span>
+                                    <span class="status-stamp status-screening">@ev.Decision</span>
                                 }
                             </td>
                             <td>
                                 @if (ev.IsDigitallySigned)
                                 {
-                                    <span class="badge bg-primary"><i class="bi bi-check-circle me-1"></i>موقع إلكترونياً</span>
+                                    <span class="status-stamp status-issued">موقع إلكترونياً</span>
                                 }
                                 else
                                 {
-                                    <span class="text-muted small">غير موقع</span>
+                                    <span class="small" style="color: var(--ink-muted);">غير موقع</span>
                                 }
                             </td>
-                            <td class="text-muted small">@(ev.SubmittedAt?.ToString("yyyy/MM/dd HH:mm") ?? "-")</td>
+                            <td class="font-mono-tabular small" style="color: var(--ink-muted);">@(ev.SubmittedAt?.ToString("yyyy/MM/dd HH:mm") ?? "-")</td>
                         </tr>
                     }
                 }
                 else
                 {
-                    <tr><td colspan="8" class="text-center py-2 text-muted">لم يتم إسناد محكمين بعد.</td></tr>
+                    <tr><td colspan="8" class="text-center py-2" style="color: var(--ink-muted);">لم يتم إسناد محكمين بعد.</td></tr>
                 }
             </tbody>
         </table>
     </div>
 
     <!-- Audit Log: ResearchStatusHistories -->
-    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-clock-history me-2 text-primary"></i>سجل التدقيق وتاريخ حالات سير العمل</h6>
+    <h6 class="fw-bold mb-2" style="color: var(--ink-primary);"><i class="bi bi-clock-history me-2"></i>سجل التدقيق وتاريخ حالات سير العمل</h6>
     <div class="table-responsive">
-        <table class="table table-sm table-striped">
-            <thead class="table-light">
+        <table class="table ledger-table table-sm align-middle">
+            <thead>
                 <tr>
                     <th>التاريخ والوقت</th>
                     <th>المسؤول</th>
@@ -201,10 +215,10 @@
                     foreach (var h in Model.ResearchStatusHistories.OrderByDescending(h => h.ChangedAt))
                     {
                         <tr>
-                            <td class="text-muted small">@h.ChangedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td class="font-mono-tabular small" style="color: var(--ink-muted);">@h.ChangedAt.ToString("yyyy/MM/dd HH:mm")</td>
                             <td class="fw-bold">@(h.ChangedByUser?.FullName ?? "النظام")</td>
                             <td>@(h.OldStatus ?? "طلب جديد")</td>
-                            <td class="text-primary fw-bold">@h.NewStatus</td>
+                            <td class="fw-bold" style="color: var(--brand-sovereign);">@h.NewStatus</td>
                             <td class="small">@h.Reason</td>
                         </tr>
                     }

@@ -5,213 +5,205 @@
     ViewData["Title"] = "تسجيل باحث جديد - المنصة الإلكترونية";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card card-custom shadow-sm border-0">
-                <div class="card-header-custom">
-                    <div>
-                        <h4 class="fw-bold text-primary mb-1">تسجيل باحث أكاديمي جديد</h4>
-                        <div class="text-muted small">يرجى إدخال البيانات بدقة. التسجيل متاح بكافة عناوين البريد الإلكتروني (Gmail، Yahoo، مؤسسي، إلخ)</div>
-                    </div>
-                    <div class="badge bg-success-subtle text-success p-2 rounded-pill">
-                        <i class="bi bi-person-check fs-6 me-1"></i> بوابة الباحثين
-                    </div>
+<div class="auth-shell">
+    <div class="auth-ledger-panel auth-ledger-wide">
+        <div class="card-header-custom">
+            <div>
+                <h2 class="page-title fw-bold text-primary mb-1">تسجيل باحث أكاديمي جديد</h2>
+                <div class="text-muted small">يرجى إدخال البيانات بدقة. التسجيل متاح بكافة عناوين البريد الإلكتروني (Gmail، Yahoo، مؤسسي، إلخ)</div>
+            </div>
+            <span class="status-stamp status-approved">
+                <i class="bi bi-person-check"></i> بوابة الباحثين
+            </span>
+        </div>
+
+        <form asp-action="SignUp" method="post" id="signUpForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" placeholder="الاسم رباعياً باللغة العربية" required />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
                 </div>
 
-                <form asp-action="SignUp" method="post" id="signUpForm">
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="example@gmail.com أو بريدك المؤسسي" dir="ltr" required />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                    <div class="form-text small text-muted">سيتم إرسال رمز الأمان ورابط التفعيل فوراً إلى هذا البريد.</div>
+                </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label asp-for="FullName" class="form-label"></label>
-                            <input asp-for="FullName" class="form-control" placeholder="الاسم رباعياً باللغة العربية" required />
-                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" dir="ltr" required />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" dir="ltr" required />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+
+                <!-- College Selection via Dedicated Dropdown -->
+                <div class="col-md-6">
+                    <label asp-for="CollegeId" class="form-label"></label>
+                    <input type="hidden" asp-for="CollegeId" id="CollegeId" />
+                    @{
+                        string initialCollegeName = "";
+                        var collegeList = ViewBag.Colleges as IEnumerable<researchProject.Models.Entities.College>;
+                        if (Model?.CollegeId > 0 && collegeList != null)
+                        {
+                            var matched = collegeList.FirstOrDefault(c => c.Id == Model.CollegeId);
+                            if (matched != null)
+                            {
+                                initialCollegeName = matched.Name;
+                            }
+                        }
+                    }
+                    <div class="dedicated-dropdown-wrapper" data-target-input="#CollegeId">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-search dedicated-dropdown-icon-right"></i>
+                            <input type="text" id="collegeDisplayInput" class="dedicated-dropdown-input" 
+                                   placeholder="ابحث أو اختر الكلية..." autocomplete="off" value="@initialCollegeName" required />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
                         </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" type="email" class="form-control" placeholder="example@gmail.com أو بريدك المؤسسي" dir="ltr" required />
-                            <span asp-validation-for="Email" class="text-danger small"></span>
-                            <div class="form-text small text-muted">سيتم إرسال رمز الأمان ورابط التفعيل فوراً إلى هذا البريد.</div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="Password" class="form-label"></label>
-                            <input asp-for="Password" class="form-control" dir="ltr" required />
-                            <span asp-validation-for="Password" class="text-danger small"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="ConfirmPassword" class="form-label"></label>
-                            <input asp-for="ConfirmPassword" class="form-control" dir="ltr" required />
-                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                        </div>
-
-                        <!-- College Selection via Unified Datalist -->
-                        <div class="col-md-6">
-                            <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
-                            <input type="hidden" asp-for="CollegeId" id="CollegeId" />
-                            @{
-                                string initialCollegeName = "";
-                                var collegeList = ViewBag.Colleges as IEnumerable<researchProject.Models.Entities.College>;
-                                if (Model?.CollegeId > 0 && collegeList != null)
+                        <div class="dedicated-dropdown-menu">
+                            @if (ViewBag.Colleges != null)
+                            {
+                                foreach (var c in ViewBag.Colleges)
                                 {
-                                    var matched = collegeList.FirstOrDefault(c => c.Id == Model.CollegeId);
-                                    if (matched != null)
-                                    {
-                                        initialCollegeName = matched.Name;
-                                    }
+                                    <div class="dedicated-dropdown-item" data-id="@c.Id" data-name="@c.Name">
+                                        <span>@c.Name</span>
+                                        <span class="dedicated-dropdown-item-badge">@c.Code</span>
+                                    </div>
                                 }
                             }
-                            <!-- College via Dedicated Dropdown -->
-                        <div class="col-md-6">
-                            <label asp-for="CollegeId" class="form-label"></label>
-                            <input type="hidden" asp-for="CollegeId" id="CollegeId" />
-                            <div class="dedicated-dropdown-wrapper" data-target-input="#CollegeId">
-                                <div class="dedicated-dropdown-input-group">
-                                    <i class="bi bi-search dedicated-dropdown-icon-right"></i>
-                                    <input type="text" id="collegeDisplayInput" class="dedicated-dropdown-input" 
-                                           placeholder="ابحث أو اختر الكلية..." autocomplete="off" value="@initialCollegeName" required />
-                                    <div class="dedicated-dropdown-actions-left">
-                                        <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                        <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
-                                            <i class="bi bi-chevron-down"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="dedicated-dropdown-menu">
-                                    @if (ViewBag.Colleges != null)
-                                    {
-                                        foreach (var c in ViewBag.Colleges)
-                                        {
-                                            <div class="dedicated-dropdown-item" data-id="@c.Id" data-name="@c.Name">
-                                                <span>@c.Name</span>
-                                                <span class="dedicated-dropdown-item-badge">@c.Code</span>
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                            </div>
-                            <span asp-validation-for="CollegeId" class="text-danger small"></span>
-                        </div>
-
-                        <!-- Researcher Type via Dedicated Dropdown -->
-                        <div class="col-md-6">
-                            <label asp-for="ResearcherType" class="form-label"></label>
-                            <input type="hidden" asp-for="ResearcherType" id="ResearcherType" />
-                            <div class="dedicated-dropdown-wrapper" data-target-input="#ResearcherType">
-                                <div class="dedicated-dropdown-input-group">
-                                    <i class="bi bi-person-badge dedicated-dropdown-icon-right"></i>
-                                    <input type="text" class="dedicated-dropdown-input" 
-                                           placeholder="ابحث أو اختر فئة الباحث..." autocomplete="off" required />
-                                    <div class="dedicated-dropdown-actions-left">
-                                        <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                        <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
-                                            <i class="bi bi-chevron-down"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="dedicated-dropdown-menu">
-                                    <div class="dedicated-dropdown-item" data-id="عضو هيئة تدريس" data-name="عضو هيئة تدريس">
-                                        <span>عضو هيئة تدريس</span>
-                                    </div>
-                                    <div class="dedicated-dropdown-item" data-id="باحث" data-name="باحث">
-                                        <span>باحث</span>
-                                    </div>
-                                    <div class="dedicated-dropdown-item" data-id="طالب دراسات عليا" data-name="طالب دراسات عليا">
-                                        <span>طالب دراسات عليا</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <span asp-validation-for="ResearcherType" class="text-danger small"></span>
-                        </div>
-
-                        <!-- Academic Degree via Dedicated Dropdown -->
-                        <div class="col-md-6">
-                            <label asp-for="AcademicDegree" class="form-label"></label>
-                            <input type="hidden" asp-for="AcademicDegree" id="AcademicDegree" />
-                            <div class="dedicated-dropdown-wrapper" data-target-input="#AcademicDegree">
-                                <div class="dedicated-dropdown-input-group">
-                                    <i class="bi bi-mortarboard dedicated-dropdown-icon-right"></i>
-                                    <input type="text" class="dedicated-dropdown-input" 
-                                           placeholder="ابحث أو اختر الدرجة العلمية..." autocomplete="off" required />
-                                    <div class="dedicated-dropdown-actions-left">
-                                        <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                        <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
-                                            <i class="bi bi-chevron-down"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="dedicated-dropdown-menu">
-                                    <div class="dedicated-dropdown-item" data-id="بكالوريوس / ليسانس" data-name="بكالوريوس / ليسانس"><span>بكالوريوس / ليسانس</span></div>
-                                    <div class="dedicated-dropdown-item" data-id="دبلوم دراسات عليا" data-name="دبلوم دراسات عليا"><span>دبلوم دراسات عليا</span></div>
-                                    <div class="dedicated-dropdown-item" data-id="ماجستير" data-name="ماجستير"><span>ماجستير</span></div>
-                                    <div class="dedicated-dropdown-item" data-id="دكتوراه" data-name="دكتوراه"><span>دكتوراه</span></div>
-                                    <div class="dedicated-dropdown-item" data-id="أستاذ مساعد" data-name="أستاذ مساعد"><span>أستاذ مساعد</span></div>
-                                    <div class="dedicated-dropdown-item" data-id="أستاذ دكتور" data-name="أستاذ دكتور"><span>أستاذ دكتور</span></div>
-                                    <div class="dedicated-dropdown-item" data-id="باحث ما بعد الدكتوراه" data-name="باحث ما بعد الدكتوراه"><span>باحث ما بعد الدكتوراه</span></div>
-                                    <div class="dedicated-dropdown-item" data-id="استشاري / زمالة" data-name="استشاري / زمالة"><span>استشاري / زمالة</span></div>
-                                </div>
-                            </div>
-                            <span asp-validation-for="AcademicDegree" class="text-danger small"></span>
-                        </div>
-
-                        <!-- Academic Department via Dedicated Dropdown -->
-                        <div class="col-md-6">
-                            <label asp-for="Department" class="form-label"></label>
-                            <input type="hidden" asp-for="Department" id="Department" />
-                            <div class="dedicated-dropdown-wrapper" id="departmentDropdownWrapper" data-target-input="#Department">
-                                <div class="dedicated-dropdown-input-group">
-                                    <i class="bi bi-building dedicated-dropdown-icon-right"></i>
-                                    <input type="text" id="departmentDisplayInput" class="dedicated-dropdown-input" 
-                                           placeholder="اختر أو ابحث عن القسم الأكاديمي..." autocomplete="off" required />
-                                    <div class="dedicated-dropdown-actions-left">
-                                        <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                        <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
-                                            <i class="bi bi-chevron-down"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="dedicated-dropdown-menu" id="departmentDropdownMenu">
-                                    <div class="dedicated-dropdown-empty text-muted p-2">اختر الكلية أولاً لعرض أقسامها الأكاديمية</div>
-                                </div>
-                            </div>
-                            <span asp-validation-for="Department" class="text-danger small"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="NationalId" class="form-label"></label>
-                            <input asp-for="NationalId" class="form-control" maxlength="14" placeholder="14 رقماً قومياً" dir="ltr" required />
-                            <span asp-validation-for="NationalId" class="text-danger small"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="PhoneNumber" class="form-label"></label>
-                            <input asp-for="PhoneNumber" class="form-control" placeholder="01xxxxxxxxx" dir="ltr" required />
-                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                         </div>
                     </div>
+                    <span asp-validation-for="CollegeId" class="text-danger small"></span>
+                </div>
 
-                    <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-                        <a asp-action="Login" class="text-muted text-decoration-none small">
-                            <i class="bi bi-arrow-right me-1"></i> لديك حساب بالفعل؟ تسجيل الدخول
-                        </a>
-                        <button type="submit" class="btn btn-accent-custom px-4 py-2">
-                            <i class="bi bi-check-lg me-1"></i> إتمام التسجيل وإرسال رمز التحقق
-                        </button>
+                <!-- Researcher Type via Dedicated Dropdown -->
+                <div class="col-md-6">
+                    <label asp-for="ResearcherType" class="form-label"></label>
+                    <input type="hidden" asp-for="ResearcherType" id="ResearcherType" />
+                    <div class="dedicated-dropdown-wrapper" data-target-input="#ResearcherType">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-person-badge dedicated-dropdown-icon-right"></i>
+                            <input type="text" class="dedicated-dropdown-input" 
+                                   placeholder="ابحث أو اختر فئة الباحث..." autocomplete="off" required />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dedicated-dropdown-menu">
+                            <div class="dedicated-dropdown-item" data-id="عضو هيئة تدريس" data-name="عضو هيئة تدريس">
+                                <span>عضو هيئة تدريس</span>
+                            </div>
+                            <div class="dedicated-dropdown-item" data-id="باحث" data-name="باحث">
+                                <span>باحث</span>
+                            </div>
+                            <div class="dedicated-dropdown-item" data-id="طالب دراسات عليا" data-name="طالب دراسات عليا">
+                                <span>طالب دراسات عليا</span>
+                            </div>
+                        </div>
                     </div>
-                </form>
+                    <span asp-validation-for="ResearcherType" class="text-danger small"></span>
+                </div>
+
+                <!-- Academic Degree via Dedicated Dropdown -->
+                <div class="col-md-6">
+                    <label asp-for="AcademicDegree" class="form-label"></label>
+                    <input type="hidden" asp-for="AcademicDegree" id="AcademicDegree" />
+                    <div class="dedicated-dropdown-wrapper" data-target-input="#AcademicDegree">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-mortarboard dedicated-dropdown-icon-right"></i>
+                            <input type="text" class="dedicated-dropdown-input" 
+                                   placeholder="ابحث أو اختر الدرجة العلمية..." autocomplete="off" required />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dedicated-dropdown-menu">
+                            <div class="dedicated-dropdown-item" data-id="بكالوريوس / ليسانس" data-name="بكالوريوس / ليسانس"><span>بكالوريوس / ليسانس</span></div>
+                            <div class="dedicated-dropdown-item" data-id="دبلوم دراسات عليا" data-name="دبلوم دراسات عليا"><span>دبلوم دراسات عليا</span></div>
+                            <div class="dedicated-dropdown-item" data-id="ماجستير" data-name="ماجستير"><span>ماجستير</span></div>
+                            <div class="dedicated-dropdown-item" data-id="دكتوراه" data-name="دكتوراه"><span>دكتوراه</span></div>
+                            <div class="dedicated-dropdown-item" data-id="أستاذ مساعد" data-name="أستاذ مساعد"><span>أستاذ مساعد</span></div>
+                            <div class="dedicated-dropdown-item" data-id="أستاذ دكتور" data-name="أستاذ دكتور"><span>أستاذ دكتور</span></div>
+                            <div class="dedicated-dropdown-item" data-id="باحث ما بعد الدكتوراه" data-name="باحث ما بعد الدكتوراه"><span>باحث ما بعد الدكتوراه</span></div>
+                            <div class="dedicated-dropdown-item" data-id="استشاري / زمالة" data-name="استشاري / زمالة"><span>استشاري / زمالة</span></div>
+                        </div>
+                    </div>
+                    <span asp-validation-for="AcademicDegree" class="text-danger small"></span>
+                </div>
+
+                <!-- Academic Department via Dedicated Dropdown -->
+                <div class="col-md-6">
+                    <label asp-for="Department" class="form-label"></label>
+                    <input type="hidden" asp-for="Department" id="Department" />
+                    <div class="dedicated-dropdown-wrapper" id="departmentDropdownWrapper" data-target-input="#Department">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-building dedicated-dropdown-icon-right"></i>
+                            <input type="text" id="departmentDisplayInput" class="dedicated-dropdown-input" 
+                                   placeholder="اختر أو ابحث عن القسم الأكاديمي..." autocomplete="off" required />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dedicated-dropdown-menu" id="departmentDropdownMenu">
+                            <div class="dedicated-dropdown-empty text-muted p-2">اختر الكلية أولاً لعرض أقسامها الأكاديمية</div>
+                        </div>
+                    </div>
+                    <span asp-validation-for="Department" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="NationalId" class="form-label"></label>
+                    <input asp-for="NationalId" class="form-control" maxlength="14" placeholder="14 رقماً قومياً" dir="ltr" required />
+                    <span asp-validation-for="NationalId" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="01xxxxxxxxx" dir="ltr" required />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
             </div>
-        </div>
+
+            <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                <a asp-action="Login" class="text-muted text-decoration-none small">
+                    <i class="bi bi-arrow-right me-1"></i> لديك حساب بالفعل؟ تسجيل الدخول
+                </a>
+                <button type="submit" class="btn btn-accent-custom px-4 py-2">
+                    <i class="bi bi-check-lg me-1"></i> إتمام التسجيل وإرسال رمز التحقق
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 

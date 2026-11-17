@@ -5,18 +5,18 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-sliders text-warning"></i> تصنيفات الأبحاث ونماذج الحقول الديناميكية</h2>
+        <h1 class="page-title"><i class="bi bi-sliders"></i> تصنيفات الأبحاث ونماذج الحقول الديناميكية</h1>
         <p>تحديد نوع الأبحاث (بشري، حيواني، سريري، استبيانات) وبناء الحقول التفاعلية الإضافية لكل تصنيف</p>
     </div>
-    <button class="btn btn-primary-custom btn-sm" onclick="openFieldsBuilder(0, 0, '', '', '[]');">
+    <button class="btn btn-brass btn-sm" onclick="openFieldsBuilder(0, 0, '', '', '[]');">
         <i class="bi bi-plus-lg me-1"></i> إضافة تصنيف جديد
     </button>
 </div>
 
-<div class="liquid-glass-card mb-4">
+<div class="card-custom archival-card mb-4">
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>اسم التصنيف</th>
@@ -34,39 +34,43 @@
                     foreach (var cat in Model)
                     {
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold text-dark">@cat.Name</td>
-                            <td><span class="badge bg-light text-dark border">@cat.College?.Name</span></td>
-                            <td class="text-muted small" style="max-width: 250px;">@(cat.Description ?? "-")</td>
+                            <td class="font-mono-tabular">@index</td>
+                            <td class="fw-bold" style="color: var(--ink-primary);">@cat.Name</td>
+                            <td><span class="status-stamp">@cat.College?.Name</span></td>
+                            <td class="small" style="max-width: 250px; color: var(--ink-muted);">@(cat.Description ?? "-")</td>
                             <td>
                                 @if (!string.IsNullOrWhiteSpace(cat.FieldsDefinitionJson))
                                 {
-                                    <span class="badge bg-info-subtle text-info"><i class="bi bi-check2-circle me-1"></i>حقول ديناميكية معرفة</span>
+                                    <span class="status-stamp status-approved">حقول ديناميكية معرفة</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary-subtle text-secondary">لا توجد حقول إضافية</span>
+                                    <span class="status-stamp status-inactive">لا توجد حقول إضافية</span>
                                 }
                             </td>
+                            <td>
                             <td>
                                 @if (cat.IsActive)
                                 {
-                                    <span class="badge bg-success">نشط</span>
+                                    <span class="status-stamp status-approved">نشط</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">معطل</span>
+                                    <span class="status-stamp status-inactive">معطل</span>
                                 }
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick='openFieldsBuilder(@cat.Id, @cat.CollegeId, "@cat.Name", @Html.Raw(Json.Serialize(cat.Description ?? "")), @Html.Raw(Json.Serialize(cat.FieldsDefinitionJson ?? "[]")))'>
-                                    <i class="bi bi-gear-wide-connected me-1"></i> تعديل وتصميم الحقول
-                                </button>
-                                <button class="btn btn-sm @(cat.IsActive ? "btn-outline-danger" : "btn-outline-success") ms-1"
-                                        onclick="toggleCategoryStatus(@cat.Id, @(!cat.IsActive ? "true" : "false"))">
-                                    <i class="bi @(cat.IsActive ? "bi-eye-slash" : "bi-eye") me-1"></i>
-                                    @(cat.IsActive ? "تعطيل" : "تفعيل")
-                                </button>
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm btn-outline-primary" onclick='openFieldsBuilder(@cat.Id, @cat.CollegeId, "@cat.Name", @Html.Raw(Json.Serialize(cat.Description ?? "")), @Html.Raw(Json.Serialize(cat.FieldsDefinitionJson ?? "[]")))'>
+                                        <i class="bi bi-gear-wide-connected"></i> تعديل وتصميم الحقول
+                                    </button>
+                                    <button class="btn btn-sm @(cat.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                            onclick="toggleCategoryStatus(@cat.Id, @(!cat.IsActive ? "true" : "false"))">
+                                        <i class="bi @(cat.IsActive ? "bi-eye-slash" : "bi-eye")"></i>
+                                        @(cat.IsActive ? "تعطيل" : "تفعيل")
+                                    </button>
+                                </div>
+                            </td>
                             </td>
                         </tr>
                         index++;
@@ -75,7 +79,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">لا توجد تصنيفات أبحاث مسجلة حالياً.</td>
+                        <td colspan="7" class="text-center py-5" style="color: var(--ink-muted);">لا توجد تصنيفات أبحاث مسجلة حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -88,7 +92,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="addCategoryModalLabel"><i class="bi bi-magic me-2 text-primary"></i>تصميم تصنيف البحث والحقول التفاعلية</h5>
+                <h5 class="modal-title fw-bold" id="addCategoryModalLabel"><i class="bi bi-magic me-2"></i>تصميم تصنيف البحث والحقول التفاعلية</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="categoryForm" asp-action="SaveCategory" method="post">
@@ -97,7 +101,7 @@
 
                 <div class="modal-body">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <label class="form-label">الكلية <span class="text-danger">*</span></label>
                             <div class="dedicated-dropdown-wrapper">
                                 <input type="hidden" name="CollegeId" id="catCollegeId" required />
@@ -116,7 +120,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <label class="form-label">اسم تصنيف البحث <span class="text-danger">*</span></label>
                             <input type="text" name="Name" id="catName" class="form-control" required placeholder="مثال: أبحاث وتجارب سريرية" />
                         </div>
@@ -126,14 +130,14 @@
                         </div>
                     </div>
 
-                    <div class="card bg-light border p-3 rounded-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-ui-checks me-2 text-primary"></i>الحقول الإضافية في نموذج التقديم</h6>
-                            <button type="button" class="btn btn-sm btn-outline-success" onclick="addFieldRow();">
+                    <div class="dossier-panel">
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                            <h6 class="fw-bold mb-0" style="color: var(--ink-primary);"><i class="bi bi-ui-checks me-2"></i>الحقول الإضافية في نموذج التقديم</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFieldRow();">
                                 <i class="bi bi-plus-circle me-1"></i> إضافة حقل جديد
                             </button>
                         </div>
-                        <div class="text-muted small mb-3">يمكنك تعريف حقول مخصصة (نص، رقم، تاريخ، قائمة منسدلة، نعم/لا) تظهر للباحث عند اختيار هذا التصنيف.</div>
+                        <div class="small mb-3" style="color: var(--ink-muted);">يمكنك تعريف حقول مخصصة (نص، رقم، تاريخ، قائمة منسدلة، نعم/لا) تظهر للباحث عند اختيار هذا التصنيف.</div>
 
                         <div id="fieldsContainer" class="d-flex flex-column gap-2">
                             <!-- Dynamic field rows inserted here -->
@@ -142,7 +146,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-primary-custom">حفظ التصنيف والحقول</button>
                 </div>
             </form>
@@ -202,14 +206,14 @@
             }
 
             currentFields.forEach(function (f, i) {
-                var html = '<div class="row g-2 align-items-center bg-white p-2 border rounded shadow-sm">' +
-                    '<div class="col-md-3">' +
-                    '<input type="text" class="form-control form-control-sm" placeholder="اسم المعرف (Code)" value="' + (f.Name || '') + '" onchange="currentFields[' + i + '].Name = this.value;" dir="ltr" />' +
+                var html = '<div class="row g-2 align-items-center bg-white p-2 border mx-0" style="border-color: var(--border-hairline) !important;">' +
+                    '<div class="col-12 col-md-3">' +
+                    '<input type="text" class="form-control form-control-sm font-mono-tabular" placeholder="اسم المعرف (Code)" value="' + (f.Name || '') + '" onchange="currentFields[' + i + '].Name = this.value;" dir="ltr" />' +
                     '</div>' +
-                    '<div class="col-md-4">' +
+                    '<div class="col-12 col-md-4">' +
                     '<input type="text" class="form-control form-control-sm" placeholder="التسمية العربية للحقل" value="' + (f.Label || '') + '" onchange="currentFields[' + i + '].Label = this.value;" />' +
                     '</div>' +
-                    '<div class="col-md-3">' +
+                    '<div class="col-8 col-md-3">' +
                     '<select class="form-select form-select-sm" onchange="currentFields[' + i + '].Type = this.value;">' +
                     '<option value="text"' + (f.Type === 'text' ? ' selected' : '') + '>نص عادي</option>' +
                     '<option value="textarea"' + (f.Type === 'textarea' ? ' selected' : '') + '>نص تفصيلي (فقرة)</option>' +
@@ -219,12 +223,12 @@
                     '<option value="yesno"' + (f.Type === 'yesno' ? ' selected' : '') + '>نعم / لا</option>' +
                     '</select>' +
                     '</div>' +
-                    '<div class="col-md-1 text-center">' +
+                    '<div class="col-2 col-md-1 text-center">' +
                     '<div class="form-check d-inline-block">' +
                     '<input class="form-check-input" type="checkbox"' + (f.IsRequired ? ' checked' : '') + ' onchange="currentFields[' + i + '].IsRequired = this.checked;" title="إلزامي؟" />' +
                     '</div>' +
                     '</div>' +
-                    '<div class="col-md-1 text-center">' +
+                    '<div class="col-2 col-md-1 text-center">' +
                     '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFieldRow(' + i + ')"><i class="bi bi-trash"></i></button>' +
                     '</div>' +
                     '</div>';

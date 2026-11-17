@@ -1,6 +1,11 @@
 // Unified Client-Side Routing and AJAX Helpers
 
 $(document).ready(function () {
+    // Initialize shared UI helpers unconditionally on load
+    initCustomDatalists();
+    initSidebarToggle();
+    initUniversalTablePagination();
+
     // 1. Sidebar link click handling
     $(document).on('click', '.sidebar-item a[data-url]', function (e) {
         e.preventDefault();
@@ -454,3 +459,175 @@ function initCustomDatalists(container) {
     });
 }
 
+// 5. Sidebar Toggle & Responsive Drawer Handler
+function initSidebarToggle() {
+    var isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+    if (isCollapsed && $(window).width() >= 992) {
+        $('.app-container').addClass('sidebar-collapsed');
+    }
+
+    $(document).off('click', '#sidebarToggleBtn').on('click', '#sidebarToggleBtn', function (e) {
+        e.preventDefault();
+        if ($(window).width() < 992) {
+            $('.right-sidebar').toggleClass('show-mobile');
+            $('#sidebar-overlay').toggleClass('active');
+        } else {
+            $('.app-container').toggleClass('sidebar-collapsed');
+            var collapsedNow = $('.app-container').hasClass('sidebar-collapsed');
+            localStorage.setItem('sidebar_collapsed', collapsedNow ? 'true' : 'false');
+        }
+    });
+
+    $(document).off('click', '#sidebar-overlay').on('click', '#sidebar-overlay', function () {
+        if ($(window).width() < 992) {
+            $('.right-sidebar').removeClass('show-mobile');
+            $('#sidebar-overlay').removeClass('active');
+        }
+    });
+
+    $(document).off('keydown.sidebarEsc').on('keydown.sidebarEsc', function (e) {
+        if (e.key === 'Escape' && $(window).width() < 992) {
+            $('.right-sidebar').removeClass('show-mobile');
+            $('#sidebar-overlay').removeClass('active');
+        }
+    });
+}
+
+// 6. Universal Table Pagination Engine with Page Size (10, 25, 50, All)
+function initUniversalTablePagination(container) {
+    var $root = container ? $(container) : $(document);
+
+    $root.find('table.table').each(function () {
+        var $table = $(this);
+        if ($table.hasClass('table-paginated-initialized') || $table.hasClass('no-pagination')) return;
+
+        var $tbody = $table.find('tbody');
+        var $allRows = $tbody.find('tr').filter(function () {
+            return $(this).find('td[colspan]').length === 0;
+        });
+
+        var totalRows = $allRows.length;
+        if (totalRows <= 5) return; // Keep small tables clean without extra controls
+
+        $table.addClass('table-paginated-initialized');
+        var tableId = 'table-' + Math.random().toString(36).substring(2, 9);
+        $table.attr('id', tableId);
+
+        var currentPage = 1;
+        var pageSize = 10; // Default: 10 rows
+
+        var controlsHtml = `
+            <div class="pagination-wrapper" data-table-id="${tableId}">
+                <div class="page-size-selector">
+                    <label class="small text-muted mb-0">عرض:</label>
+                    <select class="form-select form-select-sm page-size-select">
+                        <option value="10" selected>10 صفوف</option>
+                        <option value="25">25 صفاً</option>
+                        <option value="50">50 صفاً</option>
+                        <option value="all">عرض الكل (${totalRows})</option>
+                    </select>
+                    <span class="pagination-info ms-2">إجمالي: <strong class="font-mono-tabular">${totalRows}</strong> سجل</span>
+                </div>
+                <nav aria-label="تنقل الصفحات">
+                    <ul class="pagination pagination-sm mb-0">
+                    </ul>
+                </nav>
+            </div>
+        `;
+
+        var $wrapper = $(controlsHtml);
+        var $container = $table.closest('.table-responsive');
+        if ($container.length) {
+            $container.after($wrapper);
+        } else {
+            $table.after($wrapper);
+        }
+
+        function renderPage() {
+            var actualPageSize = (pageSize === 'all') ? totalRows : parseInt(pageSize, 10);
+            var totalPages = Math.ceil(totalRows / actualPageSize) || 1;
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            var startIndex = (currentPage - 1) * actualPageSize;
+            var endIndex = (pageSize === 'all') ? totalRows : Math.min(startIndex + actualPageSize, totalRows);
+
+            $allRows.hide();
+            $allRows.slice(startIndex, endIndex).show();
+
+            var infoText = (totalRows === 0)
+                ? 'لا توجد بيانات'
+                : `عرض <span class="font-mono-tabular">${startIndex + 1}</span> إلى <span class="font-mono-tabular">${endIndex}</span> من إجمالي <strong class="font-mono-tabular">${totalRows}</strong> سجل`;
+            $wrapper.find('.pagination-info').html(infoText);
+
+            var $paginationUl = $wrapper.find('.pagination');
+            $paginationUl.empty();
+
+            if (totalPages <= 1) return;
+
+            var prevDisabled = (currentPage === 1) ? 'disabled' : '';
+            $paginationUl.append(`
+                <li class="page-item ${prevDisabled}">
+                    <a class="page-link btn-prev" href="#" aria-label="السابق" title="السابق">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            `);
+
+            for (var p = 1; p <= totalPages; p++) {
+                if (p === 1 || p === totalPages || (p >= currentPage - 2 && p <= currentPage + 2)) {
+                    var activeClass = (p === currentPage) ? 'active' : '';
+                    $paginationUl.append(`
+                        <li class="page-item ${activeClass}">
+                            <a class="page-link btn-page font-mono-tabular" href="#" data-page="${p}">${p}</a>
+                        </li>
+                    `);
+                } else if (p === currentPage - 3 || p === currentPage + 3) {
+                    $paginationUl.append('<li class="page-item disabled"><span class="page-link font-mono-tabular">...</span></li>');
+                }
+            }
+
+            var nextDisabled = (currentPage === totalPages) ? 'disabled' : '';
+            $paginationUl.append(`
+                <li class="page-item ${nextDisabled}">
+                    <a class="page-link btn-next" href="#" aria-label="التالي" title="التالي">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            `);
+        }
+
+        $wrapper.on('change', '.page-size-select', function () {
+            pageSize = $(this).val();
+            currentPage = 1;
+            renderPage();
+        });
+
+        $wrapper.on('click', '.btn-page', function (e) {
+            e.preventDefault();
+            currentPage = parseInt($(this).data('page'), 10);
+            renderPage();
+        });
+
+        $wrapper.on('click', '.btn-prev', function (e) {
+            e.preventDefault();
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
+        });
+
+        $wrapper.on('click', '.btn-next', function (e) {
+            e.preventDefault();
+            var actualPageSize = (pageSize === 'all') ? totalRows : parseInt(pageSize, 10);
+            var totalPages = Math.ceil(totalRows / actualPageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage();
+            }
+        });
+
+        renderPage();
+    });
+}

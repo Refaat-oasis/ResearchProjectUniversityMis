@@ -3,8 +3,8 @@
 
 @if (Model != null && !string.IsNullOrWhiteSpace(Model.FieldsDefinitionJson))
 {
-    <div class="card p-3 bg-light border mb-3">
-        <h6 class="fw-bold text-primary mb-3">
+    <div class="dossier-panel dossier-panel-subtle mb-4">
+        <h6 class="fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-sovereign); border-color: var(--border-hairline) !important;">
             <i class="bi bi-ui-radios-grid me-2"></i>حقول نموذج التقديم الخاصة بتصنيف: « @Model.Name »
         </h6>
 
@@ -35,11 +35,11 @@
                             }
                             else if (type == "number")
                             {
-                                <input type="number" name="DynamicAnswers[@name]" class="form-control" @(isReq ? "required" : "") placeholder="@label" />
+                                <input type="number" name="DynamicAnswers[@name]" class="form-control font-mono-tabular" @(isReq ? "required" : "") placeholder="@label" />
                             }
                             else if (type == "date")
                             {
-                                <input type="date" name="DynamicAnswers[@name]" class="form-control" @(isReq ? "required" : "") />
+                                <input type="date" name="DynamicAnswers[@name]" class="form-control font-mono-tabular" @(isReq ? "required" : "") />
                             }
                             else if (type == "yesno")
                             {
