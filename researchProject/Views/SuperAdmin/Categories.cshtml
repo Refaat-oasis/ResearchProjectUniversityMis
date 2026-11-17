@@ -23,6 +23,7 @@
                     <th>الكلية التابع لها</th>
                     <th>الوصف</th>
                     <th>تعريف الحقول الإضافية</th>
+                    <th>الحالة</th>
                     <th>الإجراءات</th>
                 </tr>
             </thead>
@@ -48,11 +49,28 @@
                                 }
                             </td>
                             <td>
+                            <td>
+                                @if (cat.IsActive)
+                                {
+                                    <span class="status-stamp status-approved">نشط</span>
+                                }
+                                else
+                                {
+                                    <span class="status-stamp status-inactive">معطل</span>
+                                }
+                            </td>
+                            <td>
                                 <div class="table-actions-inline">
                                     <button class="btn btn-sm btn-outline-primary" onclick='openFieldsBuilder(@cat.Id, @cat.CollegeId, "@cat.Name", @Html.Raw(Json.Serialize(cat.Description ?? "")), @Html.Raw(Json.Serialize(cat.FieldsDefinitionJson ?? "[]")))'>
                                         <i class="bi bi-gear-wide-connected"></i> تعديل وتصميم الحقول
                                     </button>
+                                    <button class="btn btn-sm @(cat.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                            onclick="toggleCategoryStatus(@cat.Id, @(!cat.IsActive ? "true" : "false"))">
+                                        <i class="bi @(cat.IsActive ? "bi-eye-slash" : "bi-eye")"></i>
+                                        @(cat.IsActive ? "تعطيل" : "تفعيل")
+                                    </button>
                                 </div>
+                            </td>
                             </td>
                         </tr>
                         index++;
@@ -61,7 +79,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-5" style="color: var(--ink-muted);">لا توجد تصنيفات أبحاث مسجلة حالياً.</td>
+                        <td colspan="7" class="text-center py-5" style="color: var(--ink-muted);">لا توجد تصنيفات أبحاث مسجلة حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -85,17 +103,22 @@
                     <div class="row g-3 mb-3">
                         <div class="col-12 col-md-6">
                             <label class="form-label">الكلية <span class="text-danger">*</span></label>
-                            <input type="hidden" name="CollegeId" id="catCollegeId" />
-                            <input type="text" id="catCollegeInput" list="catCollegesList" class="form-control" placeholder="ابحث أو اختر الكلية..." required autocomplete="off" />
-                            <datalist id="catCollegesList">
-                                @if (ViewBag.Colleges != null)
-                                {
-                                    foreach (var c in ViewBag.Colleges)
+                            <div class="dedicated-dropdown-wrapper">
+                                <input type="hidden" name="CollegeId" id="catCollegeId" required />
+                                <input type="text" id="catCollegeInput" class="form-control dedicated-dropdown-input" placeholder="ابحث أو اختر الكلية..." autocomplete="off" />
+                                <div class="dedicated-dropdown-menu" id="catCollegesMenu">
+                                    @if (ViewBag.Colleges != null)
                                     {
-                                        <option value="@c.Name" data-id="@c.Id">@c.Code</option>
+                                        foreach (var c in ViewBag.Colleges)
+                                        {
+                                            <div class="dedicated-dropdown-item" data-value="@c.Id" data-label="@c.Name">
+                                                <div class="fw-bold">@c.Name</div>
+                                                <small class="text-muted">@c.Code</small>
+                                            </div>
+                                        }
                                     }
-                                }
-                            </datalist>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label">اسم تصنيف البحث <span class="text-danger">*</span></label>
@@ -135,26 +158,12 @@
     <script>
         var currentFields = [];
 
-        $('#catCollegeInput').on('input change', function () {
-            var selectedVal = $(this).val();
-            var match = $('#catCollegesList option').filter(function () {
-                return this.value === selectedVal;
-            });
-            if (match.length > 0) {
-                $('#catCollegeId').val(match.data('id'));
-            } else {
-                $('#catCollegeId').val('');
-            }
-        });
-
         function openFieldsBuilder(id, collegeId, name, desc, fieldsJson) {
             $('#catId').val(id);
             $('#catCollegeId').val(collegeId);
-            var matchedOpt = $('#catCollegesList option').filter(function () {
-                return $(this).data('id') == collegeId;
-            });
-            if (matchedOpt.length > 0) {
-                $('#catCollegeInput').val(matchedOpt.val());
+            var $item = $('#catCollegesMenu .dedicated-dropdown-item[data-value="' + collegeId + '"]');
+            if ($item.length > 0) {
+                $('#catCollegeInput').val($item.data('label'));
             } else {
                 $('#catCollegeInput').val('');
             }
@@ -241,16 +250,53 @@
                 data: data,
                 success: function (res) {
                     $('#partial-loading-spinner').hide();
-                    alert(res.message);
-                    if (res.success) {
-                        window.location.reload();
+                    if (res && res.success) {
+                        showToast(res.message, 'success');
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1200);
+                    } else {
+                        showToast(res.message || 'حدث خطأ.', 'error');
                     }
                 },
                 error: function (xhr) {
                     $('#partial-loading-spinner').hide();
-                    alert(xhr.responseText || 'حدث خطأ.');
+                    showToast(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.', 'error');
                 }
             });
+        });
+
+        function toggleCategoryStatus(id, isActive) {
+            var actionText = isActive ? 'تفعيل' : 'تعطيل وإخفاء';
+            if (!confirm('هل أنت متأكد من ' + actionText + ' هذا التصنيف؟')) return;
+
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            $('#partial-loading-spinner').css('display', 'flex');
+
+            $.ajax({
+                url: '/SuperAdmin/ToggleCategoryStatus',
+                type: 'POST',
+                data: { id: id, isActive: isActive, __RequestVerificationToken: token },
+                success: function (res) {
+                    $('#partial-loading-spinner').hide();
+                    if (res && res.success) {
+                        showToast(res.message, 'success');
+                        setTimeout(function () { window.location.reload(); }, 1000);
+                    } else {
+                        showToast(res.message || 'فشلت العملية.', 'error');
+                    }
+                },
+                error: function (xhr) {
+                    $('#partial-loading-spinner').hide();
+                    showToast(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.', 'error');
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            if (typeof initDedicatedDropdowns === 'function') {
+                initDedicatedDropdowns();
+            }
         });
     </script>
 }

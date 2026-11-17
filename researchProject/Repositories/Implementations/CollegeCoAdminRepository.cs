@@ -94,17 +94,21 @@ namespace researchProject.Repositories.Implementations
             var research = await _db.Researches.FirstOrDefaultAsync(r => r.Id == researchId && (collegeId == 0 || r.CollegeId == collegeId));
             if (research == null) return new List<Judge>();
 
+            var effectiveCollegeId = collegeId > 0 ? collegeId : research.CollegeId;
+
             // Get user IDs of all authors of this research to enforce conflict of interest
             var authorUserIds = await _db.ResearcherResearchesBridge
                 .Where(b => b.ResearchId == researchId)
                 .Select(b => b.Researcher.UserId)
                 .ToListAsync();
 
-            // Active judges university-wide who are NOT authors of this research
+            // Active judges belonging to the SAME college who are NOT authors of this research
             var activeJudges = await _db.Judges
                 .Include(j => j.User)
                 .Include(j => j.Evaluations)
-                .Where(j => j.IsActive && !authorUserIds.Contains(j.UserId))
+                .Where(j => j.IsActive && 
+                            !authorUserIds.Contains(j.UserId) && 
+                            (j.CollegeId == effectiveCollegeId || (j.CollegeId == null && _db.Researchers.Any(r => r.UserId == j.UserId && r.CollegeId == effectiveCollegeId))))
                 .ToListAsync();
 
             // Rank by: (1) Specialty matches Research.AcademicSpecialty, (2) Lowest active evaluations count
@@ -116,6 +120,9 @@ namespace researchProject.Repositories.Implementations
 
         public async Task<List<Judge>> GetAvailableJudgesForCollegeAsync(int researchId)
         {
+            var research = await _db.Researches.FirstOrDefaultAsync(r => r.Id == researchId);
+            var collegeId = research?.CollegeId ?? 0;
+
             var authorUserIds = await _db.ResearcherResearchesBridge
                 .Where(b => b.ResearchId == researchId)
                 .Select(b => b.Researcher.UserId)
@@ -123,7 +130,9 @@ namespace researchProject.Repositories.Implementations
 
             return await _db.Judges
                 .Include(j => j.User)
-                .Where(j => j.IsActive && !authorUserIds.Contains(j.UserId))
+                .Where(j => j.IsActive && 
+                            !authorUserIds.Contains(j.UserId) && 
+                            (collegeId == 0 || j.CollegeId == collegeId || (j.CollegeId == null && _db.Researchers.Any(r => r.UserId == j.UserId && r.CollegeId == collegeId))))
                 .OrderBy(j => j.User.FullName)
                 .ToListAsync();
         }
@@ -313,6 +322,7 @@ namespace researchProject.Repositories.Implementations
                 roleLookup.TryGetValue(u.Id, out var roleName);
                 list.Add(new UserSummaryViewModel
                 {
+                    UserId = u.Id,
                     Email = u.Email ?? string.Empty,
                     FullName = string.IsNullOrWhiteSpace(u.FullName) ? (u.UserName ?? u.Email ?? "") : u.FullName,
                     RoleName = roleName ?? "مستخدم"
@@ -321,8 +331,39 @@ namespace researchProject.Repositories.Implementations
             return list;
         }
 
-        public async Task<(bool Succeeded, string? ErrorMessage, string? RawToken)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId)
+        public async Task<(bool Succeeded, string? ErrorMessage, string? RawToken, int? InvitationId)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId)
         {
+            var cleanEmail = (email ?? "").Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(cleanEmail))
+            {
+                return (false, "البريد الإلكتروني إلزامي.", null, null);
+            }
+
+            var coAdmin = await _db.CollegeCoAdmins.Include(c => c.College).FirstOrDefaultAsync(c => c.UserId == invitedByUserId);
+            var collegeId = coAdmin?.CollegeId;
+
+            // Check if user is already a registered judge
+            var existingJudge = await _db.Judges.Include(j => j.User).FirstOrDefaultAsync(j => j.User.Email == cleanEmail);
+            if (existingJudge != null)
+            {
+                if (existingJudge.CollegeId == null && collegeId.HasValue)
+                {
+                    existingJudge.CollegeId = collegeId;
+                    await _db.SaveChangesAsync();
+                }
+                return (false, $"المستخدم صاحب البريد ({cleanEmail}) مسجل بالفعل كمحكم معتمد بالمنظومة.", null, null);
+            }
+
+            // Invalidate any old pending invitations for this email to prevent duplicate pending entries
+            var pendingInvitations = await _db.JudgeInvitations
+                .Where(i => i.Email == cleanEmail && i.Status == InvitationStatusConstants.Pending)
+                .ToListAsync();
+
+            foreach (var oldInv in pendingInvitations)
+            {
+                oldInv.Status = "Superseded";
+            }
+
             var rawTokenBytes = new byte[32];
             RandomNumberGenerator.Fill(rawTokenBytes);
             var rawToken = Convert.ToHexString(rawTokenBytes).ToLowerInvariant();
@@ -331,9 +372,10 @@ namespace researchProject.Repositories.Implementations
 
             var invitation = new JudgeInvitation
             {
-                Email = email,
+                Email = cleanEmail,
                 Specialty = specialty,
                 InvitedByUserId = invitedByUserId,
+                CollegeId = collegeId,
                 TokenHash = tokenHash,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
@@ -343,7 +385,7 @@ namespace researchProject.Repositories.Implementations
             await _db.JudgeInvitations.AddAsync(invitation);
             await _db.SaveChangesAsync();
 
-            return (true, null, rawToken);
+            return (true, null, rawToken, invitation.Id);
         }
 
         public async Task<List<Research>> GetApprovedResearchesForIssuanceAsync(int collegeId)
@@ -602,6 +644,72 @@ namespace researchProject.Repositories.Implementations
                 AverageJudgingDays = Math.Round(avgJudgingDays, 1),
                 SlaCompliancePercentage = Math.Round(slaCompliance, 1)
             };
+        }
+
+        public async Task<List<ResearchCategory>> GetCategoriesForCollegeAsync(int collegeId)
+        {
+            return await _db.ResearchCategories
+                .Include(c => c.College)
+                .Where(c => c.CollegeId == collegeId)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+        }
+
+        public async Task<ResearchCategory?> GetCategoryWithFieldsAsync(int categoryId, int collegeId)
+        {
+            return await _db.ResearchCategories
+                .Include(c => c.College)
+                .FirstOrDefaultAsync(c => c.Id == categoryId && c.CollegeId == collegeId);
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> SaveCategoryAsync(CategorySaveDto dto, int collegeId)
+        {
+            if (collegeId <= 0)
+            {
+                return (false, "الكلية التابع لها مدير اللجنة غير محددة أو غير صالحة.");
+            }
+
+            if (dto.Id == 0)
+            {
+                var newCat = new ResearchCategory
+                {
+                    CollegeId = collegeId,
+                    Name = dto.Name.Trim(),
+                    Description = dto.Description?.Trim(),
+                    FieldsDefinitionJson = dto.FieldsDefinitionJson ?? "[]",
+                    IsActive = dto.IsActive
+                };
+                await _db.ResearchCategories.AddAsync(newCat);
+            }
+            else
+            {
+                var existing = await _db.ResearchCategories.FirstOrDefaultAsync(c => c.Id == dto.Id && c.CollegeId == collegeId);
+                if (existing == null)
+                {
+                    return (false, "التصنيف غير موجود أو لا يتبع الكلية الخاصة بك.");
+                }
+
+                existing.Name = dto.Name.Trim();
+                existing.Description = dto.Description?.Trim();
+                existing.FieldsDefinitionJson = dto.FieldsDefinitionJson ?? "[]";
+                existing.IsActive = dto.IsActive;
+            }
+
+            await _db.SaveChangesAsync();
+            return (true, null);
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> ToggleCategoryStatusAsync(int categoryId, int collegeId, bool isActive)
+        {
+            var category = await _db.ResearchCategories.FirstOrDefaultAsync(c => c.Id == categoryId && c.CollegeId == collegeId);
+            if (category == null)
+            {
+                return (false, "التصنيف غير موجود أو لا يتبع الكلية الخاصة بك.");
+            }
+
+            category.IsActive = isActive;
+            await _db.SaveChangesAsync();
+            return (true, null);
         }
     }
 }

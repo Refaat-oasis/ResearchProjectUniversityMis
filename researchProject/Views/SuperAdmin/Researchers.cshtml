@@ -1,0 +1,129 @@
+@model List<researchProject.Models.Entities.Researcher>
+@{
+    ViewData["Title"] = "إدارة الباحثين الأكاديميين";
+}
+
+<div class="page-header-card">
+    <div>
+        <h2><i class="bi bi-people-fill text-primary"></i> إدارة حسابات الباحثين الأكاديميين</h2>
+        <p>متابعة الباحثين المسجلين بالجامعة، فحص الكليات والأقسام التابعين لها، وإدارة تفعيل أو تعطيل الحسابات</p>
+    </div>
+    <span class="badge bg-light text-dark fs-6 p-2 border">
+        إجمالي الباحثين: <strong>@(Model?.Count ?? 0)</strong>
+    </span>
+</div>
+
+<div class="liquid-glass-card mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>اسم الباحث</th>
+                    <th>الكلية / القسم</th>
+                    <th>الرقم القومي</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>رقم الهاتف</th>
+                    <th>الأبحاث المقدمة</th>
+                    <th>الحالة</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int index = 1;
+                    foreach (var r in Model)
+                    {
+                        bool isActive = r.IsActive && (r.User?.IsActive ?? true);
+                        int researchCount = r.ResearcherResearchesBridges?.Count ?? 0;
+                        <tr>
+                            <td>@index</td>
+                            <td class="fw-bold text-dark">
+                                <i class="bi bi-person-circle text-secondary me-1"></i>
+                                @r.User?.FullName
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@(r.College?.Name ?? "غير محدد")</div>
+                                <div class="small text-muted">@(string.IsNullOrWhiteSpace(r.Department) ? "-" : r.Department)</div>
+                            </td>
+                            <td class="font-monospace small">@(r.NationalId ?? "-")</td>
+                            <td dir="ltr" class="text-end font-monospace small">@r.User?.Email</td>
+                            <td dir="ltr" class="text-end font-monospace small">@(r.User?.PhoneNumber ?? "-")</td>
+                            <td>
+                                <span class="badge @(researchCount > 0 ? "bg-info-subtle text-info border" : "bg-light text-muted border")">
+                                    @researchCount مقترح
+                                </span>
+                            </td>
+                            <td>
+                                @if (isActive)
+                                {
+                                    <span class="badge bg-success">نشط</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">معطل</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-sm @(isActive ? "btn-outline-danger" : "btn-outline-success")"
+                                        onclick="toggleResearcherStatus(@r.Id, @(!isActive ? "true" : "false"))">
+                                    <i class="bi @(isActive ? "bi-person-x" : "bi-person-check") me-1"></i>
+                                    @(isActive ? "تعطيل" : "تفعيل")
+                                </button>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">لا يوجد باحثون مسجلون حالياً.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        function toggleResearcherStatus(researcherId, isActive) {
+            var actionText = isActive ? 'تفعيل' : 'تعطيل';
+            if (!confirm('هل أنت متأكد من رغبتك في ' + actionText + ' حساب هذا الباحث؟')) {
+                return;
+            }
+
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            $('#partial-loading-spinner').css('display', 'flex');
+
+            $.ajax({
+                url: '/SuperAdmin/ToggleResearcherStatus',
+                type: 'POST',
+                data: {
+                    researcherId: researcherId,
+                    isActive: isActive,
+                    __RequestVerificationToken: token
+                },
+                success: function (res) {
+                    $('#partial-loading-spinner').hide();
+                    if (res && res.success) {
+                        window.showToast('success', res.message || 'تم تحديث حالة الحساب بنجاح.');
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        window.showToast('error', res.message || 'فشل تحديث حالة الحساب.');
+                    }
+                },
+                error: function (xhr) {
+                    $('#partial-loading-spinner').hide();
+                    window.showToast('error', xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.');
+                }
+            });
+        }
+    </script>
+}

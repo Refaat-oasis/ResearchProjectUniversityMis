@@ -224,7 +224,13 @@
     function saveNotes(researchId) {
         var notes = $('#screeningNotesText').val();
         $.post('/CollegeCoAdmin/SaveScreeningNotes', { researchId: researchId, notes: notes }, function (res) {
-            alert(res.message);
+            if (res && res.success) {
+                showToast(res.message, 'success');
+            } else {
+                showToast(res.message || 'تم حفظ الملاحظات.', 'success');
+            }
+        }).fail(function (xhr) {
+            showToast(xhr.responseText || 'حدث خطأ أثناء حفظ الملاحظات.', 'error');
         });
     }
 
@@ -236,7 +242,7 @@
         });
 
         if (selected.length === 0) {
-            alert('يرجى اختيار محكم واحد على الأقل لإسناد المقترح.');
+            showToast('يرجى اختيار محكم واحد على الأقل لإسناد المقترح.', 'error');
             return false;
         }
 
@@ -252,14 +258,16 @@
             },
             success: function (res) {
                 $('#partial-loading-spinner').hide();
-                alert(res.message);
                 if (res.success) {
+                    showToast(res.message, 'success');
                     loadPartial('/CollegeCoAdmin/ScreeningQueuePartial', '#main-content-container', 'screening-queue');
+                } else {
+                    showToast(res.message || 'فشل إسناد المحكمين.', 'error');
                 }
             },
             error: function (xhr) {
                 $('#partial-loading-spinner').hide();
-                alert('فشل إسناد المحكمين: ' + xhr.responseText);
+                showToast('فشل إسناد المحكمين: ' + (xhr.responseText || 'خطأ غير متوقع'), 'error');
             }
         });
 

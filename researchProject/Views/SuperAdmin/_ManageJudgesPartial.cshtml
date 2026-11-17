@@ -174,16 +174,21 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
-                        <input list="partialJudgeUsersList" type="email" name="email" class="form-control font-mono-tabular" required placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." dir="ltr" autocomplete="off" />
-                        <datalist id="partialJudgeUsersList">
-                            @if (ViewBag.SystemUsers != null)
-                            {
-                                foreach (var u in ViewBag.SystemUsers)
+                        <div class="dedicated-dropdown-wrapper">
+                            <input type="email" name="email" id="partialJudgeEmailInput" class="form-control dedicated-dropdown-input font-mono-tabular" required placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." dir="ltr" autocomplete="off" />
+                            <div class="dedicated-dropdown-menu" id="partialJudgeUsersMenu">
+                                @if (ViewBag.SystemUsers != null)
                                 {
-                                    <option value="@u.Email">@u.FullName (@u.RoleName)</option>
+                                    foreach (var u in ViewBag.SystemUsers)
+                                    {
+                                        <div class="dedicated-dropdown-item" data-value="@u.Email" data-label="@u.Email">
+                                            <div class="fw-bold">@u.FullName</div>
+                                            <small class="text-muted">@u.Email (@u.RoleName)</small>
+                                        </div>
+                                    }
                                 }
-                            }
-                        </datalist>
+                            </div>
+                        </div>
                         <div class="form-text small">يمكنك اختيار مستخدم مسجل بالنظام أو كتابة أي بريد جديد وسيتم إرسال رابط الدعوة الرسمية إليه مباشرة.</div>
                     </div>
                     <div class="mb-3">
@@ -201,29 +206,37 @@
 </div>
 
 <script>
+    if (typeof initDedicatedDropdowns === 'function') {
+        initDedicatedDropdowns();
+    }
+
     function onJudgeInvited(res) {
         $('#inviteJudgeModal').modal('hide');
         $('.modal-backdrop').remove();
-        alert(res.message);
+        showToast(res.message, res.success ? 'success' : 'error');
         loadPartial('/SuperAdmin/ManageJudgesPartial', '#main-content-container', 'judges');
     }
 
     function toggleJudgeStatus(id, isActive) {
         $.post('/SuperAdmin/ToggleJudgeStatus', { judgeId: id, isActive: isActive }, function (res) {
-            alert(res.message);
+            showToast(res.message, res.success ? 'success' : 'error');
             if (res.success) {
                 loadPartial('/SuperAdmin/ManageJudgesPartial', '#main-content-container', 'judges');
             }
+        }).fail(function (xhr) {
+            showToast(xhr.responseText || 'حدث خطأ أثناء تغيير الحالة.', 'error');
         });
     }
 
     function revokeInvitation(id) {
         if (!confirm('هل أنت متأكد من رغبتك في إلغاء هذه الدعوة؟')) return;
         $.post('/SuperAdmin/RevokeInvitation', { invitationId: id }, function (res) {
-            alert(res.message);
+            showToast(res.message, res.success ? 'success' : 'error');
             if (res.success) {
                 loadPartial('/SuperAdmin/ManageJudgesPartial', '#main-content-container', 'judges');
             }
+        }).fail(function (xhr) {
+            showToast(xhr.responseText || 'حدث خطأ أثناء إلغاء الدعوة.', 'error');
         });
     }
 </script>

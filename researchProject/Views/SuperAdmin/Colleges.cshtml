@@ -267,14 +267,16 @@
                     collegeId: parseInt(collegeId)
                 },
                 success: function (res) {
-                    alert(res.message);
-                    if (res.success) {
+                    if (res && res.success) {
+                        showToast(res.message, 'success');
                         cancelEditDept();
                         loadDepartmentsList(collegeId);
+                    } else {
+                        showToast(res.message || 'حدث خطأ أثناء حفظ القسم.', 'error');
                     }
                 },
                 error: function (xhr) {
-                    alert(xhr.responseText || 'حدث خطأ.');
+                    showToast(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.', 'error');
                 }
             });
         });
@@ -290,13 +292,15 @@
                     id: id
                 },
                 success: function (res) {
-                    alert(res.message);
-                    if (res.success) {
+                    if (res && res.success) {
+                        showToast(res.message, 'success');
                         loadDepartmentsList(currentCollegeId);
+                    } else {
+                        showToast(res.message || 'حدث خطأ أثناء حذف القسم.', 'error');
                     }
                 },
                 error: function (xhr) {
-                    alert(xhr.responseText || 'حدث خطأ.');
+                    showToast(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.', 'error');
                 }
             });
         }
@@ -314,14 +318,18 @@
                 data: data,
                 success: function (res) {
                     $('#partial-loading-spinner').hide();
-                    alert(res.message);
-                    if (res.success) {
-                        window.location.reload();
+                    if (res && res.success) {
+                        showToast(res.message, 'success');
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1200);
+                    } else {
+                        showToast(res.message || 'حدث خطأ.', 'error');
                     }
                 },
                 error: function (xhr) {
                     $('#partial-loading-spinner').hide();
-                    alert(xhr.responseText || 'حدث خطأ.');
+                    showToast(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.', 'error');
                 }
             });
         });

@@ -23,6 +23,9 @@ namespace researchProject.Models.Entities
         [Display(Name = "تعريف الحقول الإضافية")]
         public string? FieldsDefinitionJson { get; set; }
 
+        [Display(Name = "حالة التفعيل")]
+        public bool IsActive { get; set; } = true;
+
         // Navigation properties
         public virtual College College { get; set; } = null!;
         public virtual ICollection<Research> Researches { get; set; } = new List<Research>();

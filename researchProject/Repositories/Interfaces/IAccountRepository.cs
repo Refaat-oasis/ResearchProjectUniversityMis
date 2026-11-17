@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Models.ViewModels;
 
 namespace researchProject.Repositories.Interfaces
 {
@@ -32,5 +34,11 @@ namespace researchProject.Repositories.Interfaces
         // User Profile & Judge Dual-Role Promotion
         Task<researchProject.Models.ViewModels.UserProfileViewModel?> GetUserProfileAsync(string userId);
         Task<(bool Succeeded, string? ErrorMessage)> AddResearcherRoleToJudgeAsync(string userId, JudgeToResearcherDto dto);
+
+        // Account cleanup & profile management
+        Task<int> CleanupUnconfirmedAccountsAsync(TimeSpan? olderThan = null);
+        Task<ProfileViewModel?> GetProfileViewModelAsync(string userId);
+        Task<(bool Succeeded, string? ErrorMessage)> UpdateProfileAsync(string userId, UpdateProfileDto dto);
+        Task<(bool Succeeded, string? ErrorMessage)> ChangePasswordAsync(string userId, ChangePasswordDto dto);
     }
 }

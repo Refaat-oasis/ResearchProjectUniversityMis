@@ -109,18 +109,24 @@ namespace researchProject.Services.Implementations
                 return (false, false, null, string.Empty, string.Empty);
             }
 
+            // Stream file from physical storage in wwwroot/uploads/attachments/
             var subFolder = $"Research_{attachment.ResearchId}";
             var stream = await _fileStorage.GetFileStreamAsync(attachment.StoredFileName, subFolder);
+
+            // Fallback check in Research_0 folder for legacy uploads
+            if (stream == null)
+            {
+                stream = await _fileStorage.GetFileStreamAsync(attachment.StoredFileName, "Research_0");
+            }
 
             if (stream == null)
             {
                 return (true, false, null, string.Empty, string.Empty);
             }
 
-            if (!_contentTypeProvider.TryGetContentType(attachment.OriginalFileName, out var contentType))
-            {
-                contentType = "application/octet-stream";
-            }
+            var contentType = !string.IsNullOrWhiteSpace(attachment.ContentType)
+                ? attachment.ContentType
+                : (_contentTypeProvider.TryGetContentType(attachment.OriginalFileName, out var cType) ? cType : "application/octet-stream");
 
             return (true, true, stream, contentType, attachment.OriginalFileName);
         }

@@ -16,26 +16,35 @@
                 <form id="coAdminInviteForm" asp-action="InviteJudge" method="post">
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
-                        <div class="custom-datalist-wrapper">
-                            <i class="bi bi-search datalist-search-icon"></i>
-                            <input list="systemUsersList" type="email" name="email"
-                                   class="form-control custom-datalist-input font-mono-tabular"
-                                   placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..."
-                                   required dir="ltr" autocomplete="off" />
-                            <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
-                                <i class="bi bi-x-circle-fill"></i>
-                            </button>
-                        </div>
-                        <datalist id="systemUsersList">
-                            @if (ViewBag.SystemUsers != null)
-                            {
-                                foreach (var u in ViewBag.SystemUsers)
+                        <div class="dedicated-dropdown-wrapper" data-allow-custom="true">
+                            <div class="dedicated-dropdown-input-group">
+                                <i class="bi bi-envelope dedicated-dropdown-icon-right"></i>
+                                <input type="email" name="email" id="visibleInviteEmail" class="form-control dedicated-dropdown-input font-mono-tabular" 
+                                       placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." 
+                                       required dir="ltr" autocomplete="off" />
+                                <div class="dedicated-dropdown-actions-left">
+                                    <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                    <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                        <i class="bi bi-chevron-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="dedicated-dropdown-menu">
+                                @if (ViewBag.SystemUsers != null)
                                 {
-                                    <option value="@u.Email">@u.FullName (@u.RoleName)</option>
+                                    foreach (var u in ViewBag.SystemUsers)
+                                    {
+                                        <div class="dedicated-dropdown-item" data-id="@u.Email" data-name="@u.Email" data-value="@u.Email" data-label="@u.Email">
+                                            <span>@u.FullName (@u.Email)</span>
+                                            <span class="dedicated-dropdown-item-badge">@u.RoleName</span>
+                                        </div>
+                                    }
                                 }
-                            }
-                        </datalist>
-                        <div class="custom-datalist-hint">
+                            </div>
+                        </div>
+                        <div class="form-text small mt-1">
                             <i class="bi bi-info-circle me-1"></i> يمكنك اختيار مستخدم مسجل بالنظام أو كتابة أي بريد جديد وسيتم إرسال رابط الدعوة الرسمية إليه مباشرة.
                         </div>
                     </div>
@@ -64,6 +73,13 @@
         $('#coAdminInviteForm').on('submit', function (e) {
             e.preventDefault();
             const form = this;
+            const emailInput = $(form).find('input[name="email"]');
+            const emailVal = (emailInput.val() || '').trim();
+            if (!emailVal) {
+                window.showToast('error', 'البريد الإلكتروني إلزامي.');
+                return false;
+            }
+
             const data = $(form).serialize();
 
             $('#partial-loading-spinner').css('display', 'flex');
@@ -74,14 +90,23 @@
                 data: data,
                 success: function (res) {
                     $('#partial-loading-spinner').hide();
-                    alert(res.message);
-                    if (res.success) {
+                    if (res && res.success) {
+                        window.showToast('success', res.message || 'تم إرسال الدعوة بنجاح.');
                         form.reset();
+                    } else {
+                        window.showToast('error', (res && res.message) ? res.message : 'فشل إرسال الدعوة.');
                     }
                 },
                 error: function (xhr) {
                     $('#partial-loading-spinner').hide();
-                    alert(xhr.responseText || 'حدث خطأ أثناء إرسال الدعوة.');
+                    var msg = 'حدث خطأ أثناء إرسال الدعوة.';
+                    try {
+                        var json = JSON.parse(xhr.responseText);
+                        if (json && json.message) msg = json.message;
+                    } catch (e) {
+                        if (xhr.responseText) msg = xhr.responseText;
+                    }
+                    window.showToast('error', msg);
                 }
             });
         });

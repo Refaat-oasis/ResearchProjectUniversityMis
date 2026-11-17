@@ -99,15 +99,15 @@
             success: function (res) {
                 $('#partial-loading-spinner').hide();
                 if (res.success) {
-                    alert(res.message + '\nالرقم المسلسل: ' + res.serialNumber);
+                    showToast(res.message + ' (الرقم المسلسل: ' + res.serialNumber + ')', 'success');
                     loadPartial('/CollegeCoAdmin/FinalApprovalPartial', '#main-content-container', 'finalApproval');
                 } else {
-                    alert(res.message);
+                    showToast(res.message || 'تعذر إصدار الشهادة.', 'error');
                 }
             },
             error: function (xhr) {
                 $('#partial-loading-spinner').hide();
-                alert(xhr.responseText || 'حدث خطأ أثناء إصدار الشهادة.');
+                showToast(xhr.responseText || 'حدث خطأ أثناء إصدار الشهادة.', 'error');
             }
         });
     }

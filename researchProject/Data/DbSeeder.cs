@@ -354,6 +354,7 @@ namespace researchProject.Data
                     AttachmentType = AttachmentTypeConstants.ResearchProposal,
                     OriginalFileName = "خطة_البحث_المفصلة.pdf",
                     StoredFileName = "r1_proposal.pdf",
+                    FilePath = "uploads/attachments/Research_1/r1_proposal.pdf",
                     FileSize = 1024 * 350,
                     UploadedAt = r1.SubmittedAt
                 });
@@ -363,6 +364,7 @@ namespace researchProject.Data
                     AttachmentType = AttachmentTypeConstants.InformedConsent,
                     OriginalFileName = "نموذج_الإقرار_المستنير_للمرضى.pdf",
                     StoredFileName = "r1_consent.pdf",
+                    FilePath = "uploads/attachments/Research_1/r1_consent.pdf",
                     FileSize = 1024 * 120,
                     UploadedAt = r1.SubmittedAt
                 });

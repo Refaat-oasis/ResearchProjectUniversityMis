@@ -77,6 +77,11 @@
                     </a>
                 </li>
                 <li class="sidebar-item">
+                    <a asp-controller="SuperAdmin" asp-action="Researchers" class="@(IsActive("SuperAdmin", "Researchers") ? "active" : "")">
+                        <i class="bi bi-people-fill"></i> الباحثون المسجلون والحسابات
+                    </a>
+                </li>
+                <li class="sidebar-item">
                     <a asp-controller="SuperAdmin" asp-action="Judges" class="@(IsActive("SuperAdmin", "Judges") ? "active" : "")">
                         <i class="bi bi-mortarboard"></i> هيئة المحكمين والدعوات
                     </a>
@@ -93,7 +98,12 @@
                 </li>
                 <li class="sidebar-item">
                     <a asp-controller="SuperAdmin" asp-action="Certificates" class="@(IsActive("SuperAdmin", "Certificates") ? "active" : "")">
-                        <i class="bi bi-archive"></i> أرشيف الشهادات الأخلاقية
+                        <i class="bi bi-archive"></i> الشهادات المستخرجة و المعتمدة
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="SuperAdmin" asp-action="AuditLogs" class="@(IsActive("SuperAdmin", "AuditLogs") ? "active" : "")">
+                        <i class="bi bi-shield-check"></i> سجل رقابة العمليات (Audit Logs)
                     </a>
                 </li>
             </ul>
@@ -121,6 +131,11 @@
                 <li class="sidebar-item">
                     <a asp-controller="CollegeCoAdmin" asp-action="InviteJudge" class="@(IsActive("CollegeCoAdmin", "InviteJudge") ? "active" : "")">
                         <i class="bi bi-envelope-plus"></i> دعوة محكم علمي
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="CollegeCoAdmin" asp-action="Categories" class="@(IsActive("CollegeCoAdmin", "Categories") ? "active" : "")">
+                        <i class="bi bi-sliders text-primary"></i> تصنيفات أبحاث وحقول الكلية
                     </a>
                 </li>
                 <li class="sidebar-item">
@@ -177,11 +192,11 @@
     }
 
     <!-- 5. Profile & Account Settings -->
-    <div class="sidebar-footer-section mt-auto">
+    <div class="sidebar-footer-section mt-auto pt-2 border-top">
         <ul class="sidebar-menu">
             <li class="sidebar-item">
                 <a asp-controller="Account" asp-action="Profile" class="@(IsActive("Account", "Profile") ? "active" : "")">
-                    <i class="bi bi-person-gear"></i> الملف الشخصي والحساب
+                    <i class="bi bi-person-gear"></i> الملف الشخصي والأمان
                 </a>
             </li>
         </ul>

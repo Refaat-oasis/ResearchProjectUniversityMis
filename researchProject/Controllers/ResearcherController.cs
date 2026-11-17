@@ -122,19 +122,52 @@ namespace researchProject.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateResearch(ResearchCreateDto dto)
         {
-            // Parse dynamic field answers from form data
-            foreach (var key in Request.Form.Keys)
+            // Parse dynamic field answers from form data if form is available
+            if (Request?.HasFormContentType == true && Request.Form != null)
             {
-                if (key.StartsWith("DynamicFields["))
+                foreach (var key in Request.Form.Keys)
                 {
-                    var fieldName = key.Replace("DynamicFields[", "").Replace("]", "");
-                    dto.DynamicAnswers[fieldName] = Request.Form[key].ToString();
+                    if (key.StartsWith("DynamicFields["))
+                    {
+                        var fieldName = key.Replace("DynamicFields[", "").Replace("]", "");
+                        dto.DynamicAnswers[fieldName] = Request.Form[key].ToString();
+                    }
                 }
+            }
+
+            if (dto.CategoryId <= 0)
+            {
+                ModelState.AddModelError(nameof(dto.CategoryId), "يرجى اختيار نوع وتصنيف البحث من القائمة المتاحة.");
+            }
+
+            if (dto.InformedConsentFile == null || dto.InformedConsentFile.Length == 0)
+            {
+                ModelState.AddModelError(nameof(dto.InformedConsentFile), "ملف وثيقة الموافقة المستنيرة (Informed Consent) فارغ أو لم يتم إرفاقه.");
+            }
+            if (dto.ResearchToolsFile == null || dto.ResearchToolsFile.Length == 0)
+            {
+                ModelState.AddModelError(nameof(dto.ResearchToolsFile), "ملف أدوات وأجهزة البحث (Research Tools) فارغ أو لم يتم إرفاقه.");
+            }
+            if (dto.ResearchProposalFile == null || dto.ResearchProposalFile.Length == 0)
+            {
+                ModelState.AddModelError(nameof(dto.ResearchProposalFile), "ملف خطة المقترح البحثي الكاملة (Research Proposal) فارغ أو لم يتم إرفاقه.");
+            }
+            if (dto.AdditionalDocumentFile != null && dto.AdditionalDocumentFile.Length == 0)
+            {
+                ModelState.AddModelError(nameof(dto.AdditionalDocumentFile), "الملف الإضافي المرفق فارغ (حجمه 0 بايت).");
             }
 
             if (!ModelState.IsValid)
             {
-                return Json(new { success = false, message = "يرجى تعبئة جميع الحقول ورفع المستندات الإلزامية المطلوبة." });
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .Where(m => !string.IsNullOrWhiteSpace(m))
+                    .ToList();
+                var errorMsg = errors.Any() 
+                    ? string.Join(" | ", errors) 
+                    : "يرجى تعبئة جميع الحقول ورفع المستندات الإلزامية المطلوبة.";
+                return Json(new { success = false, message = errorMsg });
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";

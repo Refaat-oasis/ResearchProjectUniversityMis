@@ -1,0 +1,9 @@
+@model List<researchProject.Models.Entities.ResearchCategory>
+@{
+    ViewData["Title"] = "تصنيفات الأبحاث والحقول التفاعلية للكلية";
+}
+
+<div id="main-content-container">
+    @await Html.PartialAsync("_ManageCategoriesPartial", Model)
+</div>
+

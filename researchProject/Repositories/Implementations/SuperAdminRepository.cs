@@ -192,6 +192,15 @@ namespace researchProject.Repositories.Implementations
             return (true, null);
         }
 
+        public async Task<(bool Succeeded, string? ErrorMessage)> ToggleCategoryStatusAsync(int categoryId, bool isActive)
+        {
+            var cat = await _db.ResearchCategories.FindAsync(categoryId);
+            if (cat == null) return (false, "التصنيف غير موجود.");
+            cat.IsActive = isActive;
+            await _db.SaveChangesAsync();
+            return (true, null);
+        }
+
         public async Task<List<CollegeCoAdmin>> GetAllCoAdminsAsync()
         {
             return await _db.CollegeCoAdmins
@@ -201,16 +210,16 @@ namespace researchProject.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<(bool Succeeded, string? ErrorMessage, string? TempPassword)> CreateCoAdminNewUserAsync(string email, string fullName, int collegeId)
+        public async Task<(bool Succeeded, string? ErrorMessage, string? TempPassword, string? UserId)> CreateCoAdminNewUserAsync(string email, string fullName, int collegeId)
         {
             if (await _userManager.FindByEmailAsync(email) != null)
             {
-                return (false, "البريد الإلكتروني مسجل بالفعل. يمكنك إضافة دور مدير الكلية له مباشرة.", null);
+                return (false, "البريد الإلكتروني مسجل بالفعل. يمكنك إضافة دور مدير الكلية له مباشرة.", null, null);
             }
 
             if (!await _db.Colleges.AnyAsync(c => c.Id == collegeId))
             {
-                return (false, "الكلية المحددة غير موجودة.", null);
+                return (false, "الكلية المحددة غير موجودة.", null, null);
             }
 
             var tempPassword = $"CoAdmin@{Guid.NewGuid().ToString("N")[..8]}!2026";
@@ -228,7 +237,7 @@ namespace researchProject.Repositories.Implementations
                 var createRes = await _userManager.CreateAsync(user, tempPassword);
                 if (!createRes.Succeeded)
                 {
-                    return (false, string.Join("، ", createRes.Errors.Select(e => e.Description)), null);
+                    return (false, string.Join("، ", createRes.Errors.Select(e => e.Description)), null, null);
                 }
 
                 if (!await _roleManager.RoleExistsAsync(RoleConstants.CollegeCoAdmin))
@@ -247,15 +256,12 @@ namespace researchProject.Repositories.Implementations
 
                 await transaction.CommitAsync();
 
-                // Send temp password via email
-                await _emailSender.SendTemporaryPasswordAsync(email, tempPassword);
-
-                return (true, null, tempPassword);
+                return (true, null, tempPassword, user.Id);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return (false, $"فشل إنشاء الحساب: {ex.Message}", null);
+                return (false, $"فشل إنشاء الحساب: {ex.Message}", null, null);
             }
         }
 
@@ -310,6 +316,30 @@ namespace researchProject.Repositories.Implementations
             return (true, null);
         }
 
+        public async Task<(bool Succeeded, string? ErrorMessage)> ReassignCoAdminCollegeAsync(int coAdminId, int newCollegeId)
+        {
+            var coAdmin = await _db.CollegeCoAdmins.FindAsync(coAdminId);
+            if (coAdmin == null) return (false, "مدير الكلية غير موجود.");
+
+            var college = await _db.Colleges.FindAsync(newCollegeId);
+            if (college == null) return (false, "الكلية المحددة غير موجودة.");
+
+            coAdmin.CollegeId = newCollegeId;
+            await _db.SaveChangesAsync();
+            return (true, null);
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> SetCoAdminActiveStatusAsync(int coAdminId, bool isActive)
+        {
+            var coAdmin = await _db.CollegeCoAdmins.Include(a => a.User).FirstOrDefaultAsync(a => a.Id == coAdminId);
+            if (coAdmin == null) return (false, "مدير الكلية غير موجود.");
+
+            coAdmin.IsActive = isActive;
+            await _db.SaveChangesAsync();
+
+            return await SetUserActiveStatusAsync(coAdmin.UserId, isActive);
+        }
+
         public async Task<List<Judge>> GetAllJudgesAsync()
         {
             return await _db.Judges
@@ -349,6 +379,7 @@ namespace researchProject.Repositories.Implementations
                 roleLookup.TryGetValue(u.Id, out var roleName);
                 list.Add(new UserSummaryViewModel
                 {
+                    UserId = u.Id,
                     Email = u.Email ?? string.Empty,
                     FullName = string.IsNullOrWhiteSpace(u.FullName) ? (u.UserName ?? u.Email ?? "") : u.FullName,
                     RoleName = roleName ?? "مستخدم"
@@ -357,8 +388,36 @@ namespace researchProject.Repositories.Implementations
             return list;
         }
 
-        public async Task<(bool Succeeded, string? ErrorMessage, string? RawToken)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId)
+        public async Task<(bool Succeeded, string? ErrorMessage, string? RawToken, int? InvitationId)> InviteJudgeAsync(string email, string? specialty, string invitedByUserId, int? collegeId = null)
         {
+            var cleanEmail = (email ?? "").Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(cleanEmail))
+            {
+                return (false, "البريد الإلكتروني إلزامي.", null, null);
+            }
+
+            // Check if user is already a registered judge
+            var existingJudge = await _db.Judges.Include(j => j.User).FirstOrDefaultAsync(j => j.User.Email == cleanEmail);
+            if (existingJudge != null)
+            {
+                if (existingJudge.CollegeId == null && collegeId.HasValue)
+                {
+                    existingJudge.CollegeId = collegeId;
+                    await _db.SaveChangesAsync();
+                }
+                return (false, $"المستخدم صاحب البريد ({cleanEmail}) مسجل بالفعل كمحكم معتمد بالمنظومة.", null, null);
+            }
+
+            // Supersede any older pending invitations for this email
+            var pendingInvitations = await _db.JudgeInvitations
+                .Where(i => i.Email == cleanEmail && i.Status == InvitationStatusConstants.Pending)
+                .ToListAsync();
+
+            foreach (var oldInv in pendingInvitations)
+            {
+                oldInv.Status = "Superseded";
+            }
+
             var rawTokenBytes = new byte[32];
             RandomNumberGenerator.Fill(rawTokenBytes);
             var rawToken = Convert.ToHexString(rawTokenBytes).ToLowerInvariant();
@@ -367,9 +426,10 @@ namespace researchProject.Repositories.Implementations
 
             var invitation = new JudgeInvitation
             {
-                Email = email,
+                Email = cleanEmail,
                 Specialty = specialty,
                 InvitedByUserId = invitedByUserId,
+                CollegeId = collegeId,
                 TokenHash = tokenHash,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
@@ -379,16 +439,61 @@ namespace researchProject.Repositories.Implementations
             await _db.JudgeInvitations.AddAsync(invitation);
             await _db.SaveChangesAsync();
 
-            return (true, null, rawToken);
+            return (true, null, rawToken, invitation.Id);
         }
 
         public async Task<(bool Succeeded, string? ErrorMessage)> SetJudgeActiveStatusAsync(int judgeId, bool isActive)
         {
-            var judge = await _db.Judges.FindAsync(judgeId);
+            var judge = await _db.Judges.Include(j => j.User).FirstOrDefaultAsync(j => j.Id == judgeId);
             if (judge == null) return (false, "المحكم غير موجود.");
 
             judge.IsActive = isActive;
             await _db.SaveChangesAsync();
+
+            if (!string.IsNullOrEmpty(judge.UserId))
+            {
+                await SetUserActiveStatusAsync(judge.UserId, isActive);
+            }
+            return (true, null);
+        }
+
+        public async Task<List<Researcher>> GetAllResearchersAsync()
+        {
+            return await _db.Researchers
+                .Include(r => r.User)
+                .Include(r => r.College)
+                .Include(r => r.ResearcherResearchesBridges)
+                .OrderBy(r => r.User.FullName)
+                .ToListAsync();
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> SetResearcherActiveStatusAsync(int researcherId, bool isActive)
+        {
+            var researcher = await _db.Researchers.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == researcherId);
+            if (researcher == null) return (false, "الباحث غير موجود.");
+
+            researcher.IsActive = isActive;
+            await _db.SaveChangesAsync();
+
+            return await SetUserActiveStatusAsync(researcher.UserId, isActive);
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> SetUserActiveStatusAsync(string userId, bool isActive)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return (false, "المستخدم غير موجود.");
+
+            user.IsActive = isActive;
+            user.LockoutEnabled = !isActive;
+            user.LockoutEnd = isActive ? null : DateTimeOffset.MaxValue;
+
+            var res = await _userManager.UpdateAsync(user);
+            if (!res.Succeeded)
+            {
+                return (false, string.Join("، ", res.Errors.Select(e => e.Description)));
+            }
+
+            await _userManager.UpdateSecurityStampAsync(user);
             return (true, null);
         }
 
@@ -556,6 +661,96 @@ namespace researchProject.Repositories.Implementations
                 SlaCompliancePercentage = Math.Round(slaCompliance, 1),
                 ResearchesByCollege = byCollege,
                 ResearchesByCategory = byCategory
+            };
+        }
+
+        public async Task<AuditLogListViewModel> GetAuditLogsAsync(
+            int page = 1,
+            int pageSize = 25,
+            string? searchTerm = null,
+            string? roleFilter = null,
+            bool? successFilter = null,
+            DateTime? fromDate = null,
+            DateTime? toDate = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 5) pageSize = 25;
+
+            var query = _db.AuditLogs.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                query = query.Where(l =>
+                    (l.UserEmail != null && l.UserEmail.Contains(term)) ||
+                    (l.UserName != null && l.UserName.Contains(term)) ||
+                    (l.ControllerName != null && l.ControllerName.Contains(term)) ||
+                    (l.ActionName != null && l.ActionName.Contains(term)) ||
+                    (l.Description != null && l.Description.Contains(term)) ||
+                    (l.Path != null && l.Path.Contains(term)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(roleFilter))
+            {
+                query = query.Where(l => l.UserRole == roleFilter);
+            }
+
+            if (successFilter.HasValue)
+            {
+                query = query.Where(l => l.IsSuccess == successFilter.Value);
+            }
+
+            if (fromDate.HasValue)
+            {
+                query = query.Where(l => l.Timestamp >= fromDate.Value.Date);
+            }
+
+            if (toDate.HasValue)
+            {
+                var endDay = toDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(l => l.Timestamp <= endDay);
+            }
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            if (totalPages < 1) totalPages = 1;
+
+            var logs = await query
+                .OrderByDescending(l => l.Timestamp)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(l => new AuditLogViewModel
+                {
+                    Id = l.Id,
+                    UserId = l.UserId,
+                    UserEmail = l.UserEmail,
+                    UserName = l.UserName,
+                    UserRole = l.UserRole,
+                    ControllerName = l.ControllerName,
+                    ActionName = l.ActionName,
+                    HttpMethod = l.HttpMethod,
+                    Path = l.Path,
+                    IpAddress = l.IpAddress,
+                    StatusCode = l.StatusCode,
+                    IsSuccess = l.IsSuccess,
+                    Description = l.Description,
+                    ExceptionDetails = l.ExceptionDetails,
+                    ExecutionDurationMs = l.ExecutionDurationMs,
+                    Timestamp = l.Timestamp
+                })
+                .ToListAsync();
+
+            return new AuditLogListViewModel
+            {
+                Logs = logs,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                TotalCount = totalCount,
+                SearchTerm = searchTerm,
+                RoleFilter = roleFilter,
+                SuccessFilter = successFilter,
+                FromDate = fromDate,
+                ToDate = toDate
             };
         }
     }

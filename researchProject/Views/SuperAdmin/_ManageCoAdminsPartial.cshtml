@@ -6,9 +6,9 @@
             <h4 class="card-title-custom">
                 <i class="bi bi-person-badge"></i> إدارة مديري اللجان الفرعية بالكليات (College Co-Admins)
             </h4>
-            <div class="small" style="color: var(--ink-muted);">تعيين مديري اللجان لكل كلية لإدارة الفحص الشكلي وإسناد المحكمين والاعتماد وإصدار الشهادات</div>
+            <div class="small" style="color: var(--ink-muted);">تعيين مديري اللجان لكل كلية، وإعادة تعيين الكليات المسندة، وإدارة تفعيل أو تعطيل حساباتهم</div>
         </div>
-        <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCoAdminModal">
+        <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#partialAddCoAdminModal">
             <i class="bi bi-person-plus-fill me-1"></i> تعيين مدير لجنة جديد
         </button>
     </div>
@@ -21,7 +21,8 @@
                     <th>الاسم الكامل</th>
                     <th>البريد الإلكتروني</th>
                     <th>الكلية المسندة</th>
-                    <th>تاريخ التسجيل</th>
+                    <th>الحالة</th>
+                    <th>الإجراءات</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,12 +31,43 @@
                     int index = 1;
                     foreach (var a in Model)
                     {
+                        bool isActive = a.IsActive && (a.User?.IsActive ?? true);
                         <tr>
                             <td class="font-mono-tabular">@index</td>
-                            <td class="fw-bold" style="color: var(--ink-primary);">@a.User?.FullName</td>
+                            <td class="fw-bold text-dark">
+                                <i class="bi bi-person-badge-fill text-primary me-1"></i>
+                                @a.User?.FullName
+                            </td>
                             <td dir="ltr" class="text-end font-mono-tabular small">@a.User?.Email</td>
-                            <td><span class="status-stamp status-assigned">@a.College?.Name</span></td>
-                            <td class="font-mono-tabular small" style="color: var(--ink-muted);">@DateTime.UtcNow.ToString("yyyy/MM/dd")</td>
+                            <td>
+                                <span class="status-stamp status-assigned">
+                                    <i class="bi bi-building me-1"></i>@(a.College?.Name ?? "غير محدد")
+                                </span>
+                            </td>
+                            <td>
+                                @if (isActive)
+                                {
+                                    <span class="status-stamp status-approved">نشط</span>
+                                }
+                                else
+                                {
+                                    <span class="status-stamp status-inactive">معطل</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm @(isActive ? "btn-outline-danger" : "btn-outline-success")"
+                                            onclick="toggleCoAdminStatusPartial(@a.Id, @(!isActive ? "true" : "false"))">
+                                        <i class="bi @(isActive ? "bi-person-x" : "bi-person-check") me-1"></i>
+                                        @(isActive ? "تعطيل" : "تفعيل")
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary ms-1"
+                                            onclick="openReassignModalPartial(@a.Id, @a.CollegeId, '@a.User?.FullName', '@(a.College?.Name ?? "")')">
+                                        <i class="bi bi-arrow-left-right me-1"></i>
+                                        تغيير الكلية
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                         index++;
                     }
@@ -43,7 +75,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-center py-4" style="color: var(--ink-muted);">لا يوجد مديرو لجان مسجلون حالياً.</td>
+                        <td colspan="6" class="text-center py-4" style="color: var(--ink-muted);">لا يوجد مديرو لجان مسجلون حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -51,56 +83,202 @@
     </div>
 </div>
 
-<!-- Modal Add Co-Admin -->
-<div class="modal fade" id="addCoAdminModal" tabindex="-1" aria-labelledby="addCoAdminModalLabel" aria-hidden="true">
+<!-- Modal Add Co-Admin (Tabs: New User vs Existing User) -->
+<div class="modal fade" id="partialAddCoAdminModal" tabindex="-1" aria-labelledby="partialAddCoAdminModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="partialAddCoAdminModalLabel">
+                    <i class="bi bi-person-plus me-2 text-primary"></i>تعيين مدير لجنة فرعية لكلية
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <ul class="nav nav-tabs nav-fill border-bottom px-3 pt-2" id="partialCoAdminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold" id="p-new-user-tab" data-bs-toggle="tab" data-bs-target="#pNewUserTabPane" type="button" role="tab">
+                        <i class="bi bi-person-plus-fill me-1"></i> إنشاء حساب جديد
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="p-existing-user-tab" data-bs-toggle="tab" data-bs-target="#pExistingUserTabPane" type="button" role="tab">
+                        <i class="bi bi-person-check-fill me-1"></i> اختيار مستخدم مسجل بالنظام
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-3" id="partialCoAdminTabsContent">
+                <!-- Tab 1: New User -->
+                <div class="tab-pane fade show active" id="pNewUserTabPane" role="tabpanel">
+                    <form id="partialCreateCoAdminForm" action="/SuperAdmin/CreateCoAdminNewUser" method="post" onsubmit="return handleCoAdminSubmitAjax(this);">
+                        <div class="mb-3">
+                            <label class="form-label">الكلية المسندة <span class="text-danger">*</span></label>
+                            <input type="hidden" name="collegeId" id="pNewCoAdminCollegeId" required />
+                            <div class="dedicated-dropdown-wrapper" data-target-input="#pNewCoAdminCollegeId">
+                                <div class="dedicated-dropdown-input-group">
+                                    <i class="bi bi-building dedicated-dropdown-icon-right"></i>
+                                    <input type="text" class="dedicated-dropdown-input" placeholder="ابحث أو اختر الكلية..." required autocomplete="off" />
+                                    <div class="dedicated-dropdown-actions-left">
+                                        <button type="button" class="dedicated-dropdown-clear-btn" title="مسح"><i class="bi bi-x-lg"></i></button>
+                                        <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة"><i class="bi bi-chevron-down"></i></button>
+                                    </div>
+                                </div>
+                                <div class="dedicated-dropdown-menu">
+                                    @if (ViewBag.Colleges != null)
+                                    {
+                                        foreach (var c in ViewBag.Colleges)
+                                        {
+                                            <div class="dedicated-dropdown-item" data-value="@c.Id" data-label="@c.Name">
+                                                <div class="fw-bold">@c.Name</div>
+                                                <small class="text-muted">@c.Code</small>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
+                            <input type="text" name="fullName" class="form-control" required placeholder="مثال: أ.د. أحمد محمد علي" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">البريد الإلكتروني المؤسسي <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" required placeholder="coadmin@university.edu.eg" dir="ltr" />
+                            <div class="form-text small">سيقوم النظام بإنشاء كلمة مرور مؤقتة وإرسالها إلى البريد مباشرة.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">إلغاء</button>
+                            <button type="submit" class="btn btn-primary-custom">إنشاء الحساب وتعيين الدور</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab 2: Existing User -->
+                <div class="tab-pane fade" id="pExistingUserTabPane" role="tabpanel">
+                    <form id="partialAddExistingCoAdminForm" action="/SuperAdmin/AddCoAdminExistingUser" method="post" onsubmit="return handleCoAdminSubmitAjax(this);">
+                        <div class="mb-3">
+                            <label class="form-label">المستخدم المسجل بالنظام <span class="text-danger">*</span></label>
+                            <input type="hidden" name="userId" id="pExistingUserId" required />
+                            <div class="dedicated-dropdown-wrapper" data-target-input="#pExistingUserId">
+                                <div class="dedicated-dropdown-input-group">
+                                    <i class="bi bi-person dedicated-dropdown-icon-right"></i>
+                                    <input type="text" class="dedicated-dropdown-input" placeholder="ابحث باسم المستخدم أو البريد..." required autocomplete="off" />
+                                    <div class="dedicated-dropdown-actions-left">
+                                        <button type="button" class="dedicated-dropdown-clear-btn" title="مسح"><i class="bi bi-x-lg"></i></button>
+                                        <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة"><i class="bi bi-chevron-down"></i></button>
+                                    </div>
+                                </div>
+                                <div class="dedicated-dropdown-menu">
+                                    @if (ViewBag.SystemUsers != null)
+                                    {
+                                        foreach (var u in ViewBag.SystemUsers)
+                                        {
+                                            <div class="dedicated-dropdown-item" data-value="@u.UserId" data-label="@u.FullName (@u.Email)">
+                                                <div class="fw-bold">@u.FullName</div>
+                                                <small class="text-muted">@u.Email | الدور: @u.RoleName</small>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">الكلية المسندة <span class="text-danger">*</span></label>
+                            <input type="hidden" name="collegeId" id="pExistingCoAdminCollegeId" required />
+                            <div class="dedicated-dropdown-wrapper" data-target-input="#pExistingCoAdminCollegeId">
+                                <div class="dedicated-dropdown-input-group">
+                                    <i class="bi bi-building dedicated-dropdown-icon-right"></i>
+                                    <input type="text" class="dedicated-dropdown-input" placeholder="ابحث أو اختر الكلية..." required autocomplete="off" />
+                                    <div class="dedicated-dropdown-actions-left">
+                                        <button type="button" class="dedicated-dropdown-clear-btn" title="مسح"><i class="bi bi-x-lg"></i></button>
+                                        <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة"><i class="bi bi-chevron-down"></i></button>
+                                    </div>
+                                </div>
+                                <div class="dedicated-dropdown-menu">
+                                    @if (ViewBag.Colleges != null)
+                                    {
+                                        foreach (var c in ViewBag.Colleges)
+                                        {
+                                            <div class="dedicated-dropdown-item" data-value="@c.Id" data-label="@c.Name">
+                                                <div class="fw-bold">@c.Name</div>
+                                                <small class="text-muted">@c.Code</small>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">إلغاء</button>
+                            <button type="submit" class="btn btn-success">إسناد الصلاحية والكلية للمستخدم</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Reassign College Partial -->
+<div class="modal fade" id="partialReassignCollegeModal" tabindex="-1" aria-labelledby="partialReassignCollegeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+<<<<<<< HEAD
                 <h5 class="modal-title fw-bold" id="addCoAdminModalLabel"><i class="bi bi-person-plus me-2"></i>تعيين مدير لجنة فرعية لكلية</h5>
+=======
+                <h5 class="modal-title fw-bold" id="partialReassignCollegeModalLabel">
+                    <i class="bi bi-arrow-left-right me-2 text-primary"></i>إعادة تعيين الكلية لمدير اللجنة
+                </h5>
+>>>>>>> origin/main
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="createCoAdminForm" action="/SuperAdmin/CreateCoAdminNewUser" method="post" onsubmit="return handleCoAdminSubmit(this);">
+            <form id="partialReassignCollegeForm" action="/SuperAdmin/ReassignCoAdminCollege" method="post" onsubmit="return handleCoAdminSubmitAjax(this);">
+                <input type="hidden" name="coAdminId" id="pReassignCoAdminId" />
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
-                        <input type="hidden" name="collegeId" id="partialCoAdminCollegeId" />
-                        <div class="custom-datalist-wrapper">
-                            <i class="bi bi-search datalist-search-icon"></i>
-                            <input type="text" list="partialCoAdminCollegesList" id="partialCoAdminCollegeInput" 
-                                   class="form-control custom-datalist-input" 
-                                   placeholder="ابحث أو اختر الكلية من النظام..." 
-                                   data-hidden-target="#partialCoAdminCollegeId"
-                                   required autocomplete="off" />
-                            <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
-                                <i class="bi bi-x-circle-fill"></i>
-                            </button>
-                        </div>
-                        <datalist id="partialCoAdminCollegesList">
-                            @if (ViewBag.Colleges != null)
-                            {
-                                foreach (var c in ViewBag.Colleges)
+                        <label class="form-label text-muted">اسم مدير الكلية:</label>
+                        <div class="fw-bold fs-6 text-dark" id="pReassignAdminName">-</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">الكلية الحالية:</label>
+                        <div class="badge bg-secondary-subtle text-secondary fs-6" id="pReassignCurrentCollege">-</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الكلية الجديدة المطلوب النقل إليها <span class="text-danger">*</span></label>
+                        <input type="hidden" name="newCollegeId" id="pReassignNewCollegeId" required />
+                        <div class="dedicated-dropdown-wrapper" data-target-input="#pReassignNewCollegeId">
+                            <div class="dedicated-dropdown-input-group">
+                                <i class="bi bi-building dedicated-dropdown-icon-right"></i>
+                                <input type="text" class="dedicated-dropdown-input" placeholder="اختر الكلية الجديدة..." required autocomplete="off" />
+                                <div class="dedicated-dropdown-actions-left">
+                                    <button type="button" class="dedicated-dropdown-clear-btn" title="مسح"><i class="bi bi-x-lg"></i></button>
+                                    <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة"><i class="bi bi-chevron-down"></i></button>
+                                </div>
+                            </div>
+                            <div class="dedicated-dropdown-menu">
+                                @if (ViewBag.Colleges != null)
                                 {
-                                    <option value="@c.Name" data-id="@c.Id">@c.Code</option>
+                                    foreach (var c in ViewBag.Colleges)
+                                    {
+                                        <div class="dedicated-dropdown-item" data-value="@c.Id" data-label="@c.Name">
+                                            <div class="fw-bold">@c.Name</div>
+                                            <small class="text-muted">@c.Code</small>
+                                        </div>
+                                    }
                                 }
-                            }
-                        </datalist>
-                        <div class="custom-datalist-hint">
-                            <i class="bi bi-info-circle me-1"></i> اختر من كليات الجامعة المسجلة لإسناد الصلاحيات إليها.
+                            </div>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
-                        <input type="text" name="fullName" class="form-control" required placeholder="مثال: أ.د. أحمد محمد علي" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control font-mono-tabular" required placeholder="coadmin@domain.com" dir="ltr" />
-                        <div class="form-text small">سيقوم النظام بإنشاء كلمة مرور مؤقتة وإرسالها إلى بريده مباشرة.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary-custom">إنشاء الحساب وتعيين الدور</button>
+                    <button type="submit" class="btn btn-primary-custom">تأكيد نقل الكلية</button>
                 </div>
             </form>
         </div>
@@ -108,36 +286,74 @@
 </div>
 
 <script>
-    $('#partialCoAdminCollegeInput').on('input change', function () {
-        var selectedVal = $(this).val();
-        var match = $('#partialCoAdminCollegesList option').filter(function () {
-            return this.value === selectedVal;
-        });
-        if (match.length > 0) {
-            $('#partialCoAdminCollegeId').val(match.data('id'));
-        } else {
-            $('#partialCoAdminCollegeId').val('');
-        }
-    });
-
-    function handleCoAdminSubmit(form) {
-        var selectedVal = $('#partialCoAdminCollegeInput').val();
-        var match = $('#partialCoAdminCollegesList option').filter(function () {
-            return this.value === selectedVal;
-        });
-        if (match.length > 0) {
-            $('#partialCoAdminCollegeId').val(match.data('id'));
-        }
-        if (!$('#partialCoAdminCollegeId').val()) {
-            alert('يرجى اختيار الكلية من القائمة.');
-            return false;
-        }
-        return handleAjaxFormSubmit(form, onCoAdminSaved);
+    function openReassignModalPartial(coAdminId, currentCollegeId, adminName, currentCollegeName) {
+        $('#pReassignCoAdminId').val(coAdminId);
+        $('#pReassignAdminName').text(adminName);
+        $('#pReassignCurrentCollege').text(currentCollegeName);
+        $('#pReassignNewCollegeId').val('');
+        $('#partialReassignCollegeModal').find('.dedicated-dropdown-input').val('');
+        $('#partialReassignCollegeModal').modal('show');
     }
 
-    function onCoAdminSaved(res) {
-        $('#addCoAdminModal').modal('hide');
-        $('.modal-backdrop').remove();
-        loadPartial('/SuperAdmin/ManageCoAdminsPartial', '#main-content-container', 'coadmins');
+    function toggleCoAdminStatusPartial(coAdminId, isActive) {
+        var actionText = isActive ? 'تفعيل' : 'تعطيل';
+        if (!confirm('هل أنت متأكد من ' + actionText + ' حساب مدير الكلية؟')) return;
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $('#partial-loading-spinner').css('display', 'flex');
+
+        $.ajax({
+            url: '/SuperAdmin/ToggleCoAdminStatus',
+            type: 'POST',
+            data: {
+                coAdminId: coAdminId,
+                isActive: isActive,
+                __RequestVerificationToken: token
+            },
+            success: function (res) {
+                $('#partial-loading-spinner').hide();
+                if (res && res.success) {
+                    window.showToast('success', res.message || 'تم تحديث حالة الحساب بنجاح.');
+                    loadPartial('/SuperAdmin/ManageCoAdminsPartial', '#main-content-container', 'manage-coadmins');
+                } else {
+                    window.showToast('error', res.message || 'فشل تحديث حالة الحساب.');
+                }
+            },
+            error: function (xhr) {
+                $('#partial-loading-spinner').hide();
+                window.showToast('error', xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.');
+            }
+        });
+    }
+
+    function handleCoAdminSubmitAjax(form) {
+        var data = $(form).serialize();
+        $('#partial-loading-spinner').css('display', 'flex');
+
+        $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: data,
+            success: function (res) {
+                $('#partial-loading-spinner').hide();
+                if (res && res.success) {
+                    $('.modal').modal('hide');
+                    window.showToast('success', res.message || 'تمت العملية بنجاح.');
+                    loadPartial('/SuperAdmin/ManageCoAdminsPartial', '#main-content-container', 'manage-coadmins');
+                } else {
+                    window.showToast('error', res.message || 'فشلت العملية.');
+                }
+            },
+            error: function (xhr) {
+                $('#partial-loading-spinner').hide();
+                window.showToast('error', xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.');
+            }
+        });
+        return false;
+    }
+
+    if (typeof initDedicatedDropdowns === 'function') {
+        initDedicatedDropdowns('#partialAddCoAdminModal');
+        initDedicatedDropdowns('#partialReassignCollegeModal');
     }
 </script>

@@ -28,16 +28,32 @@
                 <div class="col-md-6">
                     <label asp-for="CategoryId" class="form-label"></label> <span class="text-danger">*</span>
                     <input type="hidden" asp-for="CategoryId" id="CategoryId" />
-                    <input type="text" id="categoryDisplayInput" list="categoriesList" class="form-control" placeholder="ابحث أو اختر نوع وتصنيف البحث..." required autocomplete="off" />
-                    <datalist id="categoriesList">
-                        @if (ViewBag.Categories != null)
-                        {
-                            foreach (var cat in ViewBag.Categories)
+                    <div class="dedicated-dropdown-wrapper" data-target-input="#CategoryId">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-search dedicated-dropdown-icon-right"></i>
+                            <input type="text" class="dedicated-dropdown-input" placeholder="ابحث أو اختر نوع وتصنيف البحث..." required autocomplete="off" />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dedicated-dropdown-menu">
+                            @if (ViewBag.Categories != null)
                             {
-                                <option value="@cat.Name" data-id="@cat.Id"></option>
+                                foreach (var cat in ViewBag.Categories)
+                                {
+                                    <div class="dedicated-dropdown-item" data-id="@cat.Id" data-name="@cat.Name">
+                                        <span>@cat.Name</span>
+                                        <span class="dedicated-dropdown-item-badge">معتمد بالكلية</span>
+                                    </div>
+                                }
                             }
-                        }
-                    </datalist>
+                        </div>
+                    </div>
                     <span asp-validation-for="CategoryId" class="text-danger small"></span>
                 </div>
 
@@ -108,17 +124,9 @@
 
 @section Scripts {
     <script>
-        $('#categoryDisplayInput').on('input change', function() {
-            var val = $(this).val();
-            var match = $('#categoriesList option').filter(function() { return this.value === val; });
-            if (match.length > 0) {
-                var catId = match.data('id');
-                $('#CategoryId').val(catId);
-                loadCategoryFields(catId);
-            } else {
-                $('#CategoryId').val('');
-                $('#dynamicFieldsContainer').empty();
-            }
+        $('#CategoryId').on('change', function () {
+            var catId = $(this).val();
+            loadCategoryFields(catId);
         });
 
         function loadCategoryFields(categoryId) {
@@ -126,14 +134,30 @@
                 $('#dynamicFieldsContainer').empty();
                 return;
             }
-            $.get('/Researcher/DynamicCategoryFieldsPartial?categoryId=' + categoryId, function(html) {
+            $.get('/Researcher/DynamicCategoryFieldsPartial?categoryId=' + categoryId, function (html) {
                 $('#dynamicFieldsContainer').html(html);
+                if (typeof initDedicatedDropdowns === 'function') {
+                    initDedicatedDropdowns('#dynamicFieldsContainer');
+                }
             });
         }
 
-        $('#createResearchForm').on('submit', function(e) {
+        $('#createResearchForm').on('submit', function (e) {
             e.preventDefault();
             const form = this;
+
+            // Check for empty 0-byte files before sending
+            const fileInputs = $(form).find('input[type="file"]');
+            for (let i = 0; i < fileInputs.length; i++) {
+                const files = fileInputs[i].files;
+                if (files && files.length > 0) {
+                    if (files[0].size === 0) {
+                        window.showToast('error', 'الملف المرفق (' + files[0].name + ') فارغ (حجمه 0 بايت). يرجى التأكد من اختيار ملف صالح يحتوي على محتوى.');
+                        return false;
+                    }
+                }
+            }
+
             const formData = new FormData(form);
 
             $('#partial-loading-spinner').css('display', 'flex');
@@ -144,18 +168,27 @@
                 data: formData,
                 contentType: false,
                 processData: false,
-                success: function(res) {
+                success: function (res) {
                     $('#partial-loading-spinner').hide();
                     if (res && res.success) {
-                        alert(res.message);
-                        window.location.href = res.researchId ? '/Researcher/Tracker/' + res.researchId : '/Researcher/MyResearches';
+                        window.showToast('success', res.message || 'تم تقديم المقترح البحثي بنجاح.');
+                        setTimeout(function () {
+                            window.location.href = res.researchId ? '/Researcher/Tracker/' + res.researchId : '/Researcher/MyResearches';
+                        }, 1200);
                     } else {
-                        alert(res.message || 'حدث خطأ أثناء التقديم.');
+                        window.showToast('error', res.message || 'حدث خطأ أثناء التقديم.');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     $('#partial-loading-spinner').hide();
-                    alert(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.');
+                    var errMsg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    try {
+                        var json = JSON.parse(xhr.responseText);
+                        if (json && json.message) errMsg = json.message;
+                    } catch (e) {
+                        if (xhr.responseText) errMsg = xhr.responseText;
+                    }
+                    window.showToast('error', errMsg);
                 }
             });
         });

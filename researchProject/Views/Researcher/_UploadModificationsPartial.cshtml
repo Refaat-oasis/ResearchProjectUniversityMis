@@ -76,7 +76,7 @@
 
 <script>
     function onModificationsSubmitted(res) {
-        alert(res.message);
+        showToast(res.message, 'success');
         loadPartial('/Researcher/ResearchStatusTrackerPartial/@Model.ResearchId', '#main-content-container', 'my-researches');
     }
 </script>

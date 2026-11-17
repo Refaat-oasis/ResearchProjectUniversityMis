@@ -18,15 +18,18 @@ namespace researchProject.Controllers
     {
         private readonly ISuperAdminRepository _superAdminRepo;
         private readonly IEmailSender _emailSender;
+        private readonly IHangfireEmailDispatcher _hangfireEmailDispatcher;
         private readonly IReportExportService _reportExportService;
 
         public SuperAdminController(
             ISuperAdminRepository superAdminRepo,
             IEmailSender emailSender,
+            IHangfireEmailDispatcher hangfireEmailDispatcher,
             IReportExportService? reportExportService = null)
         {
             _superAdminRepo = superAdminRepo;
             _emailSender = emailSender;
+            _hangfireEmailDispatcher = hangfireEmailDispatcher;
             _reportExportService = reportExportService ?? new ReportExportService();
         }
 
@@ -56,8 +59,23 @@ namespace researchProject.Controllers
         public async Task<IActionResult> CoAdmins()
         {
             ViewBag.Colleges = await _superAdminRepo.GetAllCollegesAsync();
+            ViewBag.SystemUsers = await _superAdminRepo.GetAssignableUsersForInvitationAsync();
             var coAdmins = await _superAdminRepo.GetAllCoAdminsAsync();
             return View(coAdmins);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Researchers()
+        {
+            var researchers = await _superAdminRepo.GetAllResearchersAsync();
+            return View(researchers);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ManageResearchersPartial()
+        {
+            var researchers = await _superAdminRepo.GetAllResearchersAsync();
+            return PartialView("_ManageResearchersPartial", researchers);
         }
 
         [HttpGet]
@@ -186,6 +204,7 @@ namespace researchProject.Controllers
         public async Task<IActionResult> ManageCoAdminsPartial()
         {
             ViewBag.Colleges = await _superAdminRepo.GetAllCollegesAsync();
+            ViewBag.SystemUsers = await _superAdminRepo.GetAssignableUsersForInvitationAsync();
             var coAdmins = await _superAdminRepo.GetAllCoAdminsAsync();
             return PartialView("_ManageCoAdminsPartial", coAdmins);
         }
@@ -199,11 +218,25 @@ namespace researchProject.Controllers
                 return Json(new { success = false, message = "جميع حقول البريد والاسم والكلية مطلوبة." });
             }
 
-            var (succeeded, errorMessage, tempPassword) = await _superAdminRepo.CreateCoAdminNewUserAsync(email, fullName, collegeId);
+            var (succeeded, errorMessage, tempPassword, newUserId) = await _superAdminRepo.CreateCoAdminNewUserAsync(email, fullName, collegeId);
+            if (!succeeded)
+            {
+                return Json(new { success = false, message = errorMessage ?? "فشل إنشاء الحساب." });
+            }
+
+            var college = await _superAdminRepo.GetCollegeByIdAsync(collegeId);
+            var collegeName = college?.Name ?? "الكلية";
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+
+            if (!string.IsNullOrEmpty(newUserId) && !string.IsNullOrEmpty(tempPassword))
+            {
+                _hangfireEmailDispatcher.EnqueueCoAdminCredentialsEmail(newUserId, email, fullName, tempPassword, collegeName, currentUserId);
+            }
+
             return Json(new 
             { 
-                success = succeeded, 
-                message = errorMessage ?? $"تم إنشاء حساب مدير الكلية بنجاح وإرسال كلمة المرور المؤقتة ({tempPassword}) إلى بريده." 
+                success = true, 
+                message = $"تم إنشاء حساب مدير الكلية بنجاح وجدولة إرسال كلمة المرور المؤقتة ({tempPassword}) إلى بريده عبر Hangfire." 
             });
         }
 
@@ -262,28 +295,39 @@ namespace researchProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> InviteJudge(string email, string? specialty)
+        public async Task<IActionResult> InviteJudge([FromForm] string? email, [FromForm] string? specialty, [FromForm] int? collegeId = null)
         {
-            if (string.IsNullOrWhiteSpace(email))
+            var cleanEmail = (email ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(cleanEmail) && Request?.HasFormContentType == true && Request.Form.ContainsKey("email"))
+            {
+                cleanEmail = (Request.Form["email"].ToString() ?? "").Trim();
+            }
+            if (string.IsNullOrWhiteSpace(specialty) && Request?.HasFormContentType == true && Request.Form.ContainsKey("specialty"))
+            {
+                specialty = Request.Form["specialty"].ToString();
+            }
+
+            if (string.IsNullOrWhiteSpace(cleanEmail))
             {
                 return Json(new { success = false, message = "البريد الإلكتروني إلزامي لإرسال الدعوة." });
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            var (succeeded, errorMessage, rawToken) = await _superAdminRepo.InviteJudgeAsync(email, specialty, userId);
+            var (succeeded, errorMessage, rawToken, invitationId) = await _superAdminRepo.InviteJudgeAsync(cleanEmail, specialty, userId, collegeId);
 
             if (!succeeded)
             {
                 return Json(new { success = false, message = errorMessage ?? "فشل إرسال الدعوة." });
             }
 
-            var invitationLink = Url.Action("AcceptJudgeInvitation", "Account", new { token = rawToken }, Request.Scheme);
-            if (!string.IsNullOrEmpty(invitationLink))
+            var scheme = Request?.Scheme ?? "https";
+            var invitationLink = Url.Action("AcceptJudgeInvitation", "Account", new { token = rawToken }, scheme);
+            if (!string.IsNullOrEmpty(invitationLink) && invitationId.HasValue)
             {
-                await _emailSender.SendJudgeInvitationAsync(email, invitationLink, specialty ?? "عام");
+                _hangfireEmailDispatcher.EnqueueJudgeInvitationEmail(invitationId.Value, cleanEmail, cleanEmail, invitationLink, userId);
             }
 
-            return Json(new { success = true, message = "تم إنشاء وإرسال دعوة المحكم بنجاح عبر البريد الإلكتروني." });
+            return Json(new { success = true, message = "تم إنشاء وجدولة إرسال دعوة المحكم بنجاح عبر البريد الإلكتروني." });
         }
 
         [HttpPost]
@@ -292,6 +336,38 @@ namespace researchProject.Controllers
         {
             var (succeeded, errorMessage) = await _superAdminRepo.SetJudgeActiveStatusAsync(judgeId, isActive);
             return Json(new { success = succeeded, message = errorMessage ?? (isActive ? "تم تفعيل المحكم." : "تم تعطيل المحكم وإخفاؤه من قوائم الإسناد.") });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleResearcherStatus(int researcherId, bool isActive)
+        {
+            var (succeeded, errorMessage) = await _superAdminRepo.SetResearcherActiveStatusAsync(researcherId, isActive);
+            return Json(new { success = succeeded, message = errorMessage ?? (isActive ? "تم تفعيل حساب الباحث بنجاح." : "تم تعطيل حساب الباحث وإلغاء جلساته النشطة.") });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleCoAdminStatus(int coAdminId, bool isActive)
+        {
+            var (succeeded, errorMessage) = await _superAdminRepo.SetCoAdminActiveStatusAsync(coAdminId, isActive);
+            return Json(new { success = succeeded, message = errorMessage ?? (isActive ? "تم تفعيل حساب مدير الكلية بنجاح." : "تم تعطيل حساب مدير الكلية وإلغاء جلساته النشطة.") });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReassignCoAdminCollege(int coAdminId, int newCollegeId)
+        {
+            var (succeeded, errorMessage) = await _superAdminRepo.ReassignCoAdminCollegeAsync(coAdminId, newCollegeId);
+            return Json(new { success = succeeded, message = errorMessage ?? "تمت إعادة تعيين ونقل مدير الكلية بنجاح." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleCategoryStatus(int id, bool isActive)
+        {
+            var (succeeded, errorMessage) = await _superAdminRepo.ToggleCategoryStatusAsync(id, isActive);
+            return Json(new { success = succeeded, message = errorMessage ?? (isActive ? "تم تفعيل التصنيف." : "تم تعطيل التصنيف وإخفاؤه من استمارة تقديم الباحثين.") });
         }
 
         [HttpPost]
@@ -338,6 +414,32 @@ namespace researchProject.Controllers
             ViewBag.Colleges = await _superAdminRepo.GetAllCollegesAsync();
             var archives = await _superAdminRepo.SearchCertificatesArchiveAsync(serialNumber, researcherName, collegeId, fromDate, toDate);
             return PartialView("_CertificatesArchivePartial", archives);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AuditLogs(
+            int page = 1,
+            string? searchTerm = null,
+            string? roleFilter = null,
+            bool? successFilter = null,
+            DateTime? fromDate = null,
+            DateTime? toDate = null)
+        {
+            var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate);
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AuditLogsPartial(
+            int page = 1,
+            string? searchTerm = null,
+            string? roleFilter = null,
+            bool? successFilter = null,
+            DateTime? fromDate = null,
+            DateTime? toDate = null)
+        {
+            var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate);
+            return PartialView("_AuditLogsPartial", model);
         }
     }
 }

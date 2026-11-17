@@ -35,6 +35,9 @@ namespace researchProject.Models.Entities
         [Display(Name = "تاريخ القبول")]
         public DateTime? AcceptedAt { get; set; }
 
+        [Display(Name = "الكلية")]
+        public int? CollegeId { get; set; }
+
         [Required(ErrorMessage = "حالة الدعوة مطلوبة")]
         [Display(Name = "حالة الدعوة")]
         [StringLength(50, ErrorMessage = "حالة الدعوة يجب ألا تتجاوز 50 حرفاً")]
@@ -42,5 +45,6 @@ namespace researchProject.Models.Entities
 
         // Navigation properties
         public virtual ApplicationUser InvitedByUser { get; set; } = null!;
+        public virtual College? College { get; set; }
     }
 }

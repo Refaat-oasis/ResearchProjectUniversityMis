@@ -29,26 +29,26 @@
 
                 <div class="col-md-6">
                     <label asp-for="Email" class="form-label"></label>
-                    <input asp-for="Email" type="email" class="form-control font-mono-tabular" placeholder="example@gmail.com أو بريدك المؤسسي" dir="ltr" required />
+                    <input asp-for="Email" type="email" class="form-control" placeholder="example@gmail.com أو بريدك المؤسسي" dir="ltr" required />
                     <span asp-validation-for="Email" class="text-danger small"></span>
                     <div class="form-text small text-muted">سيتم إرسال رمز الأمان ورابط التفعيل فوراً إلى هذا البريد.</div>
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" class="form-control font-mono-tabular" dir="ltr" required />
+                    <input asp-for="Password" class="form-control" dir="ltr" required />
                     <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="ConfirmPassword" class="form-label"></label>
-                    <input asp-for="ConfirmPassword" class="form-control font-mono-tabular" dir="ltr" required />
+                    <input asp-for="ConfirmPassword" class="form-control" dir="ltr" required />
                     <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                 </div>
 
-                <!-- College Selection via Unified Datalist -->
+                <!-- College Selection via Dedicated Dropdown -->
                 <div class="col-md-6">
-                    <label class="form-label">الكلية التابع لها <span class="text-danger">*</span></label>
+                    <label asp-for="CollegeId" class="form-label"></label>
                     <input type="hidden" asp-for="CollegeId" id="CollegeId" />
                     @{
                         string initialCollegeName = "";
@@ -62,109 +62,140 @@
                             }
                         }
                     }
-                    <div class="custom-datalist-wrapper">
-                        <i class="bi bi-search datalist-search-icon"></i>
-                        <input type="text" id="collegeDisplayInput" list="collegesList"
-                               class="form-control custom-datalist-input"
-                               placeholder="ابحث أو اختر الكلية..."
-                               data-hidden-target="#CollegeId"
-                               autocomplete="off" value="@initialCollegeName" required />
-                        <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
-                            <i class="bi bi-x-circle-fill"></i>
-                        </button>
-                    </div>
-                    <datalist id="collegesList">
-                        @if (ViewBag.Colleges != null)
-                        {
-                            foreach (var c in ViewBag.Colleges)
+                    <div class="dedicated-dropdown-wrapper" data-target-input="#CollegeId">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-search dedicated-dropdown-icon-right"></i>
+                            <input type="text" id="collegeDisplayInput" class="dedicated-dropdown-input" 
+                                   placeholder="ابحث أو اختر الكلية..." autocomplete="off" value="@initialCollegeName" required />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dedicated-dropdown-menu">
+                            @if (ViewBag.Colleges != null)
                             {
-                                <option value="@c.Name" data-id="@c.Id">@c.Code</option>
+                                foreach (var c in ViewBag.Colleges)
+                                {
+                                    <div class="dedicated-dropdown-item" data-id="@c.Id" data-name="@c.Name">
+                                        <span>@c.Name</span>
+                                        <span class="dedicated-dropdown-item-badge">@c.Code</span>
+                                    </div>
+                                }
                             }
-                        }
-                    </datalist>
+                        </div>
+                    </div>
                     <span asp-validation-for="CollegeId" class="text-danger small"></span>
                 </div>
 
-                <!-- Researcher Type via Unified Datalist -->
+                <!-- Researcher Type via Dedicated Dropdown -->
                 <div class="col-md-6">
                     <label asp-for="ResearcherType" class="form-label"></label>
-                    <div class="custom-datalist-wrapper">
-                        <i class="bi bi-chevron-expand datalist-search-icon"></i>
-                        <input asp-for="ResearcherType" list="researcherTypesList"
-                               class="form-control custom-datalist-input"
-                               placeholder="ابحث أو اختر فئة الباحث..." autocomplete="off" required />
-                        <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
-                            <i class="bi bi-x-circle-fill"></i>
-                        </button>
+                    <input type="hidden" asp-for="ResearcherType" id="ResearcherType" />
+                    <div class="dedicated-dropdown-wrapper" data-target-input="#ResearcherType">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-person-badge dedicated-dropdown-icon-right"></i>
+                            <input type="text" class="dedicated-dropdown-input" 
+                                   placeholder="ابحث أو اختر فئة الباحث..." autocomplete="off" required />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dedicated-dropdown-menu">
+                            <div class="dedicated-dropdown-item" data-id="عضو هيئة تدريس" data-name="عضو هيئة تدريس">
+                                <span>عضو هيئة تدريس</span>
+                            </div>
+                            <div class="dedicated-dropdown-item" data-id="باحث" data-name="باحث">
+                                <span>باحث</span>
+                            </div>
+                            <div class="dedicated-dropdown-item" data-id="طالب دراسات عليا" data-name="طالب دراسات عليا">
+                                <span>طالب دراسات عليا</span>
+                            </div>
+                        </div>
                     </div>
-                    <datalist id="researcherTypesList">
-                        <option value="عضو هيئة تدريس"></option>
-                        <option value="باحث"></option>
-                        <option value="طالب دراسات عليا"></option>
-                    </datalist>
                     <span asp-validation-for="ResearcherType" class="text-danger small"></span>
                 </div>
 
-                <!-- Academic Degree via Unified Datalist -->
+                <!-- Academic Degree via Dedicated Dropdown -->
                 <div class="col-md-6">
                     <label asp-for="AcademicDegree" class="form-label"></label>
-                    <div class="custom-datalist-wrapper">
-                        <i class="bi bi-chevron-expand datalist-search-icon"></i>
-                        <input asp-for="AcademicDegree" list="degreesList"
-                               class="form-control custom-datalist-input"
-                               placeholder="ابحث أو اختر الدرجة العلمية..." autocomplete="off" required />
-                        <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
-                            <i class="bi bi-x-circle-fill"></i>
-                        </button>
+                    <input type="hidden" asp-for="AcademicDegree" id="AcademicDegree" />
+                    <div class="dedicated-dropdown-wrapper" data-target-input="#AcademicDegree">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-mortarboard dedicated-dropdown-icon-right"></i>
+                            <input type="text" class="dedicated-dropdown-input" 
+                                   placeholder="ابحث أو اختر الدرجة العلمية..." autocomplete="off" required />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dedicated-dropdown-menu">
+                            <div class="dedicated-dropdown-item" data-id="بكالوريوس / ليسانس" data-name="بكالوريوس / ليسانس"><span>بكالوريوس / ليسانس</span></div>
+                            <div class="dedicated-dropdown-item" data-id="دبلوم دراسات عليا" data-name="دبلوم دراسات عليا"><span>دبلوم دراسات عليا</span></div>
+                            <div class="dedicated-dropdown-item" data-id="ماجستير" data-name="ماجستير"><span>ماجستير</span></div>
+                            <div class="dedicated-dropdown-item" data-id="دكتوراه" data-name="دكتوراه"><span>دكتوراه</span></div>
+                            <div class="dedicated-dropdown-item" data-id="أستاذ مساعد" data-name="أستاذ مساعد"><span>أستاذ مساعد</span></div>
+                            <div class="dedicated-dropdown-item" data-id="أستاذ دكتور" data-name="أستاذ دكتور"><span>أستاذ دكتور</span></div>
+                            <div class="dedicated-dropdown-item" data-id="باحث ما بعد الدكتوراه" data-name="باحث ما بعد الدكتوراه"><span>باحث ما بعد الدكتوراه</span></div>
+                            <div class="dedicated-dropdown-item" data-id="استشاري / زمالة" data-name="استشاري / زمالة"><span>استشاري / زمالة</span></div>
+                        </div>
                     </div>
-                    <datalist id="degreesList">
-                        <option value="بكالوريوس / ليسانس"></option>
-                        <option value="دبلوم دراسات عليا"></option>
-                        <option value="ماجستير"></option>
-                        <option value="دكتوراه"></option>
-                        <option value="أستاذ مساعد"></option>
-                        <option value="أستاذ دكتور"></option>
-                        <option value="باحث ما بعد الدكتوراه"></option>
-                        <option value="استشاري / زمالة"></option>
-                    </datalist>
                     <span asp-validation-for="AcademicDegree" class="text-danger small"></span>
                 </div>
 
-                <!-- Academic Department via Unified Datalist -->
+                <!-- Academic Department via Dedicated Dropdown -->
                 <div class="col-md-6">
                     <label asp-for="Department" class="form-label"></label>
-                    <div class="custom-datalist-wrapper">
-                        <i class="bi bi-search datalist-search-icon"></i>
-                        <input asp-for="Department" list="departmentsList"
-                               class="form-control custom-datalist-input"
-                               placeholder="اختر أو اكتب القسم الأكاديمي..." autocomplete="off" required />
-                        <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
-                            <i class="bi bi-x-circle-fill"></i>
-                        </button>
+                    <input type="hidden" asp-for="Department" id="Department" />
+                    <div class="dedicated-dropdown-wrapper" id="departmentDropdownWrapper" data-target-input="#Department">
+                        <div class="dedicated-dropdown-input-group">
+                            <i class="bi bi-building dedicated-dropdown-icon-right"></i>
+                            <input type="text" id="departmentDisplayInput" class="dedicated-dropdown-input" 
+                                   placeholder="اختر أو ابحث عن القسم الأكاديمي..." autocomplete="off" required />
+                            <div class="dedicated-dropdown-actions-left">
+                                <button type="button" class="dedicated-dropdown-clear-btn" title="مسح">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" class="dedicated-dropdown-chevron-btn" title="عرض القائمة">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dedicated-dropdown-menu" id="departmentDropdownMenu">
+                            <div class="dedicated-dropdown-empty text-muted p-2">اختر الكلية أولاً لعرض أقسامها الأكاديمية</div>
+                        </div>
                     </div>
-                    <datalist id="departmentsList">
-                        <!-- Populated dynamically when college is selected or user can type -->
-                    </datalist>
                     <span asp-validation-for="Department" class="text-danger small"></span>
-                    <div class="custom-datalist-hint">
-                        <i class="bi bi-info-circle me-1"></i> تُعرض أقسام الكلية المحددة تلقائياً ويمكنك البحث أو الكتابة مباشرة.
-                    </div>
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="NationalId" class="form-label"></label>
-                    <input asp-for="NationalId" class="form-control font-mono-tabular" maxlength="14" placeholder="14 رقماً قومياً" dir="ltr" required />
+                    <input asp-for="NationalId" class="form-control" maxlength="14" placeholder="14 رقماً قومياً" dir="ltr" required />
                     <span asp-validation-for="NationalId" class="text-danger small"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="PhoneNumber" class="form-label"></label>
-                    <input asp-for="PhoneNumber" class="form-control font-mono-tabular" placeholder="01xxxxxxxxx" dir="ltr" required />
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="01xxxxxxxxx" dir="ltr" required />
                     <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div class="mt-4 pt-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
                 <a asp-action="Login" class="text-muted text-decoration-none small">
                     <i class="bi bi-arrow-right me-1"></i> لديك حساب بالفعل؟ تسجيل الدخول
                 </a>
@@ -185,49 +216,48 @@
                 loadDepartmentsForCollege(existingCollegeId);
             }
 
-            // College Datalist mapping to hidden CollegeId
-            $('#collegeDisplayInput').on('input change', function () {
-                var selectedVal = $(this).val();
-                var matchedOption = $('#collegesList option').filter(function () {
-                    return this.value === selectedVal;
-                });
-
-                if (matchedOption.length > 0) {
-                    var collegeId = matchedOption.data('id');
-                    $('#CollegeId').val(collegeId);
-                    loadDepartmentsForCollege(collegeId);
-                } else {
-                    $('#CollegeId').val('');
-                }
+            // When college changes, fetch departments
+            $('#CollegeId').on('change', function () {
+                var collegeId = $(this).val();
+                loadDepartmentsForCollege(collegeId);
             });
 
             function loadDepartmentsForCollege(collegeId) {
-                if (!collegeId) return;
+                var $deptMenu = $('#departmentDropdownMenu');
+                var $deptInput = $('#departmentDisplayInput');
+                var $deptHidden = $('#Department');
+
+                if (!collegeId) {
+                    $deptMenu.html('<div class="dedicated-dropdown-empty text-muted p-2">اختر الكلية أولاً لعرض أقسامها الأكاديمية</div>');
+                    $deptInput.val('');
+                    $deptHidden.val('');
+                    return;
+                }
+
+                $deptMenu.html('<div class="dedicated-dropdown-empty text-muted p-2"><span class="spinner-border spinner-border-sm me-1"></span> جاري تحميل الأقسام...</div>');
+
                 $.ajax({
                     url: '/Account/GetDepartmentsByCollege?collegeId=' + collegeId,
                     type: 'GET',
                     success: function (data) {
-                        var $deptList = $('#departmentsList');
-                        $deptList.empty();
+                        $deptMenu.empty();
                         if (data && data.length > 0) {
                             $.each(data, function (index, item) {
-                                $deptList.append($('<option>').attr('value', item.name));
+                                var $item = $('<div class="dedicated-dropdown-item"></div>')
+                                    .attr('data-id', item.name)
+                                    .attr('data-name', item.name)
+                                    .html('<span>' + item.name + '</span><span class="dedicated-dropdown-item-badge">قسم معتمد</span>');
+                                $deptMenu.append($item);
                             });
+                        } else {
+                            $deptMenu.html('<div class="dedicated-dropdown-empty text-muted p-2">لا توجد أقسام مسجلة لهذه الكلية حالياً.</div>');
                         }
+                    },
+                    error: function () {
+                        $deptMenu.html('<div class="dedicated-dropdown-empty text-danger p-2">تعذر تحميل الأقسام الأكاديمية.</div>');
                     }
                 });
             }
-
-            // Sync on submit
-            $('#signUpForm').on('submit', function () {
-                var selectedVal = $('#collegeDisplayInput').val();
-                var matchedOption = $('#collegesList option').filter(function () {
-                    return this.value === selectedVal;
-                });
-                if (matchedOption.length > 0) {
-                    $('#CollegeId').val(matchedOption.data('id'));
-                }
-            });
         });
     </script>
 }
