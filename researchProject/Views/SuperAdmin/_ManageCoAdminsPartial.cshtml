@@ -1,12 +1,12 @@
 @model List<researchProject.Models.Entities.CollegeCoAdmin>
 
-<div class="card card-custom">
+<div class="card card-custom archival-card">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-person-badge text-primary"></i> إدارة مديري اللجان الفرعية بالكليات (College Co-Admins)
+                <i class="bi bi-person-badge"></i> إدارة مديري اللجان الفرعية بالكليات (College Co-Admins)
             </h4>
-            <div class="text-muted small">تعيين مديري اللجان لكل كلية لإدارة الفحص الشكلي وإسناد المحكمين والاعتماد وإصدار الشهادات</div>
+            <div class="small" style="color: var(--ink-muted);">تعيين مديري اللجان لكل كلية لإدارة الفحص الشكلي وإسناد المحكمين والاعتماد وإصدار الشهادات</div>
         </div>
         <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCoAdminModal">
             <i class="bi bi-person-plus-fill me-1"></i> تعيين مدير لجنة جديد
@@ -14,8 +14,8 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>الاسم الكامل</th>
@@ -31,11 +31,11 @@
                     foreach (var a in Model)
                     {
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold text-dark">@a.User?.FullName</td>
-                            <td dir="ltr" class="text-end font-monospace small">@a.User?.Email</td>
-                            <td><span class="badge bg-primary-subtle text-primary fs-6">@a.College?.Name</span></td>
-                            <td class="text-muted small">@DateTime.UtcNow.ToString("yyyy/MM/dd")</td>
+                            <td class="font-mono-tabular">@index</td>
+                            <td class="fw-bold" style="color: var(--ink-primary);">@a.User?.FullName</td>
+                            <td dir="ltr" class="text-end font-mono-tabular small">@a.User?.Email</td>
+                            <td><span class="status-stamp status-assigned">@a.College?.Name</span></td>
+                            <td class="font-mono-tabular small" style="color: var(--ink-muted);">@DateTime.UtcNow.ToString("yyyy/MM/dd")</td>
                         </tr>
                         index++;
                     }
@@ -43,7 +43,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
+                        <td colspan="5" class="text-center py-4" style="color: var(--ink-muted);">لا يوجد مديرو لجان مسجلون حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -56,7 +56,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="addCoAdminModalLabel"><i class="bi bi-person-plus me-2 text-primary"></i>تعيين مدير لجنة فرعية لكلية</h5>
+                <h5 class="modal-title fw-bold" id="addCoAdminModalLabel"><i class="bi bi-person-plus me-2"></i>تعيين مدير لجنة فرعية لكلية</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="createCoAdminForm" action="/SuperAdmin/CreateCoAdminNewUser" method="post" onsubmit="return handleCoAdminSubmit(this);">
@@ -94,12 +94,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control" required placeholder="coadmin@domain.com" dir="ltr" />
+                        <input type="email" name="email" class="form-control font-mono-tabular" required placeholder="coadmin@domain.com" dir="ltr" />
                         <div class="form-text small">سيقوم النظام بإنشاء كلمة مرور مؤقتة وإرسالها إلى بريده مباشرة.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-primary-custom">إنشاء الحساب وتعيين الدور</button>
                 </div>
             </form>

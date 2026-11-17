@@ -5,20 +5,26 @@
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <div class="card card-custom shadow-sm border-0">
-                <div class="text-center mb-4">
-                    <div class="bg-primary text-white d-inline-flex p-3 rounded-circle shadow-sm mb-3">
-                        <i class="bi bi-qr-code-scan fs-2"></i>
+        <div class="col-lg-8">
+            <div class="verify-dossier verify-dossier-engraved">
+                <div class="pb-3 mb-4 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                    <div>
+                        <h2 class="page-title editorial-display-title fw-bold text-dark mb-1">التحقق الرسمي من الشهادات الأخلاقية</h2>
+                        <p class="text-muted small mb-0">نظام التحقق الإلكتروني المعتمد - جامعة مصر الأكاديمية</p>
                     </div>
-                    <h4 class="fw-bold text-dark">التحقق الرسمي من الشهادات الأخلاقية</h4>
-                    <p class="text-muted small">نظام التحقق الإلكتروني المعتمد - جامعة مصر الأكاديمية</p>
+                    <svg class="brand-crest-svg flex-shrink-0" width="44" height="44" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="1.5" y="1.5" width="33" height="33" rx="3" fill="#0F2537" stroke="#B48A3E" stroke-width="1.25" />
+                        <circle cx="18" cy="14.5" r="5" stroke="#D4AF5A" stroke-width="1.5" />
+                        <path d="M18 5.5V7.5M18 21.5V23.5M9 14.5H11M25 14.5H27M11.6 8.1L13 9.5M23 19.5L24.4 20.9M24.4 8.1L23 9.5M13 19.5L11.6 20.9" stroke="#D4AF5A" stroke-width="1.25" stroke-linecap="round" />
+                        <path d="M8.5 27.5C11.5 25.5 14.8 25.5 18 27.5C21.2 25.5 24.5 25.5 27.5 27.5" stroke="#FAF9F6" stroke-width="1.5" stroke-linecap="round" />
+                        <line x1="18" y1="22.5" x2="18" y2="27.5" stroke="#FAF9F6" stroke-width="1.25" stroke-linecap="round" />
+                    </svg>
                 </div>
 
                 <form asp-controller="Public" asp-action="VerifyCertificate" method="get" class="mb-4">
                     <div class="input-group">
-                        <input type="text" name="serialNumber" value="@Model.SerialNumber" class="form-control form-control-lg" placeholder="أدخل الرقم المسلسل للشهادة (مثال: REC-MED-2026-123456)" dir="ltr" />
-                        <button type="submit" class="btn btn-primary-custom px-4">
+                        <input type="text" name="serialNumber" value="@Model.SerialNumber" class="form-control form-control-lg font-mono-tabular" placeholder="أدخل الرقم المسلسل للشهادة (مثال: REC-MED-2026-123456)" dir="ltr" />
+                        <button type="submit" class="btn btn-primary-custom px-3 px-md-4">
                             <i class="bi bi-search me-1"></i> فحص وتحقق
                         </button>
                     </div>
@@ -28,41 +34,48 @@
                 {
                     if (Model.IsValid)
                     {
-                        <div class="border rounded-3 p-4 bg-success-subtle border-success">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <i class="bi bi-patch-check-fill text-success fs-1"></i>
-                                <div>
-                                    <h5 class="fw-bold text-success mb-0">شهادة معتمدة ورسمية</h5>
-                                    <div class="text-muted small">@Model.Message</div>
-                                </div>
+                        <div class="border p-4" style="border-color: var(--tone-approved-border) !important; background-color: var(--bg-canvas); border-radius: var(--radius-md);">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pb-3 mb-3 border-bottom">
+                                <span class="verify-dossier-seal">
+                                    <i class="bi bi-patch-check-fill"></i> شهادة معتمدة ورسمية
+                                </span>
+                                <div class="text-muted small">@Model.Message</div>
                             </div>
 
-                            <hr class="border-success-subtle my-3" />
-
-                            <dl class="row mb-0">
-                                <dt class="col-sm-4 text-muted">الرقم المسلسل المعتمد:</dt>
-                                <dd class="col-sm-8 fw-bold text-dark" dir="ltr">@Model.SerialNumber</dd>
-
-                                <dt class="col-sm-4 text-muted">عنوان المقترح البحثي:</dt>
-                                <dd class="col-sm-8 fw-bold text-primary">« @Model.ResearchTitle »</dd>
-
-                                <dt class="col-sm-4 text-muted">الكلية التابع لها البحث:</dt>
-                                <dd class="col-sm-8">@Model.CollegeName</dd>
-
-                                <dt class="col-sm-4 text-muted">تاريخ الاعتماد والإصدار:</dt>
-                                <dd class="col-sm-8">@(Model.IssueDate?.ToString("yyyy/MM/dd") ?? "-")</dd>
-
-                                <dt class="col-sm-4 text-muted">الجهة المانحة:</dt>
-                                <dd class="col-sm-8">اللجنة الفرعية لأخلاقيات البحث العلمي والنزاهة الأكاديمية</dd>
-                            </dl>
+                            <table class="colophon-table mt-0">
+                                <tbody>
+                                    <tr>
+                                        <th>الرقم المسلسل المعتمد:</th>
+                                        <td class="font-mono-tabular fw-bold text-dark" dir="ltr">@Model.SerialNumber</td>
+                                    </tr>
+                                    <tr>
+                                        <th>عنوان المقترح البحثي:</th>
+                                        <td class="fw-bold text-primary">« @Model.ResearchTitle »</td>
+                                    </tr>
+                                    <tr>
+                                        <th>الكلية التابع لها البحث:</th>
+                                        <td>@Model.CollegeName</td>
+                                    </tr>
+                                    <tr>
+                                        <th>تاريخ الاعتماد والإصدار:</th>
+                                        <td class="font-mono-tabular" dir="ltr">@(Model.IssueDate?.ToString("yyyy/MM/dd") ?? "-")</td>
+                                    </tr>
+                                    <tr>
+                                        <th>الجهة المانحة:</th>
+                                        <td>اللجنة الفرعية لأخلاقيات البحث العلمي والنزاهة الأكاديمية</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     }
                     else
                     {
-                        <div class="border rounded-3 p-4 bg-danger-subtle border-danger text-center">
-                            <i class="bi bi-x-circle-fill text-danger fs-1 mb-2"></i>
-                            <h5 class="fw-bold text-danger">شهادة غير صالحة أو غير مسجلة</h5>
-                            <p class="text-muted mb-0">@Model.Message</p>
+                        <div class="alert alert-danger p-4 mb-0">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-x-circle-fill fs-5"></i>
+                                <h5 class="fw-bold mb-0">شهادة غير صالحة أو غير مسجلة</h5>
+                            </div>
+                            <p class="mb-0 small">@Model.Message</p>
                         </div>
                     }
                 }

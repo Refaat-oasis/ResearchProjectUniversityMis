@@ -3,96 +3,92 @@
     ViewData["Title"] = "تفعيل الحساب وتأكيد البريد الإلكتروني - المنصة الإلكترونية";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-7 col-lg-5">
-            <div class="card liquid-glass-card shadow-sm border-0 p-4">
-                <div class="text-center mb-4">
-                    <div class="bg-primary-subtle text-primary d-inline-flex p-3 rounded-circle shadow-sm mb-3">
-                        <i class="bi bi-shield-check fs-1"></i>
-                    </div>
-                    <h4 class="fw-bold text-dark mb-1">تأكيد وتفعيل الحساب الأكاديمي</h4>
-                    <p class="text-muted small">أدخل بريدك الإلكتروني مع رمز الأمان (OTP) المكوّن من 6 أرقام المرسل عبر Gmail</p>
-                </div>
+<div class="auth-shell">
+    <div class="auth-ledger-panel">
+        <div class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-start gap-3">
+            <div>
+                <h2 class="page-title fw-bold text-dark mb-1">تأكيد وتفعيل الحساب الأكاديمي</h2>
+                <p class="text-muted small mb-0">أدخل بريدك الإلكتروني مع رمز الأمان (OTP) المكوّن من 6 أرقام المرسل عبر Gmail</p>
+            </div>
+            <i class="bi bi-shield-check fs-4" style="color: var(--brand-sovereign);"></i>
+        </div>
 
-                <!-- 15-Minute Expiry Notice -->
-                <div class="alert alert-warning border-warning-subtle small p-2 mb-3 d-flex align-items-center">
-                    <i class="bi bi-clock-history fs-5 me-2 text-warning"></i>
-                    <div>
-                        <strong>مدة صلاحية الرمز:</strong> صالح للاستخدام لمدة <strong>15 دقيقة</strong> فقط من وقت الإرسال.
-                    </div>
-                </div>
+        <!-- 15-Minute Expiry Notice -->
+        <div class="alert alert-warning small p-2 mb-3 d-flex align-items-center">
+            <i class="bi bi-clock-history fs-5 me-2 text-warning"></i>
+            <div>
+                <strong>مدة صلاحية الرمز:</strong> صالح للاستخدام لمدة <strong>15 دقيقة</strong> فقط من وقت الإرسال.
+            </div>
+        </div>
 
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success small p-3 mb-3">
-                        <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
-                    </div>
-                }
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success small p-3 mb-3">
+                <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+            </div>
+        }
 
-                @if (!string.IsNullOrEmpty(Model.ErrorMessage) || ViewBag.ErrorMessage != null)
-                {
-                    <div class="alert alert-danger small p-3 mb-3">
-                        <i class="bi bi-exclamation-triangle me-1"></i> @(Model.ErrorMessage ?? ViewBag.ErrorMessage)
-                    </div>
-                }
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage) || ViewBag.ErrorMessage != null)
+        {
+            <div class="alert alert-danger small p-3 mb-3">
+                <i class="bi bi-exclamation-triangle me-1"></i> @(Model.ErrorMessage ?? ViewBag.ErrorMessage)
+            </div>
+        }
 
-                <div id="resendAlertContainer"></div>
+        <div id="resendAlertContainer"></div>
 
-                <form asp-action="VerifyEmailToken" method="post" id="verifyEmailForm">
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
+        <form asp-action="VerifyEmailToken" method="post" id="verifyEmailForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="EmailOrUserId" class="form-label fw-bold">البريد الإلكتروني المسجل <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
-                            <input asp-for="EmailOrUserId" id="emailInput" class="form-control" placeholder="example@domain.com" dir="ltr" required />
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label asp-for="Token" class="form-label fw-bold mb-0">رمز التحقق الرقمي (6 أرقام) <span class="text-danger">*</span></label>
-                            <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" id="copyTokenBtn" title="نسخ الرمز">
-                                    <i class="bi bi-clipboard me-1"></i> نسخ
-                                </button>
-                                <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" id="pasteTokenBtn" title="لصق من الحافظة">
-                                    <i class="bi bi-clipboard-plus me-1"></i> لصق
-                                </button>
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-key-fill text-primary"></i></span>
-                            <input asp-for="Token" id="tokenInput" class="form-control text-center font-monospace fs-4 fw-bold letter-spacing-wide" 
-                                   maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="------" dir="ltr" required />
-                        </div>
-                        <div class="form-text small text-muted">تجد هذا الرمز في رسالة البريد الإلكتروني الواردة إليك.</div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary-custom w-100 py-2 fs-6 mb-3 shadow-sm">
-                        <i class="bi bi-check-circle-fill me-1"></i> تفعيل الحساب والمتابعة
-                    </button>
-                </form>
-
-                <!-- Resend Verification Code Section -->
-                <div class="card bg-light border-0 rounded-3 p-3 mb-3 text-center">
-                    <div class="text-muted small mb-2">لم تستلم الرمز أو انتهت مدة صلاحيته (15 دقيقة)؟</div>
-                    <button type="button" class="btn btn-outline-secondary btn-sm py-2 px-3 fw-bold" id="resendCodeBtn">
-                        <i class="bi bi-arrow-clockwise me-1" id="resendSpinnerIcon"></i>
-                        <span id="resendBtnText">إعادة إرسال رمز التحقق</span>
-                    </button>
-                    <div id="cooldownTimer" class="small text-muted mt-2 d-none">
-                        يمكنك إعادة الإرسال بعد: <span id="secondsLeft" class="fw-bold text-primary">60</span> ثانية
-                    </div>
-                </div>
-
-                <div class="border-top pt-3 text-center">
-                    <a asp-action="Login" class="text-decoration-none small text-muted">
-                        <i class="bi bi-arrow-right me-1"></i> العودة لشاشة تسجيل الدخول
-                    </a>
+            <div class="mb-3">
+                <label asp-for="EmailOrUserId" class="form-label fw-bold">البريد الإلكتروني المسجل <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input asp-for="EmailOrUserId" id="emailInput" class="form-control font-mono-tabular" placeholder="example@domain.com" dir="ltr" required />
                 </div>
             </div>
+
+            <div class="mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+                    <label asp-for="Token" class="form-label fw-bold mb-0">رمز التحقق الرقمي (6 أرقام) <span class="text-danger">*</span></label>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" id="copyTokenBtn" title="نسخ الرمز">
+                            <i class="bi bi-clipboard me-1"></i> نسخ
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" id="pasteTokenBtn" title="لصق من الحافظة">
+                            <i class="bi bi-clipboard-plus me-1"></i> لصق
+                        </button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-key-fill text-primary"></i></span>
+                    <input asp-for="Token" id="tokenInput" class="form-control text-center font-mono-tabular fs-4 fw-bold letter-spacing-wide"
+                           maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="------" dir="ltr" required />
+                </div>
+                <div class="form-text small text-muted">تجد هذا الرمز في رسالة البريد الإلكتروني الواردة إليك.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100 py-2 fs-6 mb-3">
+                <i class="bi bi-check-circle-fill me-1"></i> تفعيل الحساب والمتابعة
+            </button>
+        </form>
+
+        <!-- Resend Verification Code Section -->
+        <div class="dossier-panel-subtle mb-3 text-center">
+            <div class="text-muted small mb-2">لم تستلم الرمز أو انتهت مدة صلاحيته (15 دقيقة)؟</div>
+            <button type="button" class="btn btn-outline-secondary btn-sm py-2 px-3 fw-bold" id="resendCodeBtn">
+                <i class="bi bi-arrow-clockwise me-1" id="resendSpinnerIcon"></i>
+                <span id="resendBtnText">إعادة إرسال رمز التحقق</span>
+            </button>
+            <div id="cooldownTimer" class="small text-muted mt-2 d-none">
+                يمكنك إعادة الإرسال بعد: <span id="secondsLeft" class="font-mono-tabular fw-bold text-primary">60</span> ثانية
+            </div>
+        </div>
+
+        <div class="border-top pt-3 text-center">
+            <a asp-action="Login" class="text-decoration-none small text-muted">
+                <i class="bi bi-arrow-right me-1"></i> العودة لشاشة تسجيل الدخول
+            </a>
         </div>
     </div>
 </div>

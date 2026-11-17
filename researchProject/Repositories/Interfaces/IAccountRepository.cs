@@ -28,5 +28,9 @@ namespace researchProject.Repositories.Interfaces
         Task<(bool Succeeded, string? ErrorMessage)> ValidateVerificationCodeAsync(string emailOrUserId, string code, string purpose, bool markAsUsed = true);
         Task<(bool Succeeded, string? ErrorMessage, string? Code, string? ResolvedEmail)> ResendVerificationCodeAsync(string emailOrUserId, string purpose);
         Task<bool> MarkVerificationCodeAsUsedAsync(string emailOrUserId, string code, string purpose);
+
+        // User Profile & Judge Dual-Role Promotion
+        Task<researchProject.Models.ViewModels.UserProfileViewModel?> GetUserProfileAsync(string userId);
+        Task<(bool Succeeded, string? ErrorMessage)> AddResearcherRoleToJudgeAsync(string userId, JudgeToResearcherDto dto);
     }
 }

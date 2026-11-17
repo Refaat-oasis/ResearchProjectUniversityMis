@@ -1,0 +1,143 @@
+@model researchProject.Models.ViewModels.UserProfileViewModel
+@using researchProject.Models.Constants
+
+<div class="modal fade" id="becomeResearcherModal" tabindex="-1" aria-labelledby="becomeResearcherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom: 2px solid var(--brand-sovereign);">
+                <h5 class="modal-title fw-bold" id="becomeResearcherModalLabel">
+                    <i class="bi bi-mortarboard-fill me-2" style="color: var(--brand-sovereign);"></i> تفعيل صفة باحث أكاديمي للحساب
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="becomeResearcherForm" onsubmit="return handleBecomeResearcherSubmit(event)">
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4">
+                    <div class="alert alert-info mb-4 small">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        بصفتك محكماً معتمداً بالمنظومة، يمكنك الآن إضافة صفة <strong>باحث أكاديمي</strong> لنفس الحساب دون الحاجة لإنشاء حساب جديد، مع الحفاظ الكامل على الحيادية ومنع تضارب المصالح تلقائياً.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الكلية التابع لها <span class="text-danger">*</span></label>
+                            <select id="researcherCollegeId" name="CollegeId" class="form-select" required onchange="onResearcherCollegeChanged(this.value)">
+                                <option value="">-- اختر الكلية --</option>
+                                @if (Model.AvailableColleges != null)
+                                {
+                                    foreach (var c in Model.AvailableColleges)
+                                    {
+                                        <option value="@c.Id">@c.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">القسم الأكاديمي <span class="text-danger">*</span></label>
+                            <input type="text" id="researcherDepartment" name="Department" class="form-control" required placeholder="مثال: قسم الباطنة العامة / قسم علوم الحاسب" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">فئة الباحث <span class="text-danger">*</span></label>
+                            <select name="ResearcherType" class="form-select" required>
+                                <option value="@ResearcherTypeConstants.FacultyMember">@ResearcherTypeConstants.FacultyMember</option>
+                                <option value="@ResearcherTypeConstants.Researcher">@ResearcherTypeConstants.Researcher</option>
+                                <option value="@ResearcherTypeConstants.PostgraduateStudent">@ResearcherTypeConstants.PostgraduateStudent</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الدرجة العلمية <span class="text-danger">*</span></label>
+                            <input type="text" name="AcademicDegree" class="form-control" required placeholder="مثال: أستاذ مساعد / دكتوراه" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">الرقم القومي (14 رقماً) <span class="text-danger">*</span></label>
+                            <input type="text" name="NationalId" class="form-control font-mono-tabular" required pattern="^[0-9]{14}$" maxlength="14" placeholder="الرقم القومي المكون من 14 رقماً" dir="ltr" />
+                            <div class="form-text small">يستخدم للتحقق من هوية الباحث وتوثيق الشهادات الأخلاقية الصادرة.</div>
+                        </div>
+                    </div>
+
+                    <div id="becomeResearcherError" class="alert alert-danger mt-3 d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" id="btnSubmitBecomeResearcher" class="btn btn-success px-4 fw-semibold">
+                        <i class="bi bi-check-circle me-1"></i> حفظ وتفعيل دور الباحث
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onResearcherCollegeChanged(collegeId) {
+        if (!collegeId) return;
+        $.get('/Account/GetDepartmentsByCollege?collegeId=' + collegeId, function (data) {
+            // Optional datalist enhancement if departments exist
+        });
+    }
+
+    function handleBecomeResearcherSubmit(e) {
+        e.preventDefault();
+        var form = document.getElementById('becomeResearcherForm');
+        var errDiv = document.getElementById('becomeResearcherError');
+        var btn = document.getElementById('btnSubmitBecomeResearcher');
+
+        errDiv.classList.add('d-none');
+        errDiv.innerText = '';
+
+        var formData = {
+            CollegeId: parseInt($('#researcherCollegeId').val()),
+            Department: $('input[name="Department"]').val(),
+            ResearcherType: $('select[name="ResearcherType"]').val(),
+            AcademicDegree: $('input[name="AcademicDegree"]').val(),
+            NationalId: $('input[name="NationalId"]').val()
+        };
+
+        if (!formData.CollegeId) {
+            errDiv.innerText = 'يرجى اختيار الكلية التابع لها.';
+            errDiv.classList.remove('d-none');
+            return false;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جاري الحفظ والتفعيل...';
+
+        $.ajax({
+            url: '/Account/BecomeResearcher',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            headers: {
+                'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    var modalEl = document.getElementById('becomeResearcherModal');
+                    var modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+                    
+                    alert(res.message);
+                    // Reload to refresh layout, sidebar and role claims
+                    window.location.reload();
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> حفظ وتفعيل دور الباحث';
+                    errDiv.innerText = res.message || 'حدث خطأ أثناء تنفيذ الطلب.';
+                    errDiv.classList.remove('d-none');
+                }
+            },
+            error: function (xhr) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> حفظ وتفعيل دور الباحث';
+                errDiv.innerText = xhr.responseText || 'حدث خطأ في الاتصال بالخادم.';
+                errDiv.classList.remove('d-none');
+            }
+        });
+
+        return false;
+    }
+</script>

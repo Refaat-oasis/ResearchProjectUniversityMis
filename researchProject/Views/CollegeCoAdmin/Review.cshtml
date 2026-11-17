@@ -4,9 +4,34 @@
     ViewData["Title"] = $"فحص المقترح وإسناد المحكمين: {Model.Title}";
 }
 
+<style>
+    .dossier-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        background-color: var(--border-hairline, #D8D5CC);
+        border: 1px solid var(--border-hairline, #D8D5CC);
+        border-radius: var(--radius-md, 4px);
+        overflow: hidden;
+        margin: 0 0 24px 0;
+    }
+    .dossier-meta-cell {
+        background-color: var(--bg-surface, #FFFFFF);
+        padding: 14px 16px;
+    }
+    .dossier-meta-cell--subtle {
+        background-color: var(--bg-canvas, #F6F5F0);
+    }
+    @@media (max-width: 767.98px) {
+        .dossier-meta-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-file-earmark-check text-warning"></i> فحص المقترح وإسناد المحكمين</h2>
+        <h1><i class="bi bi-file-earmark-check"></i> فحص المقترح وإسناد المحكمين</h1>
         <p>« @Model.Title » - كلية @Model.College?.Name</p>
     </div>
     <a asp-action="ScreeningQueue" class="btn btn-outline-light btn-sm">
@@ -14,169 +39,182 @@
     </a>
 </div>
 
-<div class="liquid-glass-card mb-4">
-    <!-- Metadata & Authors -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded border">
-                <div class="text-muted small">التصنيف والتخصص:</div>
-                <div class="fw-bold text-dark mt-1">@Model.Category?.Name</div>
-                <div class="text-primary small">@Model.AcademicSpecialty</div>
-            </div>
+<div class="card card-custom archival-card">
+    <!-- Metadata & Authors Ledger -->
+    <dl class="dossier-meta-grid">
+        <div class="dossier-meta-cell">
+            <dt class="small fw-semibold mb-1 text-muted">التصنيف والتخصص:</dt>
+            <dd class="mb-0">
+                <div class="fw-bold" style="color: var(--ink-primary);">@Model.Category?.Name</div>
+                <div class="small mt-1 text-primary">@Model.AcademicSpecialty</div>
+            </dd>
         </div>
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded border">
-                <div class="text-muted small">الباحثون والمشاركون:</div>
-                <div class="mt-1">
-                    @if (Model.ResearcherResearchesBridges != null)
-                    {
-                        foreach (var b in Model.ResearcherResearchesBridges)
-                        {
-                            <span class="badge bg-secondary-subtle text-secondary me-1">
-                                @b.Researcher?.User?.FullName @(b.IsMainAuthor ? "(رئيسي)" : "")
-                            </span>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded border">
-                <div class="text-muted small">الموعد النهائي للفحص الشكلي:</div>
-                <div class="fw-bold mt-1 @(Model.ScreeningDueAt < DateTime.UtcNow ? "text-danger" : "text-success")">
-                    @Model.ScreeningDueAt.ToString("yyyy/MM/dd HH:mm")
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mandatory Documents Check -->
-    <h5 class="fw-bold text-dark mb-2"><i class="bi bi-paperclip me-2 text-primary"></i>فحص الوثائق المرفوعة</h5>
-    <div class="table-responsive mb-4">
-        <table class="table table-bordered table-sm align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>نوع الوثيقة</th>
-                    <th>النسخة</th>
-                    <th>اسم الملف</th>
-                    <th>الحجم</th>
-                    <th>تاريخ الرفع</th>
-                    <th class="text-center">تحميل / معاينة</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.ResearchAttachments != null && Model.ResearchAttachments.Any())
+        <div class="dossier-meta-cell dossier-meta-cell--subtle">
+            <dt class="small fw-semibold mb-1 text-muted">الباحثون والمشاركون:</dt>
+            <dd class="mb-0 d-flex flex-wrap gap-1 mt-1">
+                @if (Model.ResearcherResearchesBridges != null)
                 {
-                    foreach (var att in Model.ResearchAttachments)
+                    foreach (var b in Model.ResearcherResearchesBridges)
                     {
-                        <tr>
-                            <td class="fw-bold text-primary">@att.AttachmentType</td>
-                            <td><span class="badge bg-secondary">V @att.Version</span></td>
-                            <td>@att.OriginalFileName</td>
-                            <td>@(Math.Round(att.FileSize / 1024.0, 1)) KB</td>
-                            <td class="text-muted small">@att.UploadedAt.ToString("yyyy/MM/dd HH:mm")</td>
-                            <td class="text-center">
-                                <a href="/Attachment/Download/@att.Id" class="btn btn-sm btn-outline-primary" target="_blank" title="تحميل الملف">
-                                    <i class="bi bi-download me-1"></i> تحميل
-                                </a>
-                            </td>
-                        </tr>
+                        <span style="display: inline-block; padding: 3px 9px; font-size: 0.78rem; font-weight: 600; background: var(--bg-surface); color: var(--ink-primary); border: 1px solid var(--border-hairline); border-radius: 3px;">
+                            @b.Researcher?.User?.FullName @(b.IsMainAuthor ? "(رئيسي)" : "")
+                        </span>
                     }
                 }
-            </tbody>
-        </table>
+            </dd>
+        </div>
+        <div class="dossier-meta-cell">
+            <dt class="small fw-semibold mb-1 text-muted">الموعد النهائي للفحص الشكلي:</dt>
+            <dd class="mb-0 mt-1">
+                <span class="sla-badge @(Model.ScreeningDueAt < DateTime.UtcNow ? "sla-overdue" : "sla-ontime") font-mono-tabular" dir="ltr">
+                    @Model.ScreeningDueAt.ToString("yyyy/MM/dd HH:mm")
+                </span>
+            </dd>
+        </div>
+    </dl>
+
+    <!-- Mandatory Documents Check -->
+    <div class="dossier-panel">
+        <h5 class="fw-bold mb-3 pb-2 text-primary" style="border-bottom: 1px solid var(--border-hairline); font-size: 1rem;">
+            <i class="bi bi-paperclip me-2" style="color: var(--brand-brass);"></i>فحص الوثائق المرفوعة
+        </h5>
+        <div class="table-responsive">
+            <table class="table ledger-table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>نوع الوثيقة</th>
+                        <th>النسخة</th>
+                        <th>اسم الملف</th>
+                        <th>الحجم</th>
+                        <th>تاريخ الرفع</th>
+                        <th class="text-center">تحميل / معاينة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.ResearchAttachments != null && Model.ResearchAttachments.Any())
+                    {
+                        foreach (var att in Model.ResearchAttachments)
+                        {
+                            <tr>
+                                <td class="fw-bold text-primary">@att.AttachmentType</td>
+                                <td>
+                                    <span class="font-mono-tabular" dir="ltr" style="display: inline-block; padding: 2px 8px; font-size: 0.78rem; font-weight: 600; background: var(--bg-subtle); color: var(--ink-primary); border: 1px solid var(--border-hairline); border-radius: 3px;">V @att.Version</span>
+                                </td>
+                                <td>@att.OriginalFileName</td>
+                                <td class="small" style="color: var(--ink-secondary);">
+                                    <span class="font-mono-tabular" dir="ltr">@(Math.Round(att.FileSize / 1024.0, 1)) KB</span>
+                                </td>
+                                <td class="small" style="color: var(--ink-secondary);">
+                                    <span class="font-mono-tabular" dir="ltr">@att.UploadedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="table-actions-inline justify-content-center">
+                                        <a href="/Attachment/Download/@att.Id" class="btn btn-sm btn-outline-primary" target="_blank" title="تحميل الملف">
+                                            <i class="bi bi-download me-1"></i> تحميل
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Screening Notes -->
-    <div class="card bg-light border p-3 mb-4 rounded-3">
-        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-pencil-square me-2 text-primary"></i>ملاحظات الفحص الشكلي</h6>
-        <div class="input-group">
-            <textarea id="screeningNotesText" class="form-control" rows="2" placeholder="اكتب ملاحظات الفحص الإداري هنا...">@Model.ScreeningNotes</textarea>
-            <button class="btn btn-primary-custom" onclick="saveNotes(@Model.Id);">
+    <div class="dossier-panel-subtle mb-4">
+        <h6 class="fw-bold mb-2" style="color: var(--ink-primary);">
+            <i class="bi bi-pencil-square me-2 text-primary"></i>ملاحظات الفحص الشكلي
+        </h6>
+        <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-end">
+            <textarea id="screeningNotesText" class="form-control flex-grow-1" rows="2" placeholder="اكتب ملاحظات الفحص الإداري هنا...">@Model.ScreeningNotes</textarea>
+            <button class="btn btn-primary-custom text-nowrap" onclick="saveNotes(@Model.Id);">
                 <i class="bi bi-save me-1"></i> حفظ الملاحظات
             </button>
         </div>
     </div>
 
     <!-- Auto Distribution / Judge Assignment Section -->
-    <div class="card border-primary mb-3 rounded-3 overflow-hidden">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold"><i class="bi bi-person-check-fill me-2"></i>نظام التوزيع الآلي واقتراح المحكمين</h6>
-            <span class="badge bg-light text-dark">يتم استبعاد باحثي المقترح تلقائياً لمنع تضارب المصالح</span>
+    <div class="dossier-panel mb-0" style="border-top: 3px solid var(--brand-sovereign);">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 pb-3 mb-3" style="border-bottom: 1px solid var(--border-hairline);">
+            <h6 class="mb-0 fw-bold text-primary">
+                <i class="bi bi-person-check-fill me-2" style="color: var(--brand-brass);"></i>نظام التوزيع الآلي واقتراح المحكمين
+            </h6>
+            <span class="status-stamp status-screening">يتم استبعاد باحثي المقترح تلقائياً لمنع تضارب المصالح</span>
         </div>
-        <div class="card-body">
-            <p class="text-muted small mb-3">
-                يقترح النظام المحكمين المعتمدين مرتبين بحسب <strong>تطابق التخصص الأكاديمي الدقيق</strong> أولاً، ثم <strong>أقل عبء تقييمات مفتوحة</strong>.
-            </p>
 
-            <form id="assignJudgesForm" onsubmit="return submitJudgeAssignment(event, @Model.Id);">
-                <div class="table-responsive mb-3">
-                    <table class="table table-hover align-middle border">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 50px;">اختيار</th>
-                                <th>اسم المحكم</th>
-                                <th>اللقب العلمي</th>
-                                <th>التخصص الدقيق</th>
-                                <th>تطابق التخصص</th>
-                                <th>أبحاث قيد التقييم</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (ViewBag.SuggestedJudges != null && ((List<researchProject.Models.Entities.Judge>)ViewBag.SuggestedJudges).Any())
-                            {
-                                foreach (var j in (List<researchProject.Models.Entities.Judge>)ViewBag.SuggestedJudges)
-                                {
-                                    bool match = j.Specialty.Trim().Equals(Model.AcademicSpecialty.Trim(), StringComparison.OrdinalIgnoreCase);
-                                    int openLoad = j.Evaluations?.Count(e => e.Decision == EvaluationDecisionConstants.UnderEvaluation) ?? 0;
+        <p class="small mb-3" style="color: var(--ink-secondary);">
+            يقترح النظام المحكمين المعتمدين مرتبين بحسب <strong>تطابق التخصص الأكاديمي الدقيق</strong> أولاً، ثم <strong>أقل عبء تقييمات مفتوحة</strong>.
+        </p>
 
-                                    <tr class="@(match ? "table-success-subtle" : "")">
-                                        <td class="text-center">
-                                            <input type="checkbox" name="selectedJudge" value="@j.Id" class="form-check-input judge-checkbox" />
-                                        </td>
-                                        <td class="fw-bold">@j.User?.FullName</td>
-                                        <td>@j.AcademicTitle</td>
-                                        <td>@j.Specialty</td>
-                                        <td>
-                                            @if (match)
-                                            {
-                                                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>تطابق تام</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-secondary-subtle text-secondary">تخصص قريب</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            <span class="badge @(openLoad > 0 ? "bg-warning text-dark" : "bg-light text-dark border")">
-                                                @openLoad أبحاث
-                                            </span>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                            else
+        <form id="assignJudgesForm" onsubmit="return submitJudgeAssignment(event, @Model.Id);">
+            <div class="table-responsive mb-3">
+                <table class="table ledger-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">اختيار</th>
+                            <th>اسم المحكم</th>
+                            <th>اللقب العلمي</th>
+                            <th>التخصص الدقيق</th>
+                            <th>تطابق التخصص</th>
+                            <th>أبحاث قيد التقييم</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.SuggestedJudges != null && ((List<researchProject.Models.Entities.Judge>)ViewBag.SuggestedJudges).Any())
+                        {
+                            foreach (var j in (List<researchProject.Models.Entities.Judge>)ViewBag.SuggestedJudges)
                             {
-                                <tr>
-                                    <td colspan="6" class="text-center py-3 text-muted">
-                                        لا يوجد محكمون متاحون للتخصص حالياً، يمكنك دعوة محكم جديد من صفحة "دعوة محكم علمي".
+                                bool match = j.Specialty.Trim().Equals(Model.AcademicSpecialty.Trim(), StringComparison.OrdinalIgnoreCase);
+                                int openLoad = j.Evaluations?.Count(e => e.Decision == EvaluationDecisionConstants.UnderEvaluation) ?? 0;
+
+                                <tr style="@(match ? "border-right: 3px solid #14342B;" : "")">
+                                    <td class="text-center">
+                                        <input type="checkbox" name="selectedJudge" value="@j.Id" class="form-check-input judge-checkbox" />
+                                    </td>
+                                    <td class="fw-bold" style="color: var(--ink-primary);">@j.User?.FullName</td>
+                                    <td>@j.AcademicTitle</td>
+                                    <td>@j.Specialty</td>
+                                    <td>
+                                        @if (match)
+                                        {
+                                            <span class="status-stamp status-approved"><i class="bi bi-check-lg me-1"></i>تطابق تام</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-stamp status-inactive">تخصص قريب</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="status-stamp @(openLoad > 0 ? "status-screening" : "status-inactive")">
+                                            <span class="font-mono-tabular">@openLoad</span> أبحاث
+                                        </span>
                                     </td>
                                 </tr>
                             }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    لا يوجد محكمون متاحون للتخصص حالياً، يمكنك دعوة محكم جديد من صفحة "دعوة محكم علمي".
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="small text-muted">
-                        <i class="bi bi-info-circle me-1"></i> يمكنك اختيار محكم واحد أو أكثر لتأكيد إسناد المقترح.
-                    </div>
-                    <button type="submit" class="btn btn-success px-4 py-2 fw-bold">
-                        <i class="bi bi-send-check-fill me-1"></i> تأكيد إسناد المحكمين وبدء التحكيم
-                    </button>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 pt-2">
+                <div class="small" style="color: var(--ink-secondary);">
+                    <i class="bi bi-info-circle me-1"></i> يمكنك اختيار محكم واحد أو أكثر لتأكيد إسناد المقترح.
                 </div>
-            </form>
-        </div>
+                <button type="submit" class="btn btn-primary-custom px-4 py-2 fw-bold">
+                    <i class="bi bi-send-check-fill me-1"></i> تأكيد إسناد المحكمين وبدء التحكيم
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -234,4 +272,3 @@
         }
     </script>
 }
-

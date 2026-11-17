@@ -5,94 +5,102 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-file-earmark-plus text-success"></i> تقديم مقترح بحثي جديد للجنة الأخلاقيات</h2>
+        <h2>تقديم مقترح بحثي جديد للجنة الأخلاقيات</h2>
         <p>يرجى تعبئة بيانات المقترح ورفع المستندات الإلزامية الثلاثة (الموافقة المستنيرة، أدوات البحث، خطة البحث)</p>
     </div>
-    <span class="badge bg-light text-dark fs-6 p-2 border">
-        الكلية التابع لها: <strong>@(ViewBag.ResearcherCollege?.Name ?? "غير محدد")</strong>
+    <span class="role-stamp">
+        الكلية التابع لها: <strong class="ms-1">@(ViewBag.ResearcherCollege?.Name ?? "غير محدد")</strong>
     </span>
 </div>
 
-<div class="liquid-glass-card">
+<div class="card-custom archival-card">
     <form id="createResearchForm" asp-action="CreateResearch" method="post" enctype="multipart/form-data">
         <input type="hidden" name="CollegeId" value="@(ViewBag.ResearcherCollege?.Id ?? 1)" />
 
-        <div class="row g-3 mb-4">
-            <div class="col-12">
-                <label asp-for="Title" class="form-label"></label> <span class="text-danger">*</span>
-                <input asp-for="Title" class="form-control" required placeholder="العنوان الأكاديمي الدقيق للمقترح البحثي" />
-                <span asp-validation-for="Title" class="text-danger small"></span>
-            </div>
+        <div class="dossier-panel mb-4">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="Title" class="form-label"></label> <span class="text-danger">*</span>
+                    <input asp-for="Title" class="form-control" required placeholder="العنوان الأكاديمي الدقيق للمقترح البحثي" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
 
-            <div class="col-md-6">
-                <label asp-for="CategoryId" class="form-label"></label> <span class="text-danger">*</span>
-                <input type="hidden" asp-for="CategoryId" id="CategoryId" />
-                <input type="text" id="categoryDisplayInput" list="categoriesList" class="form-control" placeholder="ابحث أو اختر نوع وتصنيف البحث..." required autocomplete="off" />
-                <datalist id="categoriesList">
-                    @if (ViewBag.Categories != null)
-                    {
-                        foreach (var cat in ViewBag.Categories)
+                <div class="col-md-6">
+                    <label asp-for="CategoryId" class="form-label"></label> <span class="text-danger">*</span>
+                    <input type="hidden" asp-for="CategoryId" id="CategoryId" />
+                    <input type="text" id="categoryDisplayInput" list="categoriesList" class="form-control" placeholder="ابحث أو اختر نوع وتصنيف البحث..." required autocomplete="off" />
+                    <datalist id="categoriesList">
+                        @if (ViewBag.Categories != null)
                         {
-                            <option value="@cat.Name" data-id="@cat.Id"></option>
+                            foreach (var cat in ViewBag.Categories)
+                            {
+                                <option value="@cat.Name" data-id="@cat.Id"></option>
+                            }
                         }
-                    }
-                </datalist>
-                <span asp-validation-for="CategoryId" class="text-danger small"></span>
-            </div>
+                    </datalist>
+                    <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                </div>
 
-            <div class="col-md-6">
-                <label asp-for="AcademicSpecialty" class="form-label"></label> <span class="text-danger">*</span>
-                <input asp-for="AcademicSpecialty" class="form-control" required placeholder="مثال: العلوم الصيدلية / علم الأدوية السريري" />
-                <span asp-validation-for="AcademicSpecialty" class="text-danger small"></span>
+                <div class="col-md-6">
+                    <label asp-for="AcademicSpecialty" class="form-label"></label> <span class="text-danger">*</span>
+                    <input asp-for="AcademicSpecialty" class="form-control" required placeholder="مثال: العلوم الصيدلية / علم الأدوية السريري" />
+                    <span asp-validation-for="AcademicSpecialty" class="text-danger small"></span>
+                </div>
             </div>
         </div>
 
         <!-- Dynamic Category Fields Container -->
         <div id="dynamicFieldsContainer" class="mb-4"></div>
 
-        <!-- Mandatory Attachments Card -->
-        <div class="card p-3 mb-4 border bg-light rounded-3">
-            <h6 class="fw-bold text-dark mb-3">
-                <i class="bi bi-paperclip me-2 text-primary"></i>المستندات والوثائق الإلزامية
-            </h6>
+        <!-- Mandatory Attachments Section -->
+        <div class="dossier-panel mb-4">
+            <h6 class="fw-semibold mb-3">المستندات والوثائق الإلزامية</h6>
 
-            <div class="row g-3">
+            <div class="row g-4">
                 <!-- 1. Informed Consent -->
                 <div class="col-md-6">
-                    <label class="form-label">1. وثيقة الموافقة المستنيرة (Informed Consent) <span class="text-danger">*</span></label>
-                    <input type="file" name="InformedConsentFile" class="form-control" required accept=".pdf,.doc,.docx" />
-                    <div class="form-text small">نموذج الإقرار والموافقة المستنيرة للمشاركين بالبحث (PDF, DOCX).</div>
+                    <div class="archival-upload-box h-100">
+                        <label class="form-label">1. وثيقة الموافقة المستنيرة (Informed Consent) <span class="text-danger">*</span></label>
+                        <input type="file" name="InformedConsentFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                        <div class="form-text small">نموذج الإقرار والموافقة المستنيرة للمشاركين بالبحث (PDF, DOCX).</div>
+                    </div>
                 </div>
 
                 <!-- 2. Research Tools -->
                 <div class="col-md-6">
-                    <label class="form-label">2. أدوات وأجهزة البحث (Research Tools) <span class="text-danger">*</span></label>
-                    <input type="file" name="ResearchToolsFile" class="form-control" required accept=".pdf,.doc,.docx,.xls,.xlsx" />
-                    <div class="form-text small">الاستبيانات، استمارات المقابلات، أو بروتوكول التجارب المعملية.</div>
+                    <div class="archival-upload-box h-100">
+                        <label class="form-label">2. أدوات وأجهزة البحث (Research Tools) <span class="text-danger">*</span></label>
+                        <input type="file" name="ResearchToolsFile" class="form-control" required accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                        <div class="form-text small">الاستبيانات، استمارات المقابلات، أو بروتوكول التجارب المعملية.</div>
+                    </div>
                 </div>
 
                 <!-- 3. Research Proposal Plan -->
                 <div class="col-md-6">
-                    <label class="form-label">3. خطة المقترح البحثي الكاملة (Research Proposal) <span class="text-danger">*</span></label>
-                    <input type="file" name="ResearchProposalFile" class="form-control" required accept=".pdf,.doc,.docx" />
-                    <div class="form-text small">الخطة البحثية المتضمنة الأهداف والمنهجية العلمية والاعتبارات الأخلاقية.</div>
+                    <div class="archival-upload-box h-100">
+                        <label class="form-label">3. خطة المقترح البحثي الكاملة (Research Proposal) <span class="text-danger">*</span></label>
+                        <input type="file" name="ResearchProposalFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                        <div class="form-text small">الخطة البحثية المتضمنة الأهداف والمنهجية العلمية والاعتبارات الأخلاقية.</div>
+                    </div>
                 </div>
 
                 <!-- 4. Additional Documents (Optional) -->
                 <div class="col-md-6">
-                    <label class="form-label">4. مستندات وملاحق إضافية (اختياري)</label>
-                    <input type="file" name="AdditionalDocumentFile" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" />
-                    <div class="form-text small">موافقات جهات خارجية، مذكرات تعاون، أو ملاحق تكميلية.</div>
+                    <div class="archival-upload-box h-100">
+                        <label class="form-label">4. مستندات وملاحق إضافية (اختياري)</label>
+                        <input type="file" name="AdditionalDocumentFile" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                        <div class="form-text small">موافقات جهات خارجية، مذكرات تعاون، أو ملاحق تكميلية.</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center">
-            <a asp-action="MyResearches" class="btn btn-outline-secondary">
+        <div class="d-flex flex-column-reverse flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3 pt-2">
+            <a asp-action="MyResearches" class="btn btn-outline-secondary text-center">
                 <i class="bi bi-arrow-right me-1"></i> العودة للمقترحات
             </a>
-            <button type="submit" class="btn btn-accent-custom px-4 py-2 fs-6">
-                <i class="bi bi-send-check-fill me-1"></i> تقديم المقترح البحثي واعتماد الرفع
+            <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                تقديم المقترح البحثي واعتماد الرفع
             </button>
         </div>
     </form>
@@ -153,4 +161,3 @@
         });
     </script>
 }
-

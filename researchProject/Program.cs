@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Hangfire;
+using Hangfire.SqlServer;
 using researchProject.Data;
 using researchProject.Hubs;
 using researchProject.Models.Constants;
@@ -71,6 +73,25 @@ namespace researchProject
             builder.Services.AddScoped<IReportExportService, ReportExportService>();
             builder.Services.AddSignalR();
 
+            // Hangfire Background Job Processing (Every 12h unconfirmed emails cleanup)
+            builder.Services.AddHangfire(configuration => configuration
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+                {
+                    CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                    SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                    QueuePollInterval = TimeSpan.Zero,
+                    UseRecommendedIsolationLevel = true,
+                    DisableGlobalLocks = true
+                }));
+            builder.Services.AddHangfireServer(options =>
+            {
+                options.WorkerCount = 1;
+            });
+            builder.Services.AddScoped<IUnconfirmedEmailCleanupService, UnconfirmedEmailCleanupService>();
+
             // 4. Dedicated Repositories Per Actor
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
@@ -115,6 +136,19 @@ namespace researchProject
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // Hangfire Dashboard (Secured for SuperAdmin only)
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new[] { new HangfireAuthorizationFilter() },
+                DashboardTitle = "لوحة مهام المنصة الخلفية - Hangfire"
+            });
+
+            // Schedule recurring cleanup of unconfirmed emails every 12 hours
+            RecurringJob.AddOrUpdate<IUnconfirmedEmailCleanupService>(
+                "delete-unconfirmed-emails",
+                service => service.CleanupUnconfirmedAccountsAsync(),
+                "0 */12 * * *");
 
             app.MapControllerRoute(
                 name: "default",

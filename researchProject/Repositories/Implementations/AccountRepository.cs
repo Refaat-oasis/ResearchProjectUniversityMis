@@ -11,6 +11,7 @@ using researchProject.Data;
 using researchProject.Models.Constants;
 using researchProject.Models.DTOs;
 using researchProject.Models.Entities;
+using researchProject.Models.ViewModels;
 using researchProject.Repositories.Interfaces;
 using researchProject.Services;
 
@@ -682,6 +683,122 @@ namespace researchProject.Repositories.Implementations
         {
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
             return Convert.ToHexString(bytes).ToLowerInvariant();
+        }
+
+        public async Task<UserProfileViewModel?> GetUserProfileAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return null;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var colleges = await _db.Colleges.OrderBy(c => c.Name).ToListAsync();
+
+            var vm = new UserProfileViewModel
+            {
+                UserId = user.Id,
+                FullName = user.FullName,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                Roles = roles,
+                IsSuperAdmin = roles.Contains(RoleConstants.SuperAdmin),
+                IsCollegeCoAdmin = roles.Contains(RoleConstants.CollegeCoAdmin),
+                IsJudge = roles.Contains(RoleConstants.Judge),
+                IsResearcher = roles.Contains(RoleConstants.Researcher),
+                AvailableColleges = colleges
+            };
+
+            if (vm.IsJudge)
+            {
+                var judge = await _db.Judges.FirstOrDefaultAsync(j => j.UserId == userId);
+                if (judge != null)
+                {
+                    vm.JudgeSpecialty = judge.Specialty;
+                    vm.JudgeAcademicTitle = judge.AcademicTitle;
+                    vm.JudgeIsActive = judge.IsActive;
+                }
+            }
+
+            if (vm.IsResearcher)
+            {
+                var researcher = await _db.Researchers.Include(r => r.College).FirstOrDefaultAsync(r => r.UserId == userId);
+                if (researcher != null)
+                {
+                    vm.ResearcherCollegeName = researcher.College?.Name;
+                    vm.ResearcherDepartment = researcher.Department;
+                    vm.ResearcherType = researcher.ResearcherType;
+                    vm.ResearcherDegree = researcher.AcademicDegree;
+                    vm.ResearcherNationalId = researcher.NationalId;
+                }
+            }
+
+            return vm;
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> AddResearcherRoleToJudgeAsync(string userId, JudgeToResearcherDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return (false, "المستخدم غير موجود بالنظام.");
+            }
+
+            var isJudge = await _userManager.IsInRoleAsync(user, RoleConstants.Judge);
+            if (!isJudge)
+            {
+                return (false, "هذه الميزة متاحة للمحكمين المعتمدين فقط.");
+            }
+
+            var isAlreadyResearcher = await _userManager.IsInRoleAsync(user, RoleConstants.Researcher);
+            var existingProfile = await _db.Researchers.AnyAsync(r => r.UserId == userId);
+            if (isAlreadyResearcher || existingProfile)
+            {
+                return (false, "الحساب يحمل بالفعل صفة باحث أكاديمي مسجل.");
+            }
+
+            var collegeExists = await _db.Colleges.AnyAsync(c => c.Id == dto.CollegeId);
+            if (!collegeExists)
+            {
+                return (false, "الكلية المحددة غير صالحة أو غير موجودة.");
+            }
+
+            using var transaction = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                // Ensure Researcher role exists
+                if (!await _roleManager.RoleExistsAsync(RoleConstants.Researcher))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(RoleConstants.Researcher));
+                }
+
+                // Add Researcher role
+                var addRoleResult = await _userManager.AddToRoleAsync(user, RoleConstants.Researcher);
+                if (!addRoleResult.Succeeded)
+                {
+                    return (false, "فشل إضافة دور الباحث الأكاديمي للحساب: " + string.Join("، ", addRoleResult.Errors.Select(e => e.Description)));
+                }
+
+                // Create Researcher profile entity
+                var researcher = new Researcher
+                {
+                    UserId = user.Id,
+                    CollegeId = dto.CollegeId,
+                    Department = dto.Department,
+                    ResearcherType = dto.ResearcherType,
+                    AcademicDegree = dto.AcademicDegree,
+                    NationalId = dto.NationalId
+                };
+
+                await _db.Researchers.AddAsync(researcher);
+                await _db.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return (false, "حدث خطأ غير متوقع أثناء تفعيل دور الباحث: " + ex.Message);
+            }
         }
     }
 }

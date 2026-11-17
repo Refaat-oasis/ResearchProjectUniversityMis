@@ -1,0 +1,132 @@
+@model researchProject.Models.ViewModels.UserProfileViewModel
+@using researchProject.Models.Constants
+
+<div class="archival-card">
+    <div class="card-header-custom">
+        <h4 class="card-title-custom">
+            <i class="bi bi-person-badge-fill"></i> الملف الشخصي وبيانات الحساب
+        </h4>
+        <div class="d-flex gap-2 flex-wrap">
+            @foreach (var r in Model.Roles)
+            {
+                <span class="role-stamp @(r == RoleConstants.SuperAdmin ? "role-stamp-admin" : r == RoleConstants.CollegeCoAdmin ? "role-stamp-coadmin" : r == RoleConstants.Judge ? "role-stamp-judge" : "role-stamp-researcher")">
+                    @r
+                </span>
+            }
+        </div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="dossier-panel-subtle h-100">
+                <div class="text-muted small">الاسم الكامل</div>
+                <div class="fw-bold fs-5 text-dark mt-1">@Model.FullName</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="dossier-panel-subtle h-100">
+                <div class="text-muted small">البريد الإلكتروني المعتمد</div>
+                <div class="font-mono-tabular fw-bold fs-6 text-dark mt-1 text-break" dir="ltr">@Model.Email</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="dossier-panel-subtle h-100">
+                <div class="text-muted small">رقم الهاتف</div>
+                <div class="font-mono-tabular fw-bold fs-6 text-dark mt-1" dir="ltr">@(string.IsNullOrEmpty(Model.PhoneNumber) ? "غير مسجل" : Model.PhoneNumber)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Judge Dual-Role Promotion Banner -->
+    @if (Model.CanBecomeResearcher)
+    {
+        <div class="dossier-panel-subtle mb-4" style="border-color: var(--tone-approved-border); background-color: var(--tone-approved-bg); border-right: 3px solid var(--brand-sovereign);">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <h5 class="fw-bold text-success mb-1">
+                        <i class="bi bi-stars text-warning me-1"></i> هل ترغب في تقديم أبحاث علمية كباحث أكاديمي؟
+                    </h5>
+                    <p class="text-muted mb-0 small">
+                        أنت مسجل حالياً كـ <strong>محكم علمي</strong>. يمكنك في خطوة واحدة تفعيل صفة <strong>باحث أكاديمي</strong> لنفس حسابك لتقديم مقترحاتك وتتبعها.
+                    </p>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-success fw-semibold px-4" data-bs-toggle="modal" data-bs-target="#becomeResearcherModal">
+                        <i class="bi bi-mortarboard-fill me-1"></i> تفعيل صفة باحث أكاديمي
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Details Sections -->
+    <div class="row g-4">
+        @if (Model.IsJudge)
+        {
+            <div class="col-lg-6">
+                <div class="dossier-panel h-100 mb-0">
+                    <h5 class="page-title fw-bold text-dark border-bottom pb-2 mb-0">
+                        <i class="bi bi-mortarboard me-2"></i> بيانات المحكم العلمي
+                    </h5>
+                    <table class="colophon-table mt-2">
+                        <tbody>
+                            <tr>
+                                <th>التخصص الدقيق:</th>
+                                <td>@(Model.JudgeSpecialty ?? "غير محدد")</td>
+                            </tr>
+                            <tr>
+                                <th>اللقب الأكاديمي:</th>
+                                <td>@(Model.JudgeAcademicTitle ?? "غير محدد")</td>
+                            </tr>
+                            <tr>
+                                <th>حالة الاعتماد:</th>
+                                <td>
+                                    <span class="status-stamp @(Model.JudgeIsActive ? "status-active" : "status-inactive")">
+                                        @(Model.JudgeIsActive ? "نشط ومعتمد" : "غير نشط")
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        @if (Model.IsResearcher)
+        {
+            <div class="col-lg-6">
+                <div class="dossier-panel h-100 mb-0">
+                    <h5 class="page-title fw-bold text-success border-bottom pb-2 mb-0">
+                        <i class="bi bi-journal-check me-2"></i> بيانات الباحث الأكاديمي
+                    </h5>
+                    <table class="colophon-table mt-2">
+                        <tbody>
+                            <tr>
+                                <th>الكلية:</th>
+                                <td>@(Model.ResearcherCollegeName ?? "غير محدد")</td>
+                            </tr>
+                            <tr>
+                                <th>القسم:</th>
+                                <td>@(Model.ResearcherDepartment ?? "غير محدد")</td>
+                            </tr>
+                            <tr>
+                                <th>فئة الباحث:</th>
+                                <td>@(Model.ResearcherType ?? "غير محدد")</td>
+                            </tr>
+                            <tr>
+                                <th>الدرجة العلمية:</th>
+                                <td>@(Model.ResearcherDegree ?? "غير محدد")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.CanBecomeResearcher)
+{
+    <partial name="_RegisterAsResearcherModalPartial" model="Model" />
+}

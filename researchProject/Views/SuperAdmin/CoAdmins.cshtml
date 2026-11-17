@@ -5,18 +5,18 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-person-badge text-warning"></i> إدارة مديري اللجان الفرعية بالكليات</h2>
+        <h1 class="page-title"><i class="bi bi-person-badge"></i> إدارة مديري اللجان الفرعية بالكليات</h1>
         <p>تعيين مديري اللجان لكل كلية لإدارة الفحص الشكلي وإسناد المحكمين والاعتماد وإصدار الشهادات</p>
     </div>
-    <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCoAdminModal">
+    <button class="btn btn-brass btn-sm" data-bs-toggle="modal" data-bs-target="#addCoAdminModal">
         <i class="bi bi-person-plus-fill me-1"></i> تعيين مدير لجنة جديد
     </button>
 </div>
 
-<div class="liquid-glass-card mb-4">
+<div class="card-custom archival-card mb-4">
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>الاسم الكامل</th>
@@ -32,11 +32,11 @@
                     foreach (var a in Model)
                     {
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold text-dark">@a.User?.FullName</td>
-                            <td dir="ltr" class="text-end font-monospace small">@a.User?.Email</td>
-                            <td><span class="badge bg-primary-subtle text-primary fs-6">@a.College?.Name</span></td>
-                            <td class="text-muted small">@DateTime.UtcNow.ToString("yyyy/MM/dd")</td>
+                            <td class="font-mono-tabular">@index</td>
+                            <td class="fw-bold" style="color: var(--ink-primary);">@a.User?.FullName</td>
+                            <td dir="ltr" class="text-end font-mono-tabular small">@a.User?.Email</td>
+                            <td><span class="status-stamp status-assigned">@a.College?.Name</span></td>
+                            <td class="font-mono-tabular small" style="color: var(--ink-muted);">@DateTime.UtcNow.ToString("yyyy/MM/dd")</td>
                         </tr>
                         index++;
                     }
@@ -44,7 +44,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
+                        <td colspan="5" class="text-center py-5" style="color: var(--ink-muted);">لا يوجد مديرو لجان مسجلون حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -57,7 +57,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="addCoAdminModalLabel"><i class="bi bi-person-plus me-2 text-primary"></i>تعيين مدير لجنة فرعية لكلية</h5>
+                <h5 class="modal-title fw-bold" id="addCoAdminModalLabel"><i class="bi bi-person-plus me-2"></i>تعيين مدير لجنة فرعية لكلية</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="createCoAdminForm" asp-action="CreateCoAdminNewUser" method="post">
@@ -95,12 +95,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني المؤسسي <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control" required placeholder="coadmin.med@university.edu.eg" dir="ltr" />
+                        <input type="email" name="email" class="form-control font-mono-tabular" required placeholder="coadmin.med@university.edu.eg" dir="ltr" />
                         <div class="form-text small">سيقوم النظام بإنشاء الحساب وإرسال كلمة مرور مؤقتة عبر البريد الإلكتروني.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-primary-custom">إنشاء وتعيين مدير الكلية</button>
                 </div>
             </form>

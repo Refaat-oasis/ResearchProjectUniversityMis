@@ -4,23 +4,23 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-envelope-plus text-info"></i> دعوة محكم علمي معتمد</h2>
+        <h1><i class="bi bi-envelope-plus"></i> دعوة محكم علمي معتمد</h1>
         <p>إرسال رابط دعوة آمن عبر البريد الإلكتروني لانضمام خبير أو باحث لهيئة المحكمين بالكلية</p>
     </div>
 </div>
 
-<div class="liquid-glass-card">
+<div class="card card-custom archival-card">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="p-4 border rounded-3 bg-light">
+        <div class="col-12 col-lg-8">
+            <div class="dossier-panel-subtle" style="border-top: 3px solid var(--brand-sovereign); padding: 24px;">
                 <form id="coAdminInviteForm" asp-action="InviteJudge" method="post">
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
                         <div class="custom-datalist-wrapper">
                             <i class="bi bi-search datalist-search-icon"></i>
-                            <input list="systemUsersList" type="email" name="email" 
-                                   class="form-control custom-datalist-input" 
-                                   placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." 
+                            <input list="systemUsersList" type="email" name="email"
+                                   class="form-control custom-datalist-input font-mono-tabular"
+                                   placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..."
                                    required dir="ltr" autocomplete="off" />
                             <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
                                 <i class="bi bi-x-circle-fill"></i>
@@ -45,7 +45,7 @@
                         <input type="text" name="specialty" class="form-control" placeholder="مثال: علم الأدوية السريري / الأخلاقيات الحيوية" />
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex flex-column-reverse flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-2 pt-3" style="border-top: 1px solid var(--border-hairline);">
                         <a asp-action="ScreeningQueue" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-right me-1"></i> العودة لطابور الفحص
                         </a>
@@ -87,4 +87,3 @@
         });
     </script>
 }
-

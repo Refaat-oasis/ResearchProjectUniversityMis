@@ -1,20 +1,22 @@
 @model List<researchProject.Models.Entities.Research>
 @using researchProject.Models.Constants
 
-<div class="card card-custom">
-    <div class="card-header-custom">
+<div class="card card-custom archival-card">
+    <div class="card-header-custom flex-wrap gap-3">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-hourglass-split text-warning"></i> طابور الفحص الشكلي للمقترحات (Screening Queue)
+                <i class="bi bi-hourglass-split" style="color: var(--brand-brass, #9A6B26);"></i> طابور الفحص الشكلي للمقترحات (Screening Queue)
             </h4>
-            <div class="text-muted small">مراجعة الأوراق إدارياً والتأكد من استيفاء المرفقات خلال المهلة النظامية (24 - 48 ساعة)</div>
+            <div class="small mt-1" style="color: var(--ink-secondary, #4A525A);">مراجعة الأوراق إدارياً والتأكد من استيفاء المرفقات خلال المهلة النظامية (24 - 48 ساعة)</div>
         </div>
-        <span class="badge bg-primary fs-6">@(Model?.Count ?? 0) مقترحات بانتظار الفحص</span>
+        <span class="status-stamp status-screening">
+            <span class="font-mono-tabular me-1">@(Model?.Count ?? 0)</span> مقترحات بانتظار الفحص
+        </span>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle mb-0">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>عنوان المقترح البحثي</th>
@@ -36,16 +38,20 @@
                         bool isOverdue = r.ScreeningDueAt < DateTime.UtcNow;
                         var remainingHours = Math.Round((r.ScreeningDueAt - DateTime.UtcNow).TotalHours, 1);
 
-                        <tr class="@(isOverdue ? "table-danger" : "")">
-                            <td>@index</td>
-                            <td class="fw-bold" style="max-width: 250px;">@r.Title</td>
+                        <tr style="@(isOverdue ? "border-right: 3px solid #8C1D24;" : "")">
+                            <td class="font-mono-tabular text-muted">@index</td>
+                            <td class="fw-bold" style="max-width: 260px; color: var(--ink-primary, #121619);">@r.Title</td>
                             <td>
-                                <div>@r.Category?.Name</div>
-                                <div class="text-muted small">@r.AcademicSpecialty</div>
+                                <div class="fw-medium">@r.Category?.Name</div>
+                                <div class="small" style="color: var(--ink-secondary, #4A525A);">@r.AcademicSpecialty</div>
                             </td>
                             <td>@mainAuthor</td>
-                            <td class="text-muted small">@r.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</td>
-                            <td class="small fw-bold">@r.ScreeningDueAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td class="small" style="color: var(--ink-secondary, #4A525A);">
+                                <span class="font-mono-tabular" dir="ltr">@r.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                            </td>
+                            <td class="small fw-bold" style="color: var(--ink-primary, #121619);">
+                                <span class="font-mono-tabular" dir="ltr">@r.ScreeningDueAt.ToString("yyyy/MM/dd HH:mm")</span>
+                            </td>
                             <td>
                                 @if (isOverdue)
                                 {
@@ -56,14 +62,16 @@
                                 else
                                 {
                                     <span class="sla-badge sla-ontime">
-                                        <i class="bi bi-clock me-1"></i> متبقي @remainingHours ساعة
+                                        <i class="bi bi-clock me-1"></i> متبقي <span class="font-mono-tabular">@remainingHours</span> ساعة
                                     </span>
                                 }
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-primary-custom" onclick="loadPartial('/CollegeCoAdmin/ResearchReviewPartial/@r.Id', '#main-content-container', 'screening-queue');">
-                                    <i class="bi bi-check2-square me-1"></i> فحص وإسناد
-                                </button>
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm btn-primary-custom" onclick="loadPartial('/CollegeCoAdmin/ResearchReviewPartial/@r.Id', '#main-content-container', 'screening-queue');" title="فحص وتدقيق المقترح وإسناد المحكمين">
+                                        <i class="bi bi-check2-square me-1"></i> فحص وإسناد
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -72,8 +80,8 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            <i class="bi bi-check2-circle text-success fs-3 d-block mb-2"></i>
+                        <td colspan="8" class="text-center py-5" style="color: var(--ink-muted, #767E85);">
+                            <i class="bi bi-check2-circle fs-3 d-block mb-2" style="color: var(--brand-sovereign, #14342B);"></i>
                             لا توجد أبحاث بانتظار الفحص الشكلي حالياً، تم إنجاز جميع المهام!
                         </td>
                     </tr>

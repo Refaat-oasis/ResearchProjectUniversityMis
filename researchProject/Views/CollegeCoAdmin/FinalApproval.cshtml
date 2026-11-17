@@ -6,21 +6,21 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-award text-success"></i> الاعتماد النهائي وإصدار الشهادات الأخلاقية الرقمية</h2>
+        <h1><i class="bi bi-award"></i> الاعتماد النهائي وإصدار الشهادات الأخلاقية الرقمية</h1>
         <p>المقترحات التي نالت موافقة واكتمال جولات التحكيم (صلاحية حصرية لمدير اللجنة الفرعية بالكلية)</p>
     </div>
 </div>
 
-<div class="liquid-glass-card mb-4">
+<div class="card card-custom archival-card">
     <!-- Instructions Notice -->
-    <div class="alert alert-success small mb-4 rounded-3">
+    <div class="alert alert-success small mb-4" style="border-right: 3px solid var(--brand-sovereign);">
         <i class="bi bi-check-circle-fill me-1"></i>
         <strong>الاعتماد المباشر:</strong> تصدر الشهادة الأخلاقية الرسمية فوراً بختم واعتماد اللجنة ومزودة بالرقم المسلسل المعتمد ورمز الاستجابة السريعة (QR Code).
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle mb-0">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>عنوان المقترح البحثي</th>
@@ -39,25 +39,36 @@
                     {
                         var mainAuthor = r.ResearcherResearchesBridges?.FirstOrDefault()?.Researcher?.User?.FullName ?? "غير محدد";
                         int approvedJudges = r.Evaluations?.Count(e => e.Decision == EvaluationDecisionConstants.Approved) ?? 0;
+                        string statusClass = r.WorkflowStatus switch
+                        {
+                            ResearchStatusConstants.UnderFormalScreening => "status-screening",
+                            ResearchStatusConstants.AssignedToJudges => "status-assigned",
+                            ResearchStatusConstants.ModificationsRequired => "status-modifications",
+                            ResearchStatusConstants.Approved => "status-approved",
+                            ResearchStatusConstants.CertificateIssued => "status-issued",
+                            _ => "status-screening"
+                        };
 
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold" style="max-width: 250px;">@r.Title</td>
+                            <td class="font-mono-tabular text-muted">@index</td>
+                            <td class="fw-bold" style="max-width: 260px; color: var(--ink-primary);">@r.Title</td>
                             <td>
-                                <div>@r.Category?.Name</div>
-                                <div class="text-muted small">@r.AcademicSpecialty</div>
+                                <div class="fw-medium">@r.Category?.Name</div>
+                                <div class="small" style="color: var(--ink-secondary);">@r.AcademicSpecialty</div>
                             </td>
                             <td>@mainAuthor</td>
                             <td>
-                                <span class="badge bg-success">
+                                <span class="status-stamp status-approved">
                                     <i class="bi bi-check2-all me-1"></i> اعتماد المحكم
                                 </span>
                             </td>
-                            <td><span class="badge-status status-approved">@r.WorkflowStatus</span></td>
+                            <td><span class="status-stamp @statusClass">@r.WorkflowStatus</span></td>
                             <td>
-                                <button class="btn btn-sm btn-success fw-bold px-3" onclick="issueCertificate(@r.Id, '@r.Title');">
-                                    <i class="bi bi-patch-check-fill me-1"></i> اعتماد وإصدار الشهادة
-                                </button>
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm btn-primary-custom fw-bold px-3" onclick="issueCertificate(@r.Id, '@r.Title');">
+                                        <i class="bi bi-patch-check-fill me-1"></i> اعتماد وإصدار الشهادة
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -67,7 +78,7 @@
                 {
                     <tr>
                         <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="bi bi-award fs-1 d-block mb-3 text-secondary"></i>
+                            <i class="bi bi-award fs-1 d-block mb-3"></i>
                             لا توجد أبحاث معتمدة بانتظار إصدار الشهادة حالياً.
                         </td>
                     </tr>

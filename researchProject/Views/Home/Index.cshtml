@@ -1,8 +1,235 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "الرئيسية - المنصة الإلكترونية لأخلاقيات البحث العلمي والنزاهة الأكاديمية";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@section Styles {
+    <style>
+        .home-landing {
+            --home-ink: #253540;
+            --home-muted: #596970;
+            --home-navy: #102b40;
+            --home-green: #176047;
+            --home-gold: #d4af5a;
+            --home-line: #d5dcdf;
+            color: var(--home-ink);
+            font-family: "IBM Plex Sans Arabic", sans-serif;
+        }
+        .home-landing *, .home-landing *::before, .home-landing *::after { box-sizing: border-box; }
+        .home-landing h1, .home-landing h2, .home-landing h3, .home-landing p { margin-top: 0; }
+        .home-landing h2, .home-landing h3 { font-family: "IBM Plex Sans Arabic", sans-serif; }
+        .home-landing a:focus-visible, .home-landing input:focus-visible, .home-landing button:focus-visible { outline: 3px solid #d4af5a; outline-offset: 3px; }
+
+        .home-landing .landing-hero {
+            min-height: 520px;
+            display: flex;
+            align-items: center;
+            padding: 56px 0;
+            background-image:
+                linear-gradient(270deg, rgba(12, 32, 48, .92) 0%, rgba(12, 32, 48, .78) 47%, rgba(12, 32, 48, .22) 100%),
+                url('/images/campus/assiut-main-building.jpg');
+            background-size: cover;
+            background-position: center 54%;
+            color: #fff;
+            border-bottom: 4px solid var(--home-gold);
+        }
+        .home-landing .hero-copy { max-width: 850px; }
+        .home-landing .hero-university-name { margin-bottom: 10px; color: #fff; font-size: 1.04rem; font-weight: 700; }
+        .home-landing .hero-campus-eyebrow { margin-bottom: 12px; color: #e7c978 !important; font-size: .95rem; font-weight: 600; letter-spacing: 0; }
+        .home-landing .hero-display-title { max-width: 760px; margin-bottom: 16px; color: #fff; font-family: "IBM Plex Sans Arabic", sans-serif; font-size: clamp(2.2rem, 4vw, 3.5rem); font-weight: 700; line-height: 1.38; letter-spacing: 0; }
+        .home-landing .landing-hero .lead { max-width: 710px; margin-bottom: 24px; color: rgba(255,255,255,.93) !important; font-size: 1.05rem !important; line-height: 1.95; }
+        .home-landing .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; }
+        .home-landing .hero-actions .btn { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; font-size: .92rem; font-weight: 600; }
+        .home-landing .hero-actions .btn-accent-custom { padding-inline: 22px; background: var(--home-gold); border-color: var(--home-gold); color: #142b3b; }
+        .home-landing .hero-actions .btn-accent-custom:hover { background: #e2c67e; border-color: #e2c67e; }
+        .home-landing .hero-actions .hero-secondary { padding: 8px 2px; border: 0; color: white; text-decoration: underline; text-decoration-color: rgba(255,255,255,.5); text-underline-offset: 5px; }
+        .home-landing .hero-actions .hero-secondary:hover { color: #f1d78e; text-decoration-color: currentColor; }
+
+        .home-landing .home-section { padding-block: 58px; }
+        .home-landing .home-section-title { margin-bottom: 8px; color: var(--home-ink); font-size: clamp(1.55rem, 2.35vw, 2rem); font-weight: 700; line-height: 1.45; }
+        .home-landing .home-section-intro { margin-bottom: 25px; color: var(--home-muted); font-size: .98rem; line-height: 1.85; }
+
+        .home-landing .home-workflow { background: #f1f4f4; border-bottom: 1px solid var(--home-line); }
+        .home-landing .workflow-heading { display: flex; align-items: end; justify-content: space-between; gap: 22px; margin-bottom: 25px; }
+        .home-landing .workflow-heading .home-section-title { margin-bottom: 0; }
+        .home-landing .workflow-highlights { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0; padding: 0; list-style: none; color: #334f46; font-size: .87rem; font-weight: 600; }
+        .home-landing .workflow-highlights li { white-space: nowrap; }
+        .home-landing .workflow-highlights li + li { padding-inline-start: 18px; border-inline-start: 1px solid #c6d0d1; }
+        .home-landing .workflow-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; border-top: 1px solid #bcc9cc; }
+        .home-landing .workflow-step { min-height: 110px; padding: 15px 17px 0; border-inline-start: 1px solid #d5dcdf; }
+        .home-landing .workflow-step:first-child { border-inline-start: 0; }
+        .home-landing .workflow-step-number { display: block; margin-bottom: 10px; color: #8b7137; font: 600 .82rem "IBM Plex Mono", monospace; }
+        .home-landing .workflow-step h3 { margin: 0; color: #243842; font-size: .97rem; font-weight: 600; line-height: 1.7; }
+
+        .home-landing .home-verify { padding-block: 42px; border-bottom: 1px solid var(--home-line); }
+        .home-landing .verify-layout { display: grid; grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr); align-items: center; gap: 30px; }
+        .home-landing .verify-layout .home-section-title { margin-bottom: 0; }
+        .home-landing .verify-form label { display: block; margin-bottom: 8px; color: #3b4c52; font-size: .9rem; font-weight: 600; }
+        .home-landing .verify-form .input-group { direction: rtl; }
+        .home-landing .verify-form .form-control { min-width: 0; min-height: 48px; border-color: #aebbc0; border-radius: 3px 0 0 3px; text-align: left; }
+        .home-landing .verify-form .btn { min-height: 48px; padding-inline: 22px; border: 1px solid var(--home-green); border-radius: 0 3px 3px 0; background: var(--home-green); color: #fff; font-weight: 600; }
+        .home-landing .verify-form .btn:hover { background: #124b39; }
+
+        .home-landing .home-pillars { background: #fff; }
+        .home-landing .pillars-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--home-line); }
+        .home-landing .pillar-item { min-height: 162px; padding: 21px 24px 24px; border-bottom: 1px solid var(--home-line); }
+        .home-landing .pillar-item:nth-child(odd) { border-inline-end: 1px solid var(--home-line); }
+        .home-landing .pillar-item h3 { margin-bottom: 8px; color: #174b3c; font-size: 1.08rem; font-weight: 700; }
+        .home-landing .pillar-item p { max-width: 58ch; margin-bottom: 0; color: #4f5f64; font-size: .94rem; line-height: 1.9; }
+
+        .home-landing .home-discovery { padding-block: 42px; background: #f1f4f4; border-top: 1px solid var(--home-line); }
+        .home-landing .discovery-layout { display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+        .home-landing .discovery-copy { max-width: 730px; }
+        .home-landing .discovery-copy .home-section-title { margin-bottom: 7px; }
+        .home-landing .discovery-copy p { margin-bottom: 0; color: var(--home-muted); line-height: 1.85; }
+        .home-landing .discovery-actions { display: flex; flex-shrink: 0; gap: 9px; }
+        .home-landing .discovery-actions .btn { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; }
+
+        @@media (max-width: 991.98px) {
+            .home-landing .landing-hero { min-height: 0; }
+            .home-landing .workflow-heading { display: block; }
+            .home-landing .workflow-highlights { margin-top: 16px; }
+            .home-landing .workflow-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .home-landing .workflow-step:nth-child(4) { border-inline-start: 0; }
+            .home-landing .workflow-step:nth-child(n+4) { border-top: 1px solid #d5dcdf; }
+        }
+        @@media (max-width: 767.98px) {
+            .home-landing .landing-hero {
+                padding-block: 44px;
+                background-image:
+                    linear-gradient(180deg, rgba(12, 32, 48, .72) 0%, rgba(12, 32, 48, .9) 100%),
+                    url('/images/campus/assiut-main-building.jpg');
+                background-position: center 57%;
+            }
+            .home-landing .hero-copy { max-width: none; }
+            .home-landing .workflow-steps { grid-template-columns: 1fr; border-top: 0; }
+            .home-landing .workflow-step,
+            .home-landing .workflow-step:nth-child(4),
+            .home-landing .workflow-step:nth-child(n+4) { min-height: 0; display: flex; align-items: baseline; gap: 15px; padding: 14px 2px; border-top: 1px solid #d5dcdf; border-inline-start: 0; }
+            .home-landing .workflow-step:first-child { border-top: 1px solid #d5dcdf; }
+            .home-landing .workflow-step-number { flex: 0 0 28px; margin: 0; }
+            .home-landing .verify-layout { grid-template-columns: 1fr; gap: 15px; }
+            .home-landing .discovery-layout { align-items: flex-start; flex-direction: column; }
+            .home-landing .discovery-actions { width: 100%; }
+            .home-landing .discovery-actions .btn { flex: 1; }
+        }
+        @@media (max-width: 575.98px) {
+            .home-landing .home-section { padding-block: 42px; }
+            .home-landing .landing-hero { padding-block: 38px; }
+            .home-landing .hero-university-name { font-size: .95rem; }
+            .home-landing .hero-display-title { font-size: 2rem; line-height: 1.48; }
+            .home-landing .landing-hero .lead { font-size: .98rem !important; }
+            .home-landing .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+            .home-landing .hero-actions .btn-accent-custom { grid-column: 1 / -1; }
+            .home-landing .hero-actions .hero-secondary { justify-content: center; }
+            .home-landing .workflow-highlights { gap: 8px 12px; font-size: .82rem; }
+            .home-landing .workflow-highlights li + li { padding-inline-start: 12px; }
+            .home-landing .verify-form .input-group { flex-direction: column; gap: 8px; }
+            .home-landing .verify-form .form-control,
+            .home-landing .verify-form .btn { width: 100%; min-height: 48px; border-radius: 3px; }
+            .home-landing .pillars-grid { grid-template-columns: 1fr; }
+            .home-landing .pillar-item,
+            .home-landing .pillar-item:nth-child(odd) { min-height: 0; padding: 19px 4px; border-inline-end: 0; }
+            .home-landing .pillar-item:first-child { border-top: 0; }
+            .home-landing .discovery-actions { flex-direction: column; }
+            .home-landing .discovery-actions .btn { width: 100%; }
+        }
+        @@media (prefers-reduced-motion: reduce) {
+            .home-landing *, .home-landing *::before, .home-landing *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+        }
+    </style>
+}
+
+<div class="home-landing">
+    <section class="landing-hero" aria-labelledby="home-hero-title">
+        <div class="container position-relative">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="hero-copy">
+                        <p class="hero-university-name">جامعة أسيوط</p>
+                        <p class="hero-campus-eyebrow">المنظومة الرقمية الموحدة للنزاهة الأكاديمية</p>
+                        <h1 id="home-hero-title" class="hero-display-title">المنصة الإلكترونية للجان الفرعية لأخلاقيات البحث العلمي</h1>
+                        <p class="lead">بيئة أكاديمية رقمية مؤتمتة لتحويل دورة مراجعة مقترحات البحوث ولجان الأخلاقيات بالجامعة إلى مسار ذكي خالٍ من المعاملات الورقية، مع التحكيم المستقل وإصدار الشهادات الأخلاقية الرقمية المعتمدة بـ QR.</p>
+                        <div class="hero-actions">
+                            <a asp-controller="Account" asp-action="SignUp" class="btn btn-accent-custom">تقديم مقترح بحثي (تسجيل باحث)</a>
+                            <a asp-controller="Account" asp-action="Login" class="btn hero-secondary">تسجيل الدخول</a>
+                            <a asp-controller="Public" asp-action="VerifyCertificate" class="btn hero-secondary">التحقق من صحة شهادة</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="home-section home-workflow" aria-labelledby="home-workflow-title">
+        <div class="container">
+            <div class="workflow-heading">
+                <h2 id="home-workflow-title" class="home-section-title">مسار دورة العمل المعتمد</h2>
+                <ul class="workflow-highlights" aria-label="مميزات مسار العمل">
+                    <li>حوكمة مستقلة</li>
+                    <li>شهادات QR</li>
+                    <li>مهلة 48 ساعة SLA</li>
+                </ul>
+            </div>
+            <ol class="workflow-steps">
+                <li class="workflow-step"><span class="workflow-step-number">01</span><h3>فحص شكلي إداري</h3></li>
+                <li class="workflow-step"><span class="workflow-step-number">02</span><h3>إسناد للمحكمين</h3></li>
+                <li class="workflow-step"><span class="workflow-step-number">03</span><h3>تعديلات أخلاقية</h3></li>
+                <li class="workflow-step"><span class="workflow-step-number">04</span><h3>اعتماد رسمي</h3></li>
+                <li class="workflow-step"><span class="workflow-step-number">05</span><h3>إصدار الشهادة الرقمية</h3></li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="home-verify" aria-labelledby="home-verify-title">
+        <div class="container verify-layout">
+            <div>
+                <h2 id="home-verify-title" class="home-section-title">التحقق من صحة الشهادات</h2>
+            </div>
+            <form asp-controller="Public" asp-action="VerifyCertificate" method="get" class="verify-form">
+                <label for="certificate-serial-number">أدخل الرقم المسلسل للشهادة</label>
+                <div class="input-group">
+                    <input id="certificate-serial-number" type="text" name="serialNumber" class="form-control font-mono-tabular" placeholder="أدخل الرقم المسلسل للشهادة (مثال: REC-MED-2026-123456)" dir="ltr" />
+                    <button type="submit" class="btn">فحص وتحقق</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="home-section home-pillars" aria-labelledby="home-pillars-title">
+        <div class="container">
+            <h2 id="home-pillars-title" class="home-section-title">الركائز الأساسية للمنصة</h2>
+            <p class="home-section-intro">نظام إلكتروني يحقق أعلى معايير الشفافية والحيادية الأكاديمية</p>
+            <div class="pillars-grid">
+                <article class="pillar-item">
+                    <h3>منع تضارب المصالح</h3>
+                    <p>استبعاد تلقائي ومحكم للباحثين والمشاركين من تحكيم أبحاثهم، مع توزيع آلي ذكي حسب التخصص الدقيق والأعباء.</p>
+                </article>
+                <article class="pillar-item">
+                    <h3>تحكيم علمي مستقل</h3>
+                    <p>تقييم مبني على الإجماع لا التصويت؛ اعتماد عند إجماع المحكمين، وتعديل إلزامي عند طلب أحدهم مع تعمية الهويات.</p>
+                </article>
+                <article class="pillar-item">
+                    <h3>انضباط الـ SLA الزمني</h3>
+                    <p>متابعة دقيقة لمهلة الفحص الشكلي الإداري (24 - 48 ساعة) مع لوحات مؤشرات حية تحسب مؤشرات الأداء.</p>
+                </article>
+                <article class="pillar-item">
+                    <h3>شهادات رقمية موثقة</h3>
+                    <p>إصدار حصري من رئيس لجنة الكلية برقم تسلسلي فريد، ختم توقيع إلكتروني، ورمز QR للتحقق العام الفوري.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="home-discovery" aria-labelledby="home-discovery-title">
+        <div class="container discovery-layout">
+            <div class="discovery-copy">
+                <h2 id="home-discovery-title" class="home-section-title">هل تريد معرفة المزيد عن المنصة وفريق التطوير؟</h2>
+                <p>اطلع على دليل اللوائح والمعايير الأخلاقية، وتعرف على مهندسي البرمجيات الذين قاموا ببناء وتطوير هذا النظام.</p>
+            </div>
+            <div class="discovery-actions">
+                <a asp-controller="Home" asp-action="About" class="btn btn-outline-secondary px-4">عن المنصة</a>
+                <a asp-controller="Home" asp-action="Developers" class="btn btn-primary-custom px-4">فريق المطورين</a>
+            </div>
+        </div>
+    </section>
 </div>

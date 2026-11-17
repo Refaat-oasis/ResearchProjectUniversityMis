@@ -9,13 +9,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(ViewData["Title"] ?? "المنصة الإلكترونية لأخلاقيات البحث العلمي والنزاهة الأكاديمية")</title>
-    
+
+    <!-- Typography: Architectural Editorial (Amiri, IBM Plex Sans Arabic, IBM Plex Mono) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
     <!-- Bootstrap RTL 5 -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <!-- Site Styles -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <partial name="_SeoMetaTagsPartial" model="ViewBag.Seo" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -23,35 +29,52 @@
 
     <!-- Top Navigation Header -->
     <header class="app-navbar">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-3">
-                <a class="brand-text" href="/">
-                    <i class="bi bi-shield-check text-warning fs-3"></i>
-                    <div>
-                        <div>المنصة الإلكترونية لأخلاقيات البحث العلمي</div>
-                        <div class="brand-subtitle">اللجان الفرعية للنزاهة الأكاديمية - جامعة مصر الأكاديمية</div>
+        <div class="d-flex flex-wrap flex-sm-nowrap justify-content-between align-items-center gap-2 app-navbar-inner">
+            <div class="d-flex align-items-center gap-2 gap-md-3 min-w-0">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <button class="btn btn-sm navbar-toggle-btn d-flex align-items-center justify-content-center flex-shrink-0" id="sidebarToggleBtn" type="button" title="طي / فتح القائمة الجانبية">
+                        <i class="bi bi-layout-sidebar-inset-reverse fs-6"></i>
+                    </button>
+                }
+                <a class="brand-text d-flex align-items-center gap-2 min-w-0" href="/">
+                    <svg class="brand-crest-svg flex-shrink-0" width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="1.5" y="1.5" width="33" height="33" rx="3" fill="#0F2537" stroke="#B48A3E" stroke-width="1.25" />
+                        <circle cx="18" cy="14.5" r="5" stroke="#D4AF5A" stroke-width="1.5" />
+                        <path d="M18 5.5V7.5M18 21.5V23.5M9 14.5H11M25 14.5H27M11.6 8.1L13 9.5M23 19.5L24.4 20.9M24.4 8.1L23 9.5M13 19.5L11.6 20.9" stroke="#D4AF5A" stroke-width="1.25" stroke-linecap="round" />
+                        <path d="M8.5 27.5C11.5 25.5 14.8 25.5 18 27.5C21.2 25.5 24.5 25.5 27.5 27.5" stroke="#FAF9F6" stroke-width="1.5" stroke-linecap="round" />
+                        <line x1="18" y1="22.5" x2="18" y2="27.5" stroke="#FAF9F6" stroke-width="1.25" stroke-linecap="round" />
+                    </svg>
+                    <div class="min-w-0">
+                        <div class="brand-title">المنصة الإلكترونية لأخلاقيات البحث العلمي</div>
+                        <div class="brand-subtitle d-none d-md-block">اللجان الفرعية للنزاهة الأكاديمية - جامعة مصر الأكاديمية</div>
                     </div>
                 </a>
             </div>
 
-            <div class="d-flex align-items-center gap-3">
-                <a asp-controller="Public" asp-action="VerifyCertificate" class="btn btn-sm btn-outline-light rounded-pill px-3">
-                    <i class="bi bi-qr-code-scan me-1"></i> التحقق من صحة شهادة
-                </a>
+            <!-- Center Public Links (Desktop/Tablet) -->
+            <nav class="d-none d-lg-flex align-items-center gap-1" aria-label="التنقل العام">
+                <a asp-controller="Home" asp-action="Index" class="navbar-nav-link">الرئيسية</a>
+                <a asp-controller="Home" asp-action="About" class="navbar-nav-link">عن المنصة</a>
+                <a asp-controller="Home" asp-action="Developers" class="navbar-nav-link">فريق المطورين</a>
+            </nav>
+
+            <div class="d-flex align-items-center gap-2 flex-shrink-0 app-navbar-actions">
+                <a asp-controller="Public" asp-action="VerifyCertificate" class="btn btn-sm navbar-verify-btn">التحقق من صحة شهادة</a>
 
                 @if (SignInManager.IsSignedIn(User))
                 {
                     var currentUser = await UserManager.GetUserAsync(User);
 
-                    <!-- Liquid Glass Notification Center Dropdown -->
-                    <div class="dropdown me-2" id="notifDropdown">
+                    <!-- Archival Ledger Notification Center Dropdown -->
+                    <div class="dropdown" id="notifDropdown">
                         <button class="notif-bell-btn" type="button" id="notifBellBtn" data-bs-toggle="dropdown" aria-expanded="false" title="مركز الإشعارات">
                             <i class="bi bi-bell"></i>
                             <span class="notif-badge-pill" id="notifBadge" style="display:none;">0</span>
                         </button>
-                        <div class="dropdown-menu dropdown-menu-start liquid-glass-dropdown shadow-lg border-0" aria-labelledby="notifBellBtn">
+                        <div class="dropdown-menu dropdown-menu-start notif-ledger-dropdown" aria-labelledby="notifBellBtn">
                             <div class="notif-header">
-                                <h6><i class="bi bi-bell-fill text-primary"></i> مركز التنبيهات والإشعارات</h6>
+                                <h6><i class="bi bi-bell-fill"></i> مركز التنبيهات والإشعارات</h6>
                                 <button type="button" class="notif-mark-all-btn" id="notifMarkAllBtn">
                                     <i class="bi bi-check-all"></i> تحديد الكل كمقروء
                                 </button>
@@ -66,14 +89,21 @@
                     </div>
 
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-light dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle fs-5 text-primary"></i>
-                            <span class="fw-bold">@(currentUser?.FullName ?? User.Identity?.Name)</span>
+                        <button class="btn btn-sm navbar-user-btn dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle fs-6 text-primary"></i>
+                            <span class="fw-semibold d-none d-sm-inline">@(currentUser?.FullName ?? User.Identity?.Name)</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-start shadow border-0 mt-2">
-                            <li class="px-3 py-1 text-muted small border-bottom mb-2">
-                                <div>@currentUser?.Email</div>
+                        <ul class="dropdown-menu dropdown-menu-start archival-dropdown-menu mt-2">
+                            <li class="px-3 py-2 border-bottom mb-1 archival-dropdown-identity">
+                                <div class="fw-bold text-dark small">@(currentUser?.FullName ?? User.Identity?.Name)</div>
+                                <div class="small text-muted font-mono-tabular">@currentUser?.Email</div>
                             </li>
+                            <li>
+                                <a asp-controller="Account" asp-action="Profile" class="dropdown-item d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-badge text-primary"></i> الملف الشخصي
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
                             <li>
                                 <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="d-inline">
                                     <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
@@ -86,8 +116,8 @@
                 }
                 else
                 {
-                    <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-light px-3 fw-bold rounded-pill">تسجيل الدخول</a>
-                    <a asp-controller="Account" asp-action="SignUp" class="btn btn-sm btn-success px-3 fw-bold rounded-pill">تسجيل باحث جديد</a>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-nav-auth-login">تسجيل الدخول</a>
+                    <a asp-controller="Account" asp-action="SignUp" class="btn btn-sm btn-nav-auth-signup">تسجيل باحث جديد</a>
                 }
             </div>
         </div>
@@ -96,7 +126,7 @@
     <!-- Global Alerts -->
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show m-3 shadow-sm border-0" role="alert">
+        <div class="alert alert-success alert-dismissible fade show archival-global-alert m-3" role="alert">
             <i class="bi bi-check-circle-fill me-2 fs-5"></i>
             @TempData["SuccessMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -104,7 +134,7 @@
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show m-3 shadow-sm border-0" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show archival-global-alert m-3" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
             @TempData["ErrorMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -126,11 +156,45 @@
         <main class="public-container">
             @RenderBody()
         </main>
+
+        <footer class="app-colophon-footer">
+            <div class="container py-4">
+                <div class="row align-items-center g-3">
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-center gap-3">
+                            <svg class="brand-crest-svg flex-shrink-0" width="32" height="32" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <rect x="1.5" y="1.5" width="33" height="33" rx="3" fill="#0F2537" stroke="#B48A3E" stroke-width="1.25" />
+                                <circle cx="18" cy="14.5" r="5" stroke="#D4AF5A" stroke-width="1.5" />
+                                <path d="M18 5.5V7.5M18 21.5V23.5M9 14.5H11M25 14.5H27M11.6 8.1L13 9.5M23 19.5L24.4 20.9M24.4 8.1L23 9.5M13 19.5L11.6 20.9" stroke="#D4AF5A" stroke-width="1.25" stroke-linecap="round" />
+                                <path d="M8.5 27.5C11.5 25.5 14.8 25.5 18 27.5C21.2 25.5 24.5 25.5 27.5 27.5" stroke="#FAF9F6" stroke-width="1.5" stroke-linecap="round" />
+                                <line x1="18" y1="22.5" x2="18" y2="27.5" stroke="#FAF9F6" stroke-width="1.25" stroke-linecap="round" />
+                            </svg>
+                            <div>
+                                <div class="fw-semibold text-white small">المنصة الإلكترونية لأخلاقيات البحث العلمي</div>
+                                <div class="colophon-sub small">اللجان الفرعية للنزاهة الأكاديمية - جامعة مصر الأكاديمية</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="d-flex flex-wrap gap-3 justify-content-lg-end align-items-center small">
+                            <a asp-controller="Home" asp-action="Index" class="colophon-link">الرئيسية</a>
+                            <a asp-controller="Home" asp-action="About" class="colophon-link">عن المنصة</a>
+                            <a asp-controller="Home" asp-action="Developers" class="colophon-link">فريق المطورين</a>
+                            <a asp-controller="Public" asp-action="VerifyCertificate" class="colophon-link">التحقق من صحة شهادة</a>
+                            <span class="font-mono-tabular colophon-stamp">EST. 1957 — AUN</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
     }
+
+    <!-- Mobile Sidebar Overlay Backdrop -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
     <!-- Loading Spinner Overlay -->
     <div id="partial-loading-spinner">
-        <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
             <span class="visually-hidden">جاري التحميل...</span>
         </div>
     </div>
@@ -175,11 +239,22 @@
                         initCustomDatalists(targetSelector);
                     }
 
+                    // Initialize universal table pagination in the partial
+                    if (typeof initUniversalTablePagination === 'function') {
+                        initUniversalTablePagination(targetSelector);
+                    }
+
                     // Update sidebar active link
                     $('.sidebar-item a').removeClass('active');
                     if (hashKey) {
                         $('.sidebar-item a[data-hash="' + hashKey + '"]').addClass('active');
                         window.location.hash = hashKey;
+                    }
+
+                    // Close mobile drawer after navigation
+                    if (window.innerWidth < 992) {
+                        $('.right-sidebar').removeClass('show-mobile');
+                        $('#sidebar-overlay').removeClass('active');
                     }
                 },
                 error: function (xhr) {

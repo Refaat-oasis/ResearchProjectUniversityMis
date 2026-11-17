@@ -1,24 +1,24 @@
-<div class="card card-custom">
-    <div class="card-header-custom">
+<div class="card card-custom archival-card">
+    <div class="card-header-custom flex-wrap gap-3">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-envelope-plus text-primary"></i> دعوة محكم علمي معتمد
+                <i class="bi bi-envelope-plus" style="color: var(--brand-brass);"></i> دعوة محكم علمي معتمد
             </h4>
-            <div class="text-muted small">إرسال رابط دعوة آمن عبر البريد الإلكتروني لانضمام خبير أو باحث لهيئة المحكمين</div>
+            <div class="small mt-1" style="color: var(--ink-secondary);">إرسال رابط دعوة آمن عبر البريد الإلكتروني لانضمام خبير أو باحث لهيئة المحكمين</div>
         </div>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="p-4 border rounded bg-light">
+        <div class="col-12 col-lg-8">
+            <div class="dossier-panel-subtle" style="border-top: 3px solid var(--brand-sovereign); padding: 24px;">
                 <form id="coAdminInviteForm" action="/CollegeCoAdmin/InviteJudge" method="post" onsubmit="return handleAjaxFormSubmit(this, onCoAdminJudgeInvited);">
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
                         <div class="custom-datalist-wrapper">
                             <i class="bi bi-search datalist-search-icon"></i>
-                            <input list="partialSystemUsersList" type="email" name="email" 
-                                   class="form-control custom-datalist-input" 
-                                   placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." 
+                            <input list="partialSystemUsersList" type="email" name="email"
+                                   class="form-control custom-datalist-input font-mono-tabular"
+                                   placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..."
                                    required dir="ltr" autocomplete="off" />
                             <button type="button" class="datalist-clear-btn" title="تفريغ الحقل">
                                 <i class="bi bi-x-circle-fill"></i>
@@ -43,7 +43,7 @@
                         <input type="text" name="specialty" class="form-control" placeholder="مثال: علم الأدوية السريري / الأخلاقيات الحيوية" />
                     </div>
 
-                    <div class="d-flex justify-content-end">
+                    <div class="d-flex justify-content-end pt-3" style="border-top: 1px solid var(--border-hairline);">
                         <button type="submit" class="btn btn-primary-custom px-4 py-2">
                             <i class="bi bi-send-fill me-1"></i> إرسال رابط الدعوة الرسمية
                         </button>

@@ -5,11 +5,11 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-pie-chart text-warning"></i> إحصائيات وتقارير أداء الكلية</h2>
+        <h1><i class="bi bi-pie-chart"></i> إحصائيات وتقارير أداء الكلية</h1>
         <p>مؤشرات أداء فحص المقترحات وإنجاز لجان التحكيم على مستوى الكلية</p>
     </div>
-    <div class="d-flex gap-2">
-        <a asp-action="ExportReportsToCsv" class="btn btn-success btn-sm">
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="ExportReportsToCsv" class="btn btn-light btn-sm fw-semibold">
             <i class="bi bi-file-earmark-excel me-1"></i> تصدير إكسيل (CSV)
         </a>
         <button class="btn btn-outline-light btn-sm" onclick="window.print();">
@@ -18,95 +18,86 @@
     </div>
 </div>
 
-<div class="liquid-glass-card mb-4">
-    <!-- Stat Summary Cards -->
-    <div class="row g-3 mb-4 align-items-stretch">
-        <div class="col-md-3 d-flex">
-            <div class="stat-card w-100 h-100 d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-label">أبحاث الكلية الإجمالية</div>
-                    <div class="stat-number text-primary">@Model.TotalResearches</div>
-                </div>
-                <div class="stat-icon bg-primary-subtle text-primary">
-                    <i class="bi bi-journal-text"></i>
-                </div>
-            </div>
+<div class="card card-custom archival-card">
+    <!-- Stat Summary Ledger Strip -->
+    <div class="kpi-ledger-grid mb-4">
+        <div class="kpi-ledger-cell">
+            <div class="kpi-ledger-label stat-label">أبحاث الكلية الإجمالية</div>
+            <div class="kpi-ledger-value stat-number font-mono-tabular">@Model.TotalResearches</div>
         </div>
 
-        <div class="col-md-3 d-flex">
-            <div class="stat-card w-100 h-100 d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-label">قيد الفحص الشكلي</div>
-                    <div class="stat-number text-warning">@Model.UnderScreeningCount</div>
-                </div>
-                <div class="stat-icon bg-warning-subtle text-warning">
-                    <i class="bi bi-hourglass"></i>
-                </div>
-            </div>
+        <div class="kpi-ledger-cell">
+            <div class="kpi-ledger-label stat-label">قيد الفحص الشكلي</div>
+            <div class="kpi-ledger-value stat-number font-mono-tabular" style="color: var(--tone-screening-ink);">@Model.UnderScreeningCount</div>
         </div>
 
-        <div class="col-md-3 d-flex">
-            <div class="stat-card w-100 h-100 d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-label">مسندة للتحكيم</div>
-                    <div class="stat-number text-info">@Model.AssignedToJudgesCount</div>
-                </div>
-                <div class="stat-icon bg-info-subtle text-info">
-                    <i class="bi bi-person-lines-fill"></i>
-                </div>
-            </div>
+        <div class="kpi-ledger-cell">
+            <div class="kpi-ledger-label stat-label">مسندة للتحكيم</div>
+            <div class="kpi-ledger-value stat-number font-mono-tabular" style="color: var(--tone-assigned-ink);">@Model.AssignedToJudgesCount</div>
         </div>
 
-        <div class="col-md-3 d-flex">
-            <div class="stat-card w-100 h-100 d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-label">شهادات صادرة</div>
-                    <div class="stat-number text-success">@Model.CertificatesIssuedCount</div>
-                </div>
-                <div class="stat-icon bg-success-subtle text-success">
-                    <i class="bi bi-patch-check-fill"></i>
-                </div>
-            </div>
+        <div class="kpi-ledger-cell">
+            <div class="kpi-ledger-label stat-label">شهادات صادرة</div>
+            <div class="kpi-ledger-value stat-number font-mono-tabular" style="color: var(--brand-sovereign);">@Model.CertificatesIssuedCount</div>
         </div>
     </div>
 
     <!-- Quality KPIs -->
     <div class="row g-3">
-        <div class="col-md-6">
-            <div class="card p-3 bg-light border rounded-3">
-                <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-2"></i>كفاءة الفحص الشكلي وسرعة الإنجاز</h6>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">متوسط زمن الفحص الإداري:</span>
-                    <strong class="text-dark">@Model.AverageScreeningHours ساعة</strong>
-                </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">نسبة الالتزام بالمهلة (48h):</span>
-                    <strong class="text-success">@Model.SlaCompliancePercentage%</strong>
-                </div>
-                <div class="d-flex justify-content-between py-2">
-                    <span class="text-muted">الباحثون المسجلون بالكلية:</span>
-                    <strong class="text-dark">@Model.TotalResearchers باحث</strong>
-                </div>
+        <div class="col-12 col-lg-6">
+            <div class="dossier-panel h-100 mb-0">
+                <h6 class="fw-bold mb-3 pb-2 text-primary" style="border-bottom: 1px solid var(--border-hairline);">
+                    <i class="bi bi-clock-history me-2" style="color: var(--brand-brass);"></i>كفاءة الفحص الشكلي وسرعة الإنجاز
+                </h6>
+                <dl class="mb-0">
+                    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--border-hairline);">
+                        <dt class="fw-normal small mb-0" style="color: var(--ink-secondary);">متوسط زمن الفحص الإداري:</dt>
+                        <dd class="mb-0 fw-bold" style="color: var(--ink-primary);">
+                            <span class="font-mono-tabular">@Model.AverageScreeningHours</span> ساعة
+                        </dd>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--border-hairline);">
+                        <dt class="fw-normal small mb-0" style="color: var(--ink-secondary);">نسبة الالتزام بالمهلة (48h):</dt>
+                        <dd class="mb-0 fw-bold text-success">
+                            <span class="font-mono-tabular" dir="ltr">@Model.SlaCompliancePercentage%</span>
+                        </dd>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <dt class="fw-normal small mb-0" style="color: var(--ink-secondary);">الباحثون المسجلون بالكلية:</dt>
+                        <dd class="mb-0 fw-bold" style="color: var(--ink-primary);">
+                            <span class="font-mono-tabular">@Model.TotalResearchers</span> باحث
+                        </dd>
+                    </div>
+                </dl>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card p-3 bg-light border rounded-3">
-                <h6 class="fw-bold mb-3"><i class="bi bi-mortarboard text-info me-2"></i>هيئة التحكيم الأكاديمية</h6>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">المحكمون المعتمدون بالكلية:</span>
-                    <strong class="text-dark">@Model.TotalJudges محكم</strong>
-                </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">متوسط زمن التحكيم:</span>
-                    <strong class="text-dark">@Model.AverageJudgingDays يوم</strong>
-                </div>
-                <div class="d-flex justify-content-between py-2">
-                    <span class="text-muted">الأبحاث التي تطلبت تعديلات:</span>
-                    <strong class="text-danger">@Model.ModificationsRequiredCount مقترح</strong>
-                </div>
+        <div class="col-12 col-lg-6">
+            <div class="dossier-panel h-100 mb-0">
+                <h6 class="fw-bold mb-3 pb-2 text-primary" style="border-bottom: 1px solid var(--border-hairline);">
+                    <i class="bi bi-mortarboard me-2" style="color: var(--brand-brass);"></i>هيئة التحكيم الأكاديمية
+                </h6>
+                <dl class="mb-0">
+                    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--border-hairline);">
+                        <dt class="fw-normal small mb-0" style="color: var(--ink-secondary);">المحكمون المعتمدون بالكلية:</dt>
+                        <dd class="mb-0 fw-bold" style="color: var(--ink-primary);">
+                            <span class="font-mono-tabular">@Model.TotalJudges</span> محكم
+                        </dd>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--border-hairline);">
+                        <dt class="fw-normal small mb-0" style="color: var(--ink-secondary);">متوسط زمن التحكيم:</dt>
+                        <dd class="mb-0 fw-bold" style="color: var(--ink-primary);">
+                            <span class="font-mono-tabular">@Model.AverageJudgingDays</span> يوم
+                        </dd>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <dt class="fw-normal small mb-0" style="color: var(--ink-secondary);">الأبحاث التي تطلبت تعديلات:</dt>
+                        <dd class="mb-0 fw-bold text-danger">
+                            <span class="font-mono-tabular">@Model.ModificationsRequiredCount</span> مقترح
+                        </dd>
+                    </div>
+                </dl>
             </div>
         </div>
     </div>
 </div>
-
