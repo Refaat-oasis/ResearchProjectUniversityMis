@@ -27,6 +27,7 @@ App_Data/UploadedFiles/*
 !App_Data/UploadedFiles/.gitkeep
 App_Data/Certificates/*
 !App_Data/Certificates/.gitkeep
+App_Data
 researchProject/wwwroot/uploads/*
 !researchProject/wwwroot/uploads/.gitkeep
 .agents/

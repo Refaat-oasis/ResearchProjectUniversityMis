@@ -3,70 +3,89 @@
     ViewData["Title"] = "تسجيل الدخول الموحد - منصة النزاهة الأكاديمية";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5 col-lg-4">
-            <div class="card card-custom shadow-sm border-0">
-                <div class="text-center mb-4">
-                    <div class="bg-primary text-white d-inline-flex p-3 rounded-circle shadow-sm mb-3">
-                        <i class="bi bi-shield-lock fs-2"></i>
+<div class="auth-shell">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10">
+                <div class="auth-split-shell">
+                    <div class="row g-0">
+                        <div class="col-lg-5 auth-campus-plate d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-inline-flex align-items-center justify-content-center mb-4" style="width: 48px; height: 48px; border-radius: 12px; background-color: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.25); color: var(--accent-brass-bright);">
+                                    <i class="bi bi-shield-lock fs-4"></i>
+                                </div>
+                                <h3 class="editorial-display-title text-white fw-semibold mb-2">بوابة النزاهة الأكاديمية وأخلاقيات البحث العلمي</h3>
+                                <p class="small banner-lead mb-0">يدخل كافة منسوبي الجامعة (مديرو اللجان، المحكمون، والباحثون) من هذه الشاشة الموحدة.</p>
+                            </div>
+
+                            <div class="pt-4 mt-4 border-top border-light border-opacity-25">
+                                <div class="small" style="color: rgba(248, 250, 252, 0.85);">
+                                    منظومة التحكيم المستقل وإصدار الشهادات الأخلاقية الرقمية المعتمدة
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-7">
+                            <div class="auth-ledger-panel border-0 rounded-0 h-100">
+                                <div class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <h2 class="page-title editorial-display-title fw-bold text-dark mb-1">تسجيل الدخول الموحد</h2>
+                                        <p class="text-muted small mb-0">بوابة النزاهة الأكاديمية وأخلاقيات البحث العلمي</p>
+                                    </div>
+                                    <i class="bi bi-shield-lock fs-4" style="color: var(--brand-sovereign);"></i>
+                                </div>
+
+                                <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" id="loginForm">
+                                    <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
+
+                                    <div class="mb-3">
+                                        <label asp-for="Email" class="form-label"></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                            <input asp-for="Email" class="form-control font-mono-tabular" placeholder="اسم المستخدم أو البريد الأكاديمي" dir="ltr" autocomplete="username" />
+                                        </div>
+                                        <span asp-validation-for="Email" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label asp-for="Password" class="form-label"></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                            <input asp-for="Password" class="form-control font-mono-tabular" placeholder="••••••••" dir="ltr" autocomplete="current-password" />
+                                        </div>
+                                        <span asp-validation-for="Password" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" asp-for="RememberMe" id="rememberMe">
+                                            <label class="form-check-label small" for="rememberMe">
+                                                @Html.DisplayNameFor(m => m.RememberMe)
+                                            </label>
+                                        </div>
+                                        <a asp-action="ForgotPassword" class="text-decoration-none small text-muted">
+                                            نسيت كلمة المرور؟
+                                        </a>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary-custom w-100 py-2 fs-6 mb-3">
+                                        <i class="bi bi-box-arrow-in-left me-1"></i> الدخول إلى المنصة
+                                    </button>
+                                </form>
+
+                                <div class="border-top pt-3 text-center">
+                                    <span class="text-muted small">باحث جديد لأول مرة؟</span>
+                                    <a asp-action="SignUp" class="text-decoration-none fw-bold small ms-1 text-primary">إنشاء حساب باحث</a>
+                                    <div class="mt-2">
+                                        <a asp-action="VerifyEmailToken" class="text-muted small text-decoration-none">
+                                            <i class="bi bi-shield-check text-success me-1"></i> إدخال رمز تأكيد البريد الإلكتروني
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <h4 class="fw-bold text-dark">تسجيل الدخول الموحد</h4>
-                    <p class="text-muted small">بوابة النزاهة الأكاديمية وأخلاقيات البحث العلمي</p>
                 </div>
-
-                <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" id="loginForm">
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
-
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label"></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
-                            <input asp-for="Email" class="form-control" placeholder="اسم المستخدم أو البريد الأكاديمي" dir="ltr" />
-                        </div>
-                        <span asp-validation-for="Email" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label"></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
-                            <input asp-for="Password" class="form-control" placeholder="••••••••" dir="ltr" />
-                        </div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" asp-for="RememberMe" id="rememberMe">
-                            <label class="form-check-label small" for="rememberMe">
-                                @Html.DisplayNameFor(m => m.RememberMe)
-                            </label>
-                        </div>
-                        <a asp-action="ForgotPassword" class="text-decoration-none small text-muted">
-                            نسيت كلمة المرور؟
-                        </a>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary-custom w-100 py-2 fs-6 mb-3 shadow-sm">
-                        <i class="bi bi-box-arrow-in-left me-1"></i> الدخول إلى المنصة
-                    </button>
-                </form>
-
-                <div class="border-top pt-3 text-center">
-                    <span class="text-muted small">باحث جديد لأول مرة؟</span>
-                    <a asp-action="SignUp" class="text-decoration-none fw-bold small ms-1 text-primary">إنشاء حساب باحث</a>
-                    <div class="mt-2">
-                        <a asp-action="VerifyEmailToken" class="text-muted small text-decoration-none">
-                            <i class="bi bi-shield-check text-success me-1"></i> إدخال رمز تأكيد البريد الإلكتروني
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card card-custom p-3 bg-light border text-center small text-muted">
-                <i class="bi bi-info-circle text-primary fs-5 mb-1"></i>
-                <div>يدخل كافة منسوبي الجامعة (مديرو اللجان، المحكمون، والباحثون) من هذه الشاشة الموحدة.</div>
             </div>
         </div>
     </div>

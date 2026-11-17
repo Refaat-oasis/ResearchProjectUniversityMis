@@ -23,7 +23,6 @@ using researchProject.Services.Implementations;
 using researchProject.Services.Interfaces;
 using researchProject.Repositories.Implementations;
 using researchProject.Repositories.Interfaces;
-using researchProject.Services;
 using Xunit;
 
 namespace researchProject.Tests

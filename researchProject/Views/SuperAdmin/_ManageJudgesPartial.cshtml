@@ -1,13 +1,13 @@
 @model List<researchProject.Models.Entities.Judge>
 @using researchProject.Models.Constants
 
-<div class="card card-custom">
+<div class="card card-custom archival-card">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-mortarboard text-primary"></i> هيئة المحكمين المعتمدين والدعوات الأكاديمية
+                <i class="bi bi-mortarboard"></i> هيئة المحكمين المعتمدين والدعوات الأكاديمية
             </h4>
-            <div class="text-muted small">إدارة المحكمين وتفعيلهم أو تعطيلهم، ومتابعة روابط الدعوات المرسلة</div>
+            <div class="small" style="color: var(--ink-muted);">إدارة المحكمين وتفعيلهم أو تعطيلهم، ومتابعة روابط الدعوات المرسلة</div>
         </div>
         <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#inviteJudgeModal">
             <i class="bi bi-envelope-plus-fill me-1"></i> إرسال دعوة تحكيم جديدة
@@ -15,15 +15,15 @@
     </div>
 
     <!-- Nav Tabs for Active Judges and Invitations -->
-    <ul class="nav nav-pills mb-3" id="judgesTab" role="tablist">
+    <ul class="nav nav-tabs mb-3" id="judgesTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active btn-sm" id="active-judges-tab" data-bs-toggle="pill" data-bs-target="#active-judges" type="button" role="tab">
-                المحكمون المسجلون (@(Model?.Count ?? 0))
+            <button class="nav-link active" id="active-judges-tab" data-bs-toggle="tab" data-bs-target="#active-judges" type="button" role="tab">
+                المحكمون المسجلون (<span class="font-mono-tabular">@(Model?.Count ?? 0)</span>)
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link btn-sm" id="invitations-tab" data-bs-toggle="pill" data-bs-target="#invitations" type="button" role="tab">
-                سجل الدعوات (@(ViewBag.Invitations != null ? ((List<researchProject.Models.Entities.JudgeInvitation>)ViewBag.Invitations).Count : 0))
+            <button class="nav-link" id="invitations-tab" data-bs-toggle="tab" data-bs-target="#invitations" type="button" role="tab">
+                سجل الدعوات (<span class="font-mono-tabular">@(ViewBag.Invitations != null ? ((List<researchProject.Models.Entities.JudgeInvitation>)ViewBag.Invitations).Count : 0)</span>)
             </button>
         </li>
     </ul>
@@ -32,8 +32,8 @@
         <!-- Tab 1: Judges List -->
         <div class="tab-pane fade show active" id="active-judges" role="tabpanel">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table ledger-table align-middle">
+                    <thead>
                         <tr>
                             <th>#</th>
                             <th>اسم المحكم</th>
@@ -53,32 +53,35 @@
                             {
                                 int openEvals = j.Evaluations?.Count(e => e.Decision == EvaluationDecisionConstants.UnderEvaluation) ?? 0;
                                 <tr>
-                                    <td>@index</td>
-                                    <td class="fw-bold text-dark">@j.User?.FullName</td>
+                                    <td class="font-mono-tabular">@index</td>
+                                    <td class="fw-bold" style="color: var(--ink-primary);">@j.User?.FullName</td>
                                     <td>@j.AcademicTitle</td>
-                                    <td><span class="badge bg-light text-primary border">@j.Specialty</span></td>
-                                    <td dir="ltr" class="text-end font-monospace small">@j.User?.Email</td>
+                                    <td><span class="status-stamp">@j.Specialty</span></td>
+                                    <td dir="ltr" class="text-end font-mono-tabular small">@j.User?.Email</td>
                                     <td>
-                                        <span class="badge @(openEvals > 0 ? "bg-warning text-dark" : "bg-success")">
+                                        <span class="status-stamp @(openEvals > 0 ? "status-screening" : "status-approved") font-mono-tabular">
                                             @openEvals أبحاث
                                         </span>
                                     </td>
                                     <td>
                                         @if (j.IsActive)
                                         {
-                                            <span class="badge bg-success">نشط</span>
+                                            <span class="status-stamp status-approved">نشط</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary">معطل</span>
+                                            <span class="status-stamp status-inactive">معطل</span>
                                         }
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm @(j.IsActive ? "btn-outline-danger" : "btn-outline-success")"
-                                                onclick="toggleJudgeStatus(@j.Id, @(!j.IsActive ? "true" : "false"))">
-                                            <i class="bi @(j.IsActive ? "bi-person-x" : "bi-person-check")"></i>
-                                            @(j.IsActive ? "تعطيل" : "تفعيل")
-                                        </button>
+                                        <div class="table-actions-inline">
+                                            <button class="btn btn-sm @(j.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                    onclick="toggleJudgeStatus(@j.Id, @(!j.IsActive ? "true" : "false"))"
+                                                    title="@(j.IsActive ? "تعطيل المحكم" : "تفعيل المحكم")">
+                                                <i class="bi @(j.IsActive ? "bi-person-x" : "bi-person-check")"></i>
+                                                @(j.IsActive ? "تعطيل" : "تفعيل")
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 index++;
@@ -87,7 +90,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">لا يوجد محكمون مسجلون حالياً.</td>
+                                <td colspan="8" class="text-center py-4" style="color: var(--ink-muted);">لا يوجد محكمون مسجلون حالياً.</td>
                             </tr>
                         }
                     </tbody>
@@ -98,8 +101,8 @@
         <!-- Tab 2: Invitations -->
         <div class="tab-pane fade" id="invitations" role="tabpanel">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table ledger-table align-middle">
+                    <thead>
                         <tr>
                             <th>البريد الإلكتروني</th>
                             <th>التخصص المطلوب</th>
@@ -116,35 +119,37 @@
                             foreach (var inv in (List<researchProject.Models.Entities.JudgeInvitation>)ViewBag.Invitations)
                             {
                                 <tr>
-                                    <td dir="ltr" class="text-end font-monospace">@inv.Email</td>
+                                    <td dir="ltr" class="text-end font-mono-tabular">@inv.Email</td>
                                     <td>@(inv.Specialty ?? "عام")</td>
                                     <td>@(inv.InvitedByUser?.FullName ?? "مدير النظام")</td>
-                                    <td>@inv.CreatedAt.ToString("yyyy/MM/dd")</td>
-                                    <td>@inv.ExpiresAt.ToString("yyyy/MM/dd")</td>
+                                    <td class="font-mono-tabular small">@inv.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                    <td class="font-mono-tabular small">@inv.ExpiresAt.ToString("yyyy/MM/dd")</td>
                                     <td>
                                         @if (inv.Status == InvitationStatusConstants.Accepted)
                                         {
-                                            <span class="badge bg-success">تم القبول</span>
+                                            <span class="status-stamp status-approved">تم القبول</span>
                                         }
                                         else if (inv.Status == InvitationStatusConstants.Pending)
                                         {
-                                            <span class="badge bg-warning text-dark">قيد الانتظار</span>
+                                            <span class="status-stamp status-screening">قيد الانتظار</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary">@inv.Status</span>
+                                            <span class="status-stamp status-inactive">@inv.Status</span>
                                         }
                                     </td>
                                     <td>
                                         @if (inv.Status == InvitationStatusConstants.Pending && inv.ExpiresAt > DateTime.UtcNow)
                                         {
-                                            <button class="btn btn-sm btn-outline-danger" onclick="revokeInvitation(@inv.Id)">
-                                                <i class="bi bi-x-circle me-1"></i> إلغاء
-                                            </button>
+                                            <div class="table-actions-inline">
+                                                <button class="btn btn-sm btn-outline-danger" onclick="revokeInvitation(@inv.Id)">
+                                                    <i class="bi bi-x-circle"></i> إلغاء
+                                                </button>
+                                            </div>
                                         }
                                         else
                                         {
-                                            <span class="text-muted small">-</span>
+                                            <span class="small" style="color: var(--ink-muted);">-</span>
                                         }
                                     </td>
                                 </tr>
@@ -162,7 +167,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="inviteJudgeModalLabel"><i class="bi bi-envelope-plus me-2 text-primary"></i>دعوة محكم علمي للانضمام</h5>
+                <h5 class="modal-title fw-bold" id="inviteJudgeModalLabel"><i class="bi bi-envelope-plus me-2"></i>دعوة محكم علمي للانضمام</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="inviteJudgeForm" action="/SuperAdmin/InviteJudge" method="post" onsubmit="return handleAjaxFormSubmit(this, onJudgeInvited);">
@@ -170,7 +175,7 @@
                     <div class="mb-3">
                         <label class="form-label">البريد الإلكتروني للمحكم <span class="text-danger">*</span></label>
                         <div class="dedicated-dropdown-wrapper">
-                            <input type="email" name="email" id="partialJudgeEmailInput" class="form-control dedicated-dropdown-input" required placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." dir="ltr" autocomplete="off" />
+                            <input type="email" name="email" id="partialJudgeEmailInput" class="form-control dedicated-dropdown-input font-mono-tabular" required placeholder="اكتب بريداً جديداً أو اختر من مستخدمي النظام..." dir="ltr" autocomplete="off" />
                             <div class="dedicated-dropdown-menu" id="partialJudgeUsersMenu">
                                 @if (ViewBag.SystemUsers != null)
                                 {
@@ -192,7 +197,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-primary-custom">إرسال الدعوة بالبريد</button>
                 </div>
             </form>

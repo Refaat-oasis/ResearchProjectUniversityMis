@@ -5,18 +5,18 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-buildings text-warning"></i> إدارة كليات الجامعة ولجانها الفرعية والأقسام</h2>
+        <h1 class="page-title"><i class="bi bi-buildings"></i> إدارة كليات الجامعة ولجانها الفرعية والأقسام</h1>
         <p>إدارة الكليات والأقسام الأكاديمية التابعة لها وتعيين مديري اللجان ورموز الاعتماد المؤسسية</p>
     </div>
-    <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCollegeModal">
+    <button class="btn btn-brass btn-sm" data-bs-toggle="modal" data-bs-target="#addCollegeModal">
         <i class="bi bi-plus-lg me-1"></i> إضافة كلية جديدة
     </button>
 </div>
 
-<div class="liquid-glass-card mb-4">
+<div class="card-custom archival-card mb-4">
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>اسم الكلية</th>
@@ -36,30 +36,32 @@
                         var coAdmin = c.CollegeCoAdmins?.FirstOrDefault()?.User?.FullName ?? "لم يُعين بعد";
                         var deptsCount = c.Departments?.Count ?? 0;
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold text-dark">@c.Name</td>
-                            <td><span class="badge bg-secondary-subtle text-secondary font-monospace">@c.Code</span></td>
+                            <td class="font-mono-tabular">@index</td>
+                            <td class="fw-bold" style="color: var(--ink-primary);">@c.Name</td>
+                            <td><span class="status-stamp font-mono-tabular" dir="ltr">@c.Code</span></td>
                             <td>
                                 @if (c.CollegeCoAdmins != null && c.CollegeCoAdmins.Any())
                                 {
-                                    <span class="text-primary"><i class="bi bi-person-badge me-1"></i>@coAdmin</span>
+                                    <span style="color: var(--brand-sovereign);"><i class="bi bi-person-badge me-1"></i>@coAdmin</span>
                                 }
                                 else
                                 {
-                                    <span class="text-danger small"><i class="bi bi-exclamation-circle me-1"></i>لا يوجد مدير لجنة</span>
+                                    <span class="small" style="color: #8C1D24;"><i class="bi bi-exclamation-circle me-1"></i>لا يوجد مدير لجنة</span>
                                 }
                             </td>
                             <td>
-                                <span class="badge bg-info-subtle text-info border">@deptsCount قسم</span>
+                                <span class="status-stamp status-assigned"><span class="font-mono-tabular">@deptsCount</span> قسم</span>
                             </td>
-                            <td>@(c.ResearchCategories?.Count ?? 0) تصنيف</td>
+                            <td><span class="font-mono-tabular">@(c.ResearchCategories?.Count ?? 0)</span> تصنيف</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="manageDepartments(@c.Id, '@c.Name')">
-                                    <i class="bi bi-diagram-3 me-1"></i> الأقسام (@deptsCount)
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="editCollege(@c.Id, '@c.Name', '@c.Code')">
-                                    <i class="bi bi-pencil"></i> تعديل
-                                </button>
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="manageDepartments(@c.Id, '@c.Name')">
+                                        <i class="bi bi-diagram-3"></i> الأقسام (<span class="font-mono-tabular">@deptsCount</span>)
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="editCollege(@c.Id, '@c.Name', '@c.Code')">
+                                        <i class="bi bi-pencil"></i> تعديل
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -68,7 +70,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">لا توجد كليات مسجلة حالياً.</td>
+                        <td colspan="7" class="text-center py-5" style="color: var(--ink-muted);">لا توجد كليات مسجلة حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -81,7 +83,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="addCollegeModalLabel"><i class="bi bi-building-add me-2 text-primary"></i>إضافة كلية جديدة</h5>
+                <h5 class="modal-title fw-bold" id="addCollegeModalLabel"><i class="bi bi-building-add me-2"></i>إضافة كلية جديدة</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="createCollegeForm" asp-action="CreateCollege" method="post">
@@ -92,11 +94,11 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">رمز الكلية (الكود المختصر) <span class="text-danger">*</span></label>
-                        <input type="text" name="Code" class="form-control font-monospace" required placeholder="MED, PHARM, DENT, ENG..." dir="ltr" />
+                        <input type="text" name="Code" class="form-control font-mono-tabular" required placeholder="MED, PHARM, DENT, ENG..." dir="ltr" />
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-primary-custom">حفظ الكلية</button>
                 </div>
             </form>
@@ -109,7 +111,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2 text-primary"></i>تعديل بيانات الكلية</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>تعديل بيانات الكلية</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editCollegeForm" asp-action="UpdateCollege" method="post">
@@ -121,11 +123,11 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">رمز الكلية <span class="text-danger">*</span></label>
-                        <input type="text" name="Code" id="editCollegeCode" class="form-control font-monospace" required dir="ltr" />
+                        <input type="text" name="Code" id="editCollegeCode" class="form-control font-mono-tabular" required dir="ltr" />
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-primary-custom">حفظ التعديلات</button>
                 </div>
             </form>
@@ -137,16 +139,16 @@
 <div class="modal fade" id="departmentsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-light">
+            <div class="modal-header">
                 <h5 class="modal-title fw-bold">
-                    <i class="bi bi-diagram-3-fill text-primary me-2"></i>
-                    إدارة الأقسام الأكاديمية - <span id="deptCollegeName" class="text-primary"></span>
+                    <i class="bi bi-diagram-3-fill me-2"></i>
+                    إدارة الأقسام الأكاديمية - <span id="deptCollegeName" style="color: var(--brand-sovereign);"></span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <!-- Add Department Form -->
-                <form id="addDeptForm" class="mb-4 p-3 border rounded bg-light">
+                <form id="addDeptForm" class="dossier-panel mb-4">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="deptTargetCollegeId" name="collegeId" />
                     <input type="hidden" id="deptEditingId" name="id" />
@@ -156,33 +158,33 @@
                         <button type="submit" class="btn btn-primary-custom px-4" id="deptSaveBtn">
                             <i class="bi bi-plus-lg me-1"></i> حفظ القسم
                         </button>
-                        <button type="button" class="btn btn-secondary" id="deptCancelEditBtn" style="display:none;" onclick="cancelEditDept()">
+                        <button type="button" class="btn btn-outline-secondary" id="deptCancelEditBtn" style="display:none;" onclick="cancelEditDept()">
                             إلغاء التعديل
                         </button>
                     </div>
                 </form>
 
                 <!-- Departments List -->
-                <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-list-check me-1"></i> الأقسام الأكاديمية المسجلة بالكلية:</h6>
+                <h6 class="fw-bold mb-2" style="color: var(--ink-primary);"><i class="bi bi-list-check me-1"></i> الأقسام الأكاديمية المسجلة بالكلية:</h6>
                 <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle">
-                        <thead class="table-light">
+                    <table class="table ledger-table table-sm align-middle">
+                        <thead>
                             <tr>
                                 <th style="width: 50px;">#</th>
                                 <th>اسم القسم الأكاديمي</th>
-                                <th style="width: 140px;">الإجراءات</th>
+                                <th style="width: 160px;">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="departmentsTableBody">
                             <tr>
-                                <td colspan="3" class="text-center py-3 text-muted">جاري تحميل الأقسام...</td>
+                                <td colspan="3" class="text-center py-3" style="color: var(--ink-muted);">جاري تحميل الأقسام...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
             </div>
         </div>
     </div>
@@ -219,12 +221,14 @@
                 }
                 $.each(data, function (i, item) {
                     var tr = $('<tr>');
-                    tr.append($('<td>').text(i + 1));
+                    tr.append($('<td class="font-mono-tabular">').text(i + 1));
                     tr.append($('<td class="fw-bold">').text(item.name));
-                    var actions = $('<td>');
-                    actions.append('<button class="btn btn-xs btn-outline-primary btn-sm py-0 px-2 me-1" onclick="startEditDept(' + item.id + ', \'' + item.name.replace(/'/g, "\\'") + '\')"><i class="bi bi-pencil"></i> تعديل</button>');
-                    actions.append('<button class="btn btn-xs btn-outline-danger btn-sm py-0 px-2" onclick="deleteDept(' + item.id + ')"><i class="bi bi-trash"></i> حذف</button>');
-                    tr.append(actions);
+                    var actionsTd = $('<td>');
+                    var actionsWrap = $('<div class="table-actions-inline">');
+                    actionsWrap.append('<button class="btn btn-outline-primary btn-sm" onclick="startEditDept(' + item.id + ', \'' + item.name.replace(/'/g, "\\'") + '\')"><i class="bi bi-pencil"></i> تعديل</button>');
+                    actionsWrap.append('<button class="btn btn-outline-danger btn-sm" onclick="deleteDept(' + item.id + ')"><i class="bi bi-trash"></i> حذف</button>');
+                    actionsTd.append(actionsWrap);
+                    tr.append(actionsTd);
                     tbody.append(tr);
                 });
             });

@@ -6,7 +6,7 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-folder2-open text-warning"></i> مقترحاتي البحثية ومتابعة الحالات</h2>
+        <h2><i class="bi bi-folder2-open"></i> مقترحاتي البحثية ومتابعة الحالات</h2>
         <p>تتبع مسار كافة الأبحاث المقدمة منكم للجان الأخلاقيات والنزاهة الأكاديمية بالجامعة</p>
     </div>
     <a asp-action="Create" class="btn btn-accent-custom">
@@ -14,10 +14,10 @@
     </a>
 </div>
 
-<div class="liquid-glass-card">
+<div class="card-custom archival-card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table table-hover ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>عنوان المقترح البحثي</th>
@@ -40,35 +40,35 @@
                             ResearchStatusConstants.ModificationsRequired => "status-modifications",
                             ResearchStatusConstants.Approved => "status-approved",
                             ResearchStatusConstants.CertificateIssued => "status-issued",
-                            _ => "bg-secondary text-white"
+                            _ => "status-inactive"
                         };
 
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold" style="max-width: 280px;">@r.Title</td>
+                            <td class="font-mono-tabular text-muted">@index</td>
+                            <td class="fw-bold" style="min-width: 200px; max-width: 280px;">@r.Title</td>
                             <td>
                                 <div>@r.Category?.Name</div>
                                 <div class="text-muted small">@r.AcademicSpecialty</div>
                             </td>
-                            <td class="text-muted small">@r.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</td>
-                            <td><span class="badge-status @badgeClass">@r.WorkflowStatus</span></td>
+                            <td class="text-muted small font-mono-tabular" style="white-space: nowrap;" dir="ltr">@r.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td><span class="status-stamp @badgeClass">@r.WorkflowStatus</span></td>
                             <td>
-                                <div class="d-flex gap-2">
+                                <div class="table-actions-inline">
                                     <a asp-action="Tracker" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-activity me-1"></i> تتبع المسار
+                                        <i class="bi bi-activity"></i> تتبع المسار
                                     </a>
 
                                     @if (r.WorkflowStatus == ResearchStatusConstants.ModificationsRequired)
                                     {
-                                        <a asp-action="Modify" asp-route-id="@r.Id" class="btn btn-sm btn-danger fw-bold">
-                                            <i class="bi bi-upload me-1"></i> رفع التعديلات
+                                        <a asp-action="Modify" asp-route-id="@r.Id" class="btn btn-sm btn-outline-danger fw-bold">
+                                            <i class="bi bi-upload"></i> رفع التعديلات
                                         </a>
                                     }
 
                                     @if (r.WorkflowStatus == ResearchStatusConstants.CertificateIssued)
                                     {
-                                        <a asp-action="DownloadCertificate" asp-route-researchId="@r.Id" target="_blank" class="btn btn-sm btn-success">
-                                            <i class="bi bi-download me-1"></i> الشهادة
+                                        <a asp-action="DownloadCertificate" asp-route-researchId="@r.Id" target="_blank" class="btn btn-sm btn-primary-custom">
+                                            <i class="bi bi-download"></i> الشهادة
                                         </a>
                                     }
                                 </div>
@@ -81,7 +81,7 @@
                 {
                     <tr>
                         <td colspan="6" class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary"></i>
+                            <i class="bi bi-inbox fs-1 d-block mb-3 text-muted"></i>
                             لم تقم بتقديم أي مقترحات بحثية حتى الآن.
                             <div class="mt-3">
                                 <a asp-action="Create" class="btn btn-primary-custom btn-sm">
@@ -95,4 +95,3 @@
         </table>
     </div>
 </div>
-

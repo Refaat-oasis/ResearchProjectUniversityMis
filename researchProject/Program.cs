@@ -76,7 +76,7 @@ namespace researchProject
             builder.Services.AddHostedService<researchProject.Services.BackgroundServices.UnconfirmedEmailCleanupBackgroundService>();
             builder.Services.AddSignalR();
 
-            // Hangfire Background Job Processing (2 attempts max with rollback)
+            // Hangfire Background Job Processing (Every 12h unconfirmed emails cleanup & dispatch)
             builder.Services.AddHangfire(config => config
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
@@ -94,6 +94,7 @@ namespace researchProject
             {
                 options.WorkerCount = Math.Max(2, Environment.ProcessorCount * 2);
             });
+            builder.Services.AddScoped<IUnconfirmedEmailCleanupService, UnconfirmedEmailCleanupService>();
 
             // 5. Dedicated Repositories Per Actor
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
@@ -149,6 +150,11 @@ namespace researchProject
                 DashboardTitle = "لوحة مهام وإرسال البريد - منصة أخلاقيات البحث العلمي"
             });
 
+            // Schedule recurring cleanup of unconfirmed emails every 12 hours
+            RecurringJob.AddOrUpdate<IUnconfirmedEmailCleanupService>(
+                "delete-unconfirmed-emails",
+                service => service.CleanupUnconfirmedAccountsAsync(),
+                "0 */12 * * *");
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");

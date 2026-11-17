@@ -1,11 +1,9 @@
 @model researchProject.Models.DTOs.ResearchModificationDto
 
-<div class="card card-custom">
+<div class="card-custom archival-card">
     <div class="card-header-custom">
         <div>
-            <h4 class="card-title-custom">
-                <i class="bi bi-cloud-arrow-up text-danger"></i> رفع الوثائق والمقترح المعدل
-            </h4>
+            <h4 class="card-title-custom">رفع الوثائق والمقترح المعدل</h4>
             <div class="text-muted small">« @(ViewBag.Research?.Title ?? "") »</div>
         </div>
         <div>
@@ -16,11 +14,9 @@
     </div>
 
     <!-- Review Modification Requests from Judges -->
-    <div class="card bg-danger-subtle border-danger p-3 mb-4">
-        <h6 class="fw-bold text-danger mb-2">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>التعديلات المطلوبة من هيئة التحكيم:
-        </h6>
-        <div class="p-3 bg-white rounded border small text-dark" style="white-space: pre-line;">
+    <div class="alert alert-danger mb-4">
+        <div class="fw-semibold mb-2">التعديلات المطلوبة من هيئة التحكيم:</div>
+        <div class="small" style="white-space: pre-line;">
             @{
                 var latestHistory = ((researchProject.Models.Entities.Research)ViewBag.Research)?.ResearchStatusHistories?
                     .OrderByDescending(h => h.ChangedAt)
@@ -41,32 +37,38 @@
     <form id="uploadModForm" action="/Researcher/SubmitModifications" method="post" enctype="multipart/form-data" onsubmit="return handleAjaxFormSubmit(this, onModificationsSubmitted);">
         <input type="hidden" asp-for="ResearchId" />
 
-        <div class="mb-3">
-            <label asp-for="ResearcherNotes" class="form-label"></label>
-            <textarea asp-for="ResearcherNotes" class="form-control" rows="3" placeholder="وضح هنا النقاط التي تم تعديلها واستيفاؤها في هذه النسخة..."></textarea>
-            <span asp-validation-for="ResearcherNotes" class="text-danger small"></span>
-        </div>
-
-        <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <label class="form-label">ملف المقترح البحثي المعدل (خطة البحث) <span class="text-danger">*</span></label>
-                <input type="file" name="ModifiedProposalFile" class="form-control" required accept=".pdf,.doc,.docx" />
-                <div class="form-text small">نسخة جديدة من خطة البحث تتضمن كافة التعديلات المطلوبة.</div>
+        <div class="dossier-panel mb-4">
+            <div class="mb-3">
+                <label asp-for="ResearcherNotes" class="form-label"></label>
+                <textarea asp-for="ResearcherNotes" class="form-control" rows="3" placeholder="وضح هنا النقاط التي تم تعديلها واستيفاؤها في هذه النسخة..."></textarea>
+                <span asp-validation-for="ResearcherNotes" class="text-danger small"></span>
             </div>
 
-            <div class="col-md-6">
-                <label class="form-label">ملف أدوات البحث المعدلة (اختياري)</label>
-                <input type="file" name="ModifiedToolsFile" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" />
-                <div class="form-text small">في حال طُلب تعديل على استمارات الاستبيان أو أدوات البحث.</div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="archival-upload-box h-100">
+                        <label class="form-label">ملف المقترح البحثي المعدل (خطة البحث) <span class="text-danger">*</span></label>
+                        <input type="file" name="ModifiedProposalFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                        <div class="form-text small">نسخة جديدة من خطة البحث تتضمن كافة التعديلات المطلوبة.</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="archival-upload-box h-100">
+                        <label class="form-label">ملف أدوات البحث المعدلة (اختياري)</label>
+                        <input type="file" name="ModifiedToolsFile" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                        <div class="form-text small">في حال طُلب تعديل على استمارات الاستبيان أو أدوات البحث.</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 pt-2">
             <div class="small text-muted">
-                <i class="bi bi-info-circle me-1"></i> سيتم حفظ هذه الملفات كنسخة جديدة (Version N) وبدء جولة تحكيمية تالية للمحكمين.
+                سيتم حفظ هذه الملفات كنسخة جديدة (Version N) وبدء جولة تحكيمية تالية للمحكمين.
             </div>
-            <button type="submit" class="btn btn-danger px-4 py-2 fw-bold">
-                <i class="bi bi-send-check-fill me-1"></i> تسليم التعديلات وبدء الجولة التحكيمية
+            <button type="submit" class="btn btn-primary-custom px-4 py-2 fw-medium">
+                تسليم التعديلات وبدء الجولة التحكيمية
             </button>
         </div>
     </form>

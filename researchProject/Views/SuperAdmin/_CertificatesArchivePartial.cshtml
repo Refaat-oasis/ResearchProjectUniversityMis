@@ -1,28 +1,28 @@
 @model List<researchProject.Models.Entities.Research>
 
-<div class="card card-custom">
+<div class="card card-custom archival-card">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-archive text-primary"></i> الأرشيف الرقمي الموحد للشهادات الأخلاقية
+                <i class="bi bi-archive"></i> الأرشيف الرقمي الموحد للشهادات الأخلاقية
             </h4>
-            <div class="text-muted small">قاعدة بيانات موثقة لجميع الشهادات الأخلاقية الصادرة مع إمكانية البحث والتحقق والطباعة</div>
+            <div class="small" style="color: var(--ink-muted);">قاعدة بيانات موثقة لجميع الشهادات الأخلاقية الصادرة مع إمكانية البحث والتحقق والطباعة</div>
         </div>
     </div>
 
     <!-- Filter Form -->
-    <div class="p-3 bg-light rounded border mb-4">
+    <div class="dossier-panel-subtle mb-4">
         <form id="archiveSearchForm" onsubmit="return searchArchive(event);">
             <div class="row g-2">
-                <div class="col-md-3">
+                <div class="col-12 col-md-3">
                     <label class="form-label small">الرقم المسلسل للشهادة</label>
-                    <input type="text" id="arcSerial" class="form-control form-control-sm" placeholder="REC-..." dir="ltr" />
+                    <input type="text" id="arcSerial" class="form-control form-control-sm font-mono-tabular" placeholder="REC-..." dir="ltr" />
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-3">
                     <label class="form-label small">اسم الباحث</label>
                     <input type="text" id="arcResearcher" class="form-control form-control-sm" placeholder="ابحث باسم الباحث" />
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-3">
                     <label class="form-label small">الكلية</label>
                     <div class="dedicated-dropdown-wrapper">
                         <input type="hidden" id="arcCollege" />
@@ -44,7 +44,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
+                <div class="col-12 col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary-custom btn-sm w-100">
                         <i class="bi bi-search me-1"></i> بحث في الأرشيف
                     </button>
@@ -55,8 +55,8 @@
 
     <!-- Archive Results Table -->
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>الرقم المسلسل</th>
@@ -76,21 +76,25 @@
                     {
                         var author = r.ResearcherResearchesBridges?.FirstOrDefault()?.Researcher?.User?.FullName ?? "غير محدد";
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold font-monospace text-success" dir="ltr">@r.CertificateSerialNumber</td>
-                            <td class="fw-bold" style="max-width: 250px;">@r.Title</td>
-                            <td><span class="badge bg-light text-dark border">@r.College?.Name</span></td>
+                            <td class="font-mono-tabular">@index</td>
+                            <td><span class="status-stamp status-approved font-mono-tabular" dir="ltr">@r.CertificateSerialNumber</span></td>
+                            <td class="fw-bold" style="max-width: 250px; color: var(--ink-primary);">@r.Title</td>
+                            <td><span class="status-stamp">@r.College?.Name</span></td>
                             <td>@author</td>
-                            <td class="text-muted small">@(r.CertificateIssuedAt?.ToString("yyyy/MM/dd") ?? "-")</td>
+                            <td class="font-mono-tabular small" style="color: var(--ink-muted);">@(r.CertificateIssuedAt?.ToString("yyyy/MM/dd") ?? "-")</td>
                             <td>
-                                <a href="@r.CertificateQrCodeUrl" target="_blank" class="badge bg-primary text-decoration-none">
-                                    <i class="bi bi-qr-code me-1"></i> فحص عام
-                                </a>
+                                <div class="table-actions-inline">
+                                    <a href="@r.CertificateQrCodeUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-qr-code"></i> فحص عام
+                                    </a>
+                                </div>
                             </td>
                             <td>
-                                <a href="/Researcher/DownloadCertificate?researchId=@r.Id" target="_blank" class="btn btn-sm btn-outline-success">
-                                    <i class="bi bi-file-earmark-pdf"></i> فتح الشهادة
-                                </a>
+                                <div class="table-actions-inline">
+                                    <a href="/Researcher/DownloadCertificate?researchId=@r.Id" target="_blank" class="btn btn-sm btn-outline-success" title="استعراض الشهادة الرسمية">
+                                        <i class="bi bi-file-earmark-pdf"></i> فتح الشهادة
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -99,7 +103,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">لا توجد شهادات صادرة تطابق معايير البحث.</td>
+                        <td colspan="8" class="text-center py-4" style="color: var(--ink-muted);">لا توجد شهادات صادرة تطابق معايير البحث.</td>
                     </tr>
                 }
             </tbody>

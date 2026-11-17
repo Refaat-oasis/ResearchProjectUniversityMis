@@ -8,13 +8,118 @@
     else if (Model.WorkflowStatus == ResearchStatusConstants.ModificationsRequired) currentStep = 3;
     else if (Model.WorkflowStatus == ResearchStatusConstants.Approved) currentStep = 4;
     else if (Model.WorkflowStatus == ResearchStatusConstants.CertificateIssued) currentStep = 5;
+
+    string GetStatusStampClass(string? status) => status switch
+    {
+        ResearchStatusConstants.UnderFormalScreening => "status-screening",
+        ResearchStatusConstants.AssignedToJudges => "status-assigned",
+        ResearchStatusConstants.ModificationsRequired => "status-modifications",
+        ResearchStatusConstants.Approved => "status-approved",
+        ResearchStatusConstants.CertificateIssued => "status-issued",
+        _ => "status-inactive"
+    };
 }
 
-<div class="card card-custom" id="trackerCardContainer" data-research-id="@Model.Id">
+<style>
+    .archival-stage-ledger {
+        position: relative;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .archival-stage-ledger::before {
+        content: '';
+        position: absolute;
+        top: 22px;
+        bottom: 22px;
+        right: 17px;
+        width: 1px;
+        background-color: var(--border-hairline, #E2E8F0);
+        z-index: 0;
+    }
+    .archival-stage-item {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 7px 0;
+    }
+    .archival-stage-marker {
+        width: 34px;
+        height: 34px;
+        border-radius: 3px;
+        border: 1px solid var(--border-hairline, #E2E8F0);
+        background-color: var(--bg-surface, #FFFFFF);
+        color: var(--ink-muted, #64748B);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.88rem;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+    .archival-stage-row {
+        flex: 1;
+        min-width: 0;
+        padding: 9px 14px;
+        background-color: var(--bg-surface, #FFFFFF);
+        border: 1px solid var(--border-hairline, #E2E8F0);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .archival-stage-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--ink-secondary, #475569);
+    }
+    .archival-stage-item.step-completed .archival-stage-marker {
+        background-color: var(--brand-sovereign, #0E2235);
+        border-color: var(--brand-sovereign, #0E2235);
+        color: #FFFFFF;
+    }
+    .archival-stage-item.step-completed .archival-stage-label {
+        color: var(--ink-primary, #0E2235);
+    }
+    .archival-stage-item.step-active .archival-stage-marker {
+        background-color: var(--brand-brass-soft, #FBF5E8);
+        border: 1.5px solid var(--brand-brass, #B88E38);
+        color: var(--brand-sovereign, #0E2235);
+        font-weight: 700;
+    }
+    .archival-stage-item.step-active .archival-stage-row {
+        border-color: var(--brand-brass, #B88E38);
+        background-color: var(--brand-brass-soft, #FBF5E8);
+    }
+    .archival-stage-item.step-active .archival-stage-label {
+        color: var(--brand-sovereign, #0E2235);
+        font-weight: 700;
+    }
+    .archival-stage-item.step-modifications .archival-stage-marker {
+        background-color: var(--tone-modifications-bg, #FDF1F2);
+        border: 1.5px solid var(--tone-modifications-ink, #8C1D24);
+        color: var(--tone-modifications-ink, #8C1D24);
+        font-weight: 700;
+    }
+    .archival-stage-item.step-modifications .archival-stage-row {
+        border-color: var(--tone-modifications-border, #E8B4B8);
+        background-color: var(--tone-modifications-bg, #FDF1F2);
+    }
+    .archival-stage-item.step-modifications .archival-stage-label {
+        color: var(--tone-modifications-ink, #8C1D24);
+        font-weight: 700;
+    }
+</style>
+
+<div class="card-custom archival-card" id="trackerCardContainer" data-research-id="@Model.Id">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-activity text-primary"></i> تتبع مسار المقترح البحثي (Status Tracker)
+                <i class="bi bi-activity" style="color: var(--brand-sovereign);"></i> تتبع مسار المقترح البحثي (Status Tracker)
             </h4>
             <div class="text-muted small">« @Model.Title » - كلية @Model.College?.Name</div>
         </div>
@@ -25,80 +130,94 @@
         </div>
     </div>
 
-    <!-- Visual 5-Stage Stepper -->
-    <div class="status-tracker-container">
-        <!-- Stage 1 -->
-        <div class="status-step @(currentStep > 1 ? "step-completed" : (currentStep == 1 ? "step-active" : ""))">
-            <div class="step-circle">
-                @if (currentStep > 1) { <i class="bi bi-check-lg"></i> } else { <span>1</span> }
-            </div>
-            <div class="step-label">المراجعة الشكلية</div>
-        </div>
+    <!-- Swiss-Archival Vertical Stage Ledger -->
+    <div class="dossier-panel dossier-panel-subtle mb-4">
+        <ol class="archival-stage-ledger">
+            <!-- Stage 1 -->
+            <li class="archival-stage-item @(currentStep > 1 ? "step-completed" : (currentStep == 1 ? "step-active" : ""))">
+                <div class="archival-stage-marker font-mono-tabular">
+                    @if (currentStep > 1) { <i class="bi bi-check-lg"></i> } else { <span>1</span> }
+                </div>
+                <div class="archival-stage-row">
+                    <span class="archival-stage-label">المراجعة الشكلية</span>
+                </div>
+            </li>
 
-        <!-- Stage 2 -->
-        <div class="status-step @(currentStep > 2 ? "step-completed" : (currentStep == 2 ? "step-active" : ""))">
-            <div class="step-circle">
-                @if (currentStep > 2) { <i class="bi bi-check-lg"></i> } else { <span>2</span> }
-            </div>
-            <div class="step-label">مسند للمحكمين</div>
-        </div>
+            <!-- Stage 2 -->
+            <li class="archival-stage-item @(currentStep > 2 ? "step-completed" : (currentStep == 2 ? "step-active" : ""))">
+                <div class="archival-stage-marker font-mono-tabular">
+                    @if (currentStep > 2) { <i class="bi bi-check-lg"></i> } else { <span>2</span> }
+                </div>
+                <div class="archival-stage-row">
+                    <span class="archival-stage-label">مسند للمحكمين</span>
+                </div>
+            </li>
 
-        <!-- Stage 3 (Modifications or Under Review) -->
-        <div class="status-step @(currentStep > 3 ? "step-completed" : (currentStep == 3 ? "step-active text-danger" : ""))">
-            <div class="step-circle @(currentStep == 3 ? "bg-danger text-white border-danger" : "")">
-                @if (currentStep > 3) { <i class="bi bi-check-lg"></i> } else { <span>3</span> }
-            </div>
-            <div class="step-label">@(currentStep == 3 ? "تعديلات مطلوبة" : "مراجعة التعديلات")</div>
-        </div>
+            <!-- Stage 3 (Modifications or Under Review) -->
+            <li class="archival-stage-item @(currentStep > 3 ? "step-completed" : (currentStep == 3 ? "step-modifications" : ""))">
+                <div class="archival-stage-marker font-mono-tabular">
+                    @if (currentStep > 3) { <i class="bi bi-check-lg"></i> } else { <span>3</span> }
+                </div>
+                <div class="archival-stage-row">
+                    <span class="archival-stage-label">@(currentStep == 3 ? "تعديلات مطلوبة" : "مراجعة التعديلات")</span>
+                </div>
+            </li>
 
-        <!-- Stage 4 -->
-        <div class="status-step @(currentStep > 4 ? "step-completed" : (currentStep == 4 ? "step-active" : ""))">
-            <div class="step-circle">
-                @if (currentStep > 4) { <i class="bi bi-check-lg"></i> } else { <span>4</span> }
-            </div>
-            <div class="step-label">معتمد بالكامل</div>
-        </div>
+            <!-- Stage 4 -->
+            <li class="archival-stage-item @(currentStep > 4 ? "step-completed" : (currentStep == 4 ? "step-active" : ""))">
+                <div class="archival-stage-marker font-mono-tabular">
+                    @if (currentStep > 4) { <i class="bi bi-check-lg"></i> } else { <span>4</span> }
+                </div>
+                <div class="archival-stage-row">
+                    <span class="archival-stage-label">معتمد بالكامل</span>
+                </div>
+            </li>
 
-        <!-- Stage 5 -->
-        <div class="status-step @(currentStep == 5 ? "step-completed" : "")">
-            <div class="step-circle">
-                @if (currentStep == 5) { <i class="bi bi-patch-check-fill text-white"></i> } else { <span>5</span> }
-            </div>
-            <div class="step-label">صادر الشهادة</div>
-        </div>
+            <!-- Stage 5 -->
+            <li class="archival-stage-item @(currentStep == 5 ? "step-completed" : "")">
+                <div class="archival-stage-marker font-mono-tabular">
+                    @if (currentStep == 5) { <i class="bi bi-patch-check-fill"></i> } else { <span>5</span> }
+                </div>
+                <div class="archival-stage-row">
+                    <span class="archival-stage-label">صادر الشهادة</span>
+                </div>
+            </li>
+        </ol>
     </div>
 
     <!-- Status Action Banner -->
     @if (Model.WorkflowStatus == ResearchStatusConstants.ModificationsRequired)
     {
-        <div class="alert alert-danger p-3 my-3 d-flex justify-content-between align-items-center">
+        <div class="alert alert-danger p-3 my-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" style="border-right: 3px solid var(--tone-modifications-ink);">
             <div>
-                <h6 class="fw-bold text-danger mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>تعديلات مطلوبة من المحكمين</h6>
+                <h6 class="fw-bold mb-1" style="color: var(--tone-modifications-ink);"><i class="bi bi-exclamation-triangle-fill me-1"></i>تعديلات مطلوبة من المحكمين</h6>
                 <div class="small">يرجى مراجعة الملاحظات المدونة أدناه وإعادة رفع خطة البحث أو الأدوات المعدلة.</div>
             </div>
-            <button class="btn btn-danger btn-sm fw-bold px-3" onclick="loadPartial('/Researcher/UploadModificationsPartial/@Model.Id', '#main-content-container', 'my-researches');">
+            <button class="btn btn-danger btn-sm fw-bold px-3 flex-shrink-0" onclick="loadPartial('/Researcher/UploadModificationsPartial/@Model.Id', '#main-content-container', 'my-researches');">
                 <i class="bi bi-upload me-1"></i> رفع الملفات المعدلة الآن
             </button>
         </div>
     }
     else if (Model.WorkflowStatus == ResearchStatusConstants.CertificateIssued)
     {
-        <div class="alert alert-success p-3 my-3 d-flex justify-content-between align-items-center">
+        <div class="alert alert-success p-3 my-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" style="border-right: 3px solid var(--brand-sovereign);">
             <div>
-                <h6 class="fw-bold text-success mb-1"><i class="bi bi-patch-check-fill me-1"></i>تم إصدار الشهادة الأخلاقية الرسمية بنجاح!</h6>
-                <div class="small">رقم الشهادة: <strong>@Model.CertificateSerialNumber</strong> (تاريخ الإصدار: @Model.CertificateIssuedAt?.ToString("yyyy/MM/dd"))</div>
+                <h6 class="fw-bold mb-1" style="color: var(--brand-sovereign);"><i class="bi bi-patch-check-fill me-1"></i>تم إصدار الشهادة الأخلاقية الرسمية بنجاح!</h6>
+                <div class="small">رقم الشهادة: <strong class="font-mono-tabular" dir="ltr">@Model.CertificateSerialNumber</strong> (تاريخ الإصدار: <span class="font-mono-tabular" dir="ltr">@Model.CertificateIssuedAt?.ToString("yyyy/MM/dd")</span>)</div>
             </div>
-            <a href="/Researcher/DownloadCertificate?researchId=@Model.Id" target="_blank" class="btn btn-success btn-sm fw-bold px-3">
+            <a href="/Researcher/DownloadCertificate?researchId=@Model.Id" target="_blank" class="btn btn-primary-custom btn-sm fw-bold px-3 flex-shrink-0">
                 <i class="bi bi-download me-1"></i> تحميل الشهادة (HTML / PDF)
             </a>
         </div>
     }
 
     <!-- Timeline of Status Changes -->
-    <h6 class="fw-bold text-dark mt-4 mb-3"><i class="bi bi-clock-history me-2 text-primary"></i>سجل المسار وتاريخ الحالات</h6>
+    <h6 class="fw-bold mt-4 mb-3 pb-2 border-bottom" style="color: var(--ink-primary); border-color: var(--border-hairline) !important;">
+        <i class="bi bi-clock-history me-2" style="color: var(--brand-sovereign);"></i>سجل المسار وتاريخ الحالات
+    </h6>
     <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle border">
-            <thead class="table-light">
+        <table class="table ledger-table table-sm align-middle">
+            <thead>
                 <tr>
                     <th>تاريخ الإجراء</th>
                     <th>الحالة السابقة</th>
@@ -112,10 +231,19 @@
                     foreach (var h in Model.ResearchStatusHistories.OrderByDescending(h => h.ChangedAt))
                     {
                         <tr>
-                            <td class="text-muted small">@h.ChangedAt.ToString("yyyy/MM/dd HH:mm")</td>
-                            <td>@(h.OldStatus ?? "طلب جديد")</td>
-                            <td class="fw-bold text-primary">@h.NewStatus</td>
-                            <td class="small" style="max-width: 450px; white-space: pre-line;">@h.Reason</td>
+                            <td class="text-muted small font-mono-tabular" style="white-space: nowrap;" dir="ltr">@h.ChangedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(h.OldStatus))
+                                {
+                                    <span class="status-stamp @GetStatusStampClass(h.OldStatus)">@h.OldStatus</span>
+                                }
+                                else
+                                {
+                                    <span class="status-stamp status-inactive">طلب جديد</span>
+                                }
+                            </td>
+                            <td><span class="status-stamp @GetStatusStampClass(h.NewStatus)">@h.NewStatus</span></td>
+                            <td class="small" style="min-width: 200px; max-width: 450px; white-space: pre-line;">@h.Reason</td>
                         </tr>
                     }
                 }

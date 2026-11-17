@@ -1,19 +1,19 @@
 @model List<researchProject.Models.Entities.Research>
 @using researchProject.Models.Constants
 
-<div class="card card-custom">
+<div class="card card-custom archival-card">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-journal-text text-primary"></i> كافة المقترحات البحثية في الجامعة
+                <i class="bi bi-journal-text"></i> كافة المقترحات البحثية في الجامعة
             </h4>
-            <div class="text-muted small">متابعة مسار جميع الأبحاث المقدمة في مختلف الكليات وحالات سير العمل</div>
+            <div class="small" style="color: var(--ink-muted);">متابعة مسار جميع الأبحاث المقدمة في مختلف الكليات وحالات سير العمل</div>
         </div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>عنوان المقترح البحثي</th>
@@ -41,26 +41,28 @@
                             ResearchStatusConstants.ModificationsRequired => "status-modifications",
                             ResearchStatusConstants.Approved => "status-approved",
                             ResearchStatusConstants.CertificateIssued => "status-issued",
-                            _ => "bg-secondary text-white"
+                            _ => ""
                         };
 
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold text-dark" style="max-width: 280px;">@r.Title</td>
-                            <td><span class="badge bg-light text-dark border">@r.College?.Name</span></td>
+                            <td class="font-mono-tabular">@index</td>
+                            <td class="fw-bold" style="max-width: 280px; color: var(--ink-primary);">@r.Title</td>
+                            <td><span class="status-stamp">@r.College?.Name</span></td>
                             <td>
                                 <div>@r.Category?.Name</div>
-                                <div class="text-muted small">@r.AcademicSpecialty</div>
+                                <div class="small" style="color: var(--ink-muted);">@r.AcademicSpecialty</div>
                             </td>
                             <td><i class="bi bi-person me-1"></i>@mainAuthor</td>
-                            <td class="text-muted small">@r.SubmittedAt.ToString("yyyy/MM/dd")</td>
+                            <td class="font-mono-tabular small" style="color: var(--ink-muted);">@r.SubmittedAt.ToString("yyyy/MM/dd")</td>
                             <td>
-                                <span class="badge-status @badgeClass">@r.WorkflowStatus</span>
+                                <span class="status-stamp @badgeClass">@r.WorkflowStatus</span>
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="loadPartial('/SuperAdmin/ResearchDetailsPartial/@r.Id', '#main-content-container', 'all-researches');">
-                                    <i class="bi bi-eye"></i> عرض
-                                </button>
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="loadPartial('/SuperAdmin/ResearchDetailsPartial/@r.Id', '#main-content-container', 'all-researches');" title="عرض تفاصيل المقترح">
+                                        <i class="bi bi-eye"></i> عرض
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -69,7 +71,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">لا توجد مقترحات بحثية مسجلة بالنظام حتى الآن.</td>
+                        <td colspan="8" class="text-center py-4" style="color: var(--ink-muted);">لا توجد مقترحات بحثية مسجلة بالنظام حتى الآن.</td>
                     </tr>
                 }
             </tbody>

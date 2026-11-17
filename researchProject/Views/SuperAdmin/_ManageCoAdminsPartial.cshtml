@@ -1,12 +1,12 @@
 @model List<researchProject.Models.Entities.CollegeCoAdmin>
 
-<div class="card card-custom">
+<div class="card card-custom archival-card">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-person-badge text-primary"></i> إدارة مديري اللجان الفرعية بالكليات (College Co-Admins)
+                <i class="bi bi-person-badge"></i> إدارة مديري اللجان الفرعية بالكليات (College Co-Admins)
             </h4>
-            <div class="text-muted small">تعيين مديري اللجان لكل كلية، إعادة تعيين الكليات المسندة، وإدارة تفعيل أو تعطيل حساباتهم</div>
+            <div class="small" style="color: var(--ink-muted);">تعيين مديري اللجان لكل كلية، وإعادة تعيين الكليات المسندة، وإدارة تفعيل أو تعطيل حساباتهم</div>
         </div>
         <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#partialAddCoAdminModal">
             <i class="bi bi-person-plus-fill me-1"></i> تعيين مدير لجنة جديد
@@ -14,8 +14,8 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>الاسم الكامل</th>
@@ -33,38 +33,40 @@
                     {
                         bool isActive = a.IsActive && (a.User?.IsActive ?? true);
                         <tr>
-                            <td>@index</td>
+                            <td class="font-mono-tabular">@index</td>
                             <td class="fw-bold text-dark">
                                 <i class="bi bi-person-badge-fill text-primary me-1"></i>
                                 @a.User?.FullName
                             </td>
-                            <td dir="ltr" class="text-end font-monospace small">@a.User?.Email</td>
+                            <td dir="ltr" class="text-end font-mono-tabular small">@a.User?.Email</td>
                             <td>
-                                <span class="badge bg-primary-subtle text-primary fs-6">
+                                <span class="status-stamp status-assigned">
                                     <i class="bi bi-building me-1"></i>@(a.College?.Name ?? "غير محدد")
                                 </span>
                             </td>
                             <td>
                                 @if (isActive)
                                 {
-                                    <span class="badge bg-success">نشط</span>
+                                    <span class="status-stamp status-approved">نشط</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">معطل</span>
+                                    <span class="status-stamp status-inactive">معطل</span>
                                 }
                             </td>
                             <td>
-                                <button class="btn btn-sm @(isActive ? "btn-outline-danger" : "btn-outline-success")"
-                                        onclick="toggleCoAdminStatusPartial(@a.Id, @(!isActive ? "true" : "false"))">
-                                    <i class="bi @(isActive ? "bi-person-x" : "bi-person-check") me-1"></i>
-                                    @(isActive ? "تعطيل" : "تفعيل")
-                                </button>
-                                <button class="btn btn-sm btn-outline-primary ms-1"
-                                        onclick="openReassignModalPartial(@a.Id, @a.CollegeId, '@a.User?.FullName', '@(a.College?.Name ?? "")')">
-                                    <i class="bi bi-arrow-left-right me-1"></i>
-                                    تغيير الكلية
-                                </button>
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm @(isActive ? "btn-outline-danger" : "btn-outline-success")"
+                                            onclick="toggleCoAdminStatusPartial(@a.Id, @(!isActive ? "true" : "false"))">
+                                        <i class="bi @(isActive ? "bi-person-x" : "bi-person-check") me-1"></i>
+                                        @(isActive ? "تعطيل" : "تفعيل")
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary ms-1"
+                                            onclick="openReassignModalPartial(@a.Id, @a.CollegeId, '@a.User?.FullName', '@(a.College?.Name ?? "")')">
+                                        <i class="bi bi-arrow-left-right me-1"></i>
+                                        تغيير الكلية
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -73,7 +75,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
+                        <td colspan="6" class="text-center py-4" style="color: var(--ink-muted);">لا يوجد مديرو لجان مسجلون حالياً.</td>
                     </tr>
                 }
             </tbody>
@@ -227,9 +229,13 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+<<<<<<< HEAD
+                <h5 class="modal-title fw-bold" id="addCoAdminModalLabel"><i class="bi bi-person-plus me-2"></i>تعيين مدير لجنة فرعية لكلية</h5>
+=======
                 <h5 class="modal-title fw-bold" id="partialReassignCollegeModalLabel">
                     <i class="bi bi-arrow-left-right me-2 text-primary"></i>إعادة تعيين الكلية لمدير اللجنة
                 </h5>
+>>>>>>> origin/main
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="partialReassignCollegeForm" action="/SuperAdmin/ReassignCoAdminCollege" method="post" onsubmit="return handleCoAdminSubmitAjax(this);">
@@ -271,7 +277,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-primary-custom">تأكيد نقل الكلية</button>
                 </div>
             </form>

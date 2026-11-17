@@ -6,139 +6,114 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-speedometer2 text-warning"></i> لوحة المؤشرات المركزية للجامعة</h2>
+        <h1 class="page-title">لوحة المؤشرات المركزية للجامعة</h1>
         <p>نظرة شاملة ومحدثة على حركة وأداء لجان أخلاقيات البحث العلمي بكافة الكليات</p>
     </div>
-    <span class="badge bg-light text-dark border p-2">
-        <i class="bi bi-clock-history me-1"></i> تاريخ التحديث: @DateTime.UtcNow.ToString("yyyy/MM/dd HH:mm") UTC
+    <span class="role-stamp">
+        <span>تاريخ التحديث:</span>
+        <span class="font-mono-tabular" dir="ltr">@DateTime.UtcNow.ToString("yyyy/MM/dd HH:mm") UTC</span>
     </span>
 </div>
 
 <!-- Stat Cards Grid -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div>
-                <div class="stat-label">إجمالي المقترحات البحثية</div>
-                <div class="stat-number">@Model.TotalResearches</div>
-            </div>
-            <div class="stat-icon bg-primary-subtle text-primary">
-                <i class="bi bi-journal-check"></i>
-            </div>
-        </div>
+<div class="kpi-ledger-grid mb-4">
+    <div class="kpi-ledger-cell">
+        <div class="stat-label">إجمالي المقترحات البحثية</div>
+        <div class="stat-number font-mono-tabular">@Model.TotalResearches</div>
     </div>
 
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div>
-                <div class="stat-label">قيد المراجعة الشكلية</div>
-                <div class="stat-number text-warning">@Model.UnderScreeningCount</div>
-            </div>
-            <div class="stat-icon bg-warning-subtle text-warning">
-                <i class="bi bi-hourglass-split"></i>
-            </div>
-        </div>
+    <div class="kpi-ledger-cell">
+        <div class="stat-label">قيد المراجعة الشكلية</div>
+        <div class="stat-number font-mono-tabular">@Model.UnderScreeningCount</div>
     </div>
 
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div>
-                <div class="stat-label">مسندة للمحكمين</div>
-                <div class="stat-number text-info">@Model.AssignedToJudgesCount</div>
-            </div>
-            <div class="stat-icon bg-info-subtle text-info">
-                <i class="bi bi-person-lines-fill"></i>
-            </div>
-        </div>
+    <div class="kpi-ledger-cell">
+        <div class="stat-label">مسندة للمحكمين</div>
+        <div class="stat-number font-mono-tabular">@Model.AssignedToJudgesCount</div>
     </div>
 
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div>
-                <div class="stat-label">شهادات صادرة رسمياً</div>
-                <div class="stat-number text-success">@Model.CertificatesIssuedCount</div>
-            </div>
-            <div class="stat-icon bg-success-subtle text-success">
-                <i class="bi bi-patch-check-fill"></i>
-            </div>
-        </div>
+    <div class="kpi-ledger-cell">
+        <div class="stat-label">شهادات صادرة رسمياً</div>
+        <div class="stat-number font-mono-tabular">@Model.CertificatesIssuedCount</div>
     </div>
 </div>
 
 <!-- SLA Performance & Quick Indicators -->
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="liquid-glass-card h-100">
-            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-stopwatch text-primary me-2"></i>مؤشر الالتزام بمهلة الفحص (48h)</h6>
-            <div class="d-flex align-items-baseline gap-2 mb-2">
-                <span class="fs-1 fw-bold text-primary">@Model.SlaCompliancePercentage%</span>
-                <span class="text-muted small">نسبة الالتزام بالـ SLA</span>
-            </div>
-            <div class="progress" style="height: 8px;">
-                <div class="progress-bar bg-success" role="progressbar" style="width: @Model.SlaCompliancePercentage%"></div>
-            </div>
-            <div class="text-muted small mt-2">متوسط زمن الفحص الشكلي: <strong>@Model.AverageScreeningHours ساعة</strong></div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="liquid-glass-card h-100">
-            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-people text-info me-2"></i>هيئة المحكمين والباحثين</h6>
-            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span class="text-muted">المحكمون النشطون:</span>
-                <strong class="text-dark">@Model.TotalJudges محكم معتمد</strong>
-            </div>
-            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span class="text-muted">الباحثون المسجلون:</span>
-                <strong class="text-dark">@Model.TotalResearchers باحث</strong>
-            </div>
-            <div class="d-flex justify-content-between align-items-center py-2">
-                <span class="text-muted">متوسط أيام التحكيم:</span>
-                <strong class="text-dark">@Model.AverageJudgingDays يوم</strong>
+<div class="card-custom archival-card mb-4">
+    <div class="row g-4">
+        <div class="col-12 col-md-4">
+            <div class="h-100">
+                <h2 class="card-title-custom fs-6 mb-3 pb-2 border-bottom">مؤشر الالتزام بمهلة الفحص (48h)</h2>
+                <div class="d-flex align-items-baseline gap-2 mb-2">
+                    <span class="fs-2 fw-semibold font-mono-tabular">@Model.SlaCompliancePercentage%</span>
+                    <span class="small text-muted">نسبة الالتزام بالـ SLA</span>
+                </div>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar" role="progressbar" style="width: @Model.SlaCompliancePercentage%;"></div>
+                </div>
+                <div class="small mt-2 text-secondary">متوسط زمن الفحص الشكلي: <strong><span class="font-mono-tabular">@Model.AverageScreeningHours</span> ساعة</strong></div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-4">
-        <div class="liquid-glass-card h-100">
-            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-mortarboard text-success me-2"></i>كليات الجامعة واللجان</h6>
-            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span class="text-muted">إجمالي الكليات المشتركة:</span>
-                <strong class="text-dark">@Model.TotalColleges كلية</strong>
+        <div class="col-12 col-md-4">
+            <div class="h-100">
+                <h2 class="card-title-custom fs-6 mb-3 pb-2 border-bottom">هيئة المحكمين والباحثين</h2>
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
+                    <span class="text-secondary">المحكمون النشطون:</span>
+                    <strong><span class="font-mono-tabular">@Model.TotalJudges</span> محكم معتمد</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
+                    <span class="text-secondary">الباحثون المسجلون:</span>
+                    <strong><span class="font-mono-tabular">@Model.TotalResearchers</span> باحث</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2 small">
+                    <span class="text-secondary">متوسط أيام التحكيم:</span>
+                    <strong><span class="font-mono-tabular">@Model.AverageJudgingDays</span> يوم</strong>
+                </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span class="text-muted">أبحاث تطلبت تعديلات:</span>
-                <strong class="text-danger">@Model.ModificationsRequiredCount مقترح</strong>
-            </div>
-            <div class="d-flex justify-content-between align-items-center py-2">
-                <span class="text-muted">أبحاث معتمدة نهائياً:</span>
-                <strong class="text-success">@Model.ApprovedCount مقترح</strong>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="h-100">
+                <h2 class="card-title-custom fs-6 mb-3 pb-2 border-bottom">كليات الجامعة واللجان</h2>
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
+                    <span class="text-secondary">إجمالي الكليات المشتركة:</span>
+                    <strong><span class="font-mono-tabular">@Model.TotalColleges</span> كلية</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
+                    <span class="text-secondary">أبحاث تطلبت تعديلات:</span>
+                    <strong><span class="font-mono-tabular">@Model.ModificationsRequiredCount</span> مقترح</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2 small">
+                    <span class="text-secondary">أبحاث معتمدة نهائياً:</span>
+                    <strong><span class="font-mono-tabular">@Model.ApprovedCount</span> مقترح</strong>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- College Breakdown -->
-<div class="liquid-glass-card mb-4">
-    <h5 class="fw-bold text-primary mb-3">
-        <i class="bi bi-bar-chart-fill me-2"></i>توزيع المقترحات البحثية بحسب الكليات
-    </h5>
+<div class="card-custom archival-card mb-4">
+    <div class="card-header-custom">
+        <h2 class="card-title-custom">توزيع المقترحات البحثية بحسب الكليات</h2>
+    </div>
     <div class="row g-3">
         @if (Model.ResearchesByCollege != null && Model.ResearchesByCollege.Any())
         {
             foreach (var item in Model.ResearchesByCollege)
             {
-                <div class="col-md-6">
-                    <div class="d-flex justify-content-between align-items-center p-3 rounded border bg-light">
-                        <span class="fw-bold text-dark">@item.Key</span>
-                        <span class="badge bg-primary fs-6">@item.Value مقترحات</span>
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="fw-medium">@item.Key</span>
+                        <span class="role-stamp"><span class="font-mono-tabular">@item.Value</span> مقترحات</span>
                     </div>
                 </div>
             }
         }
         else
         {
-            <div class="col-12 text-center text-muted py-3">لا توجد مقترحات مسجلة بالكليات حتى الآن.</div>
+            <div class="col-12 text-center py-3 text-muted">لا توجد مقترحات مسجلة بالكليات حتى الآن.</div>
         }
     </div>
 </div>

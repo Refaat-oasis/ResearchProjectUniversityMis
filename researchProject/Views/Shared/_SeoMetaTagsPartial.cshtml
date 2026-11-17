@@ -1,0 +1,44 @@
+@model researchProject.Models.ViewModels.SeoMetadataViewModel
+@{
+    var seo = Model ?? new researchProject.Models.ViewModels.SeoMetadataViewModel();
+    var currentUrl = Context.Request.Scheme + "://" + Context.Request.Host + Context.Request.Path;
+}
+
+<!-- Primary Meta Tags -->
+<meta name="title" content="@seo.Title" />
+<meta name="description" content="@seo.Description" />
+<meta name="keywords" content="@seo.Keywords" />
+<meta name="author" content="@seo.Author" />
+<meta name="robots" content="@(seo.NoIndex ? "noindex, nofollow" : "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1")" />
+
+<!-- Canonical Link -->
+<link rel="canonical" href="@(string.IsNullOrEmpty(seo.CanonicalUrl) || seo.CanonicalUrl == "/" ? currentUrl : seo.CanonicalUrl)" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="@seo.OgType" />
+<meta property="og:url" content="@currentUrl" />
+<meta property="og:title" content="@seo.Title" />
+<meta property="og:description" content="@seo.Description" />
+<meta property="og:image" content="@seo.OgImage" />
+<meta property="og:site_name" content="المنصة الإلكترونية للجان الفرعية لأخلاقيات البحث العلمي" />
+<meta property="og:locale" content="ar_EG" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="@seo.TwitterCard" />
+<meta name="twitter:url" content="@currentUrl" />
+<meta name="twitter:title" content="@seo.Title" />
+<meta name="twitter:description" content="@seo.Description" />
+<meta name="twitter:image" content="@seo.OgImage" />
+
+<!-- JSON-LD Structured Data Schema -->
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "EducationalOrganization",
+  "name": "المنصة الإلكترونية للجان الفرعية للنزاهة الأكاديمية وأخلاقيات البحث العلمي",
+  "url": "@currentUrl",
+  "description": "@seo.Description",
+  "inLanguage": "ar-EG"
+}
+</script>
+

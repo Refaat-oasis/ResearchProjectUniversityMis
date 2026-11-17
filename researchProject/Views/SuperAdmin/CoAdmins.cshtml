@@ -5,18 +5,18 @@
 
 <div class="page-header-card">
     <div>
-        <h2><i class="bi bi-person-badge text-warning"></i> إدارة مديري اللجان الفرعية بالكليات</h2>
-        <p>تعيين مديري اللجان لكل كلية، إعادة تعيين الكليات المسندة، وإدارة تفعيل أو تعطيل حساباتهم</p>
+        <h1 class="page-title"><i class="bi bi-person-badge"></i> إدارة مديري اللجان الفرعية بالكليات</h1>
+        <p>تعيين مديري اللجان لكل كلية، وإعادة تعيين الكليات المسندة، وإدارة تفعيل أو تعطيل حساباتهم</p>
     </div>
-    <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCoAdminModal">
+    <button class="btn btn-brass btn-sm" data-bs-toggle="modal" data-bs-target="#addCoAdminModal">
         <i class="bi bi-person-plus-fill me-1"></i> تعيين مدير لجنة جديد
     </button>
 </div>
 
-<div class="liquid-glass-card mb-4">
+<div class="card-custom archival-card mb-4">
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>الاسم الكامل</th>
@@ -34,38 +34,40 @@
                     {
                         bool isActive = a.IsActive && (a.User?.IsActive ?? true);
                         <tr>
-                            <td>@index</td>
+                            <td class="font-mono-tabular">@index</td>
                             <td class="fw-bold text-dark">
                                 <i class="bi bi-person-badge-fill text-primary me-1"></i>
                                 @a.User?.FullName
                             </td>
-                            <td dir="ltr" class="text-end font-monospace small">@a.User?.Email</td>
+                            <td dir="ltr" class="text-end font-mono-tabular small">@a.User?.Email</td>
                             <td>
-                                <span class="badge bg-primary-subtle text-primary fs-6">
+                                <span class="status-stamp status-assigned">
                                     <i class="bi bi-building me-1"></i>@(a.College?.Name ?? "غير محدد")
                                 </span>
                             </td>
                             <td>
                                 @if (isActive)
                                 {
-                                    <span class="badge bg-success">نشط</span>
+                                    <span class="status-stamp status-approved">نشط</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">معطل</span>
+                                    <span class="status-stamp status-inactive">معطل</span>
                                 }
                             </td>
                             <td>
-                                <button class="btn btn-sm @(isActive ? "btn-outline-danger" : "btn-outline-success")"
-                                        onclick="toggleCoAdminStatus(@a.Id, @(!isActive ? "true" : "false"))">
-                                    <i class="bi @(isActive ? "bi-person-x" : "bi-person-check") me-1"></i>
-                                    @(isActive ? "تعطيل" : "تفعيل")
-                                </button>
-                                <button class="btn btn-sm btn-outline-primary ms-1"
-                                        onclick="openReassignModal(@a.Id, @a.CollegeId, '@a.User?.FullName', '@(a.College?.Name ?? "")')">
-                                    <i class="bi bi-arrow-left-right me-1"></i>
-                                    تغيير الكلية
-                                </button>
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm @(isActive ? "btn-outline-danger" : "btn-outline-success")"
+                                            onclick="toggleCoAdminStatus(@a.Id, @(!isActive ? "true" : "false"))">
+                                        <i class="bi @(isActive ? "bi-person-x" : "bi-person-check") me-1"></i>
+                                        @(isActive ? "تعطيل" : "تفعيل")
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary ms-1"
+                                            onclick="openReassignModal(@a.Id, @a.CollegeId, '@a.User?.FullName', '@(a.College?.Name ?? "")')">
+                                        <i class="bi bi-arrow-left-right me-1"></i>
+                                        تغيير الكلية
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -74,7 +76,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">لا يوجد مديرو لجان مسجلون حالياً.</td>
+                        <td colspan="6" class="text-center py-5" style="color: var(--ink-muted);">لا يوجد مديرو لجان مسجلون حالياً.</td>
                     </tr>
                 }
             </tbody>

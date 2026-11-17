@@ -1,20 +1,22 @@
 @model List<researchProject.Models.Entities.Evaluation>
 @using researchProject.Models.Constants
 
-<div class="card card-custom">
-    <div class="card-header-custom">
+<div class="card card-custom archival-card">
+    <div class="card-header-custom flex-wrap gap-3">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-file-earmark-medical text-primary"></i> المقترحات البحثية المسندة للتحكيم الأخلاقي
+                <i class="bi bi-file-earmark-medical" style="color: var(--brand-brass, #B88E38);"></i> المقترحات البحثية المسندة للتحكيم الأخلاقي
             </h4>
-            <div class="text-muted small">تقييم الجوانب الأخلاقية للمقترحات البحثية المسندة إليكم بصفتكم محكماً علمياً مستقلاً</div>
+            <div class="small mt-1" style="color: var(--ink-secondary, #475569);">تقييم الجوانب الأخلاقية للمقترحات البحثية المسندة إليكم بصفتكم محكماً علمياً مستقلاً</div>
         </div>
-        <span class="badge bg-primary fs-6">@(Model?.Count ?? 0) مهمة تحكيم</span>
+        <span class="status-stamp status-assigned">
+            <span class="font-mono-tabular me-1">@(Model?.Count ?? 0)</span> مهمة تحكيم
+        </span>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table ledger-table align-middle mb-0">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>عنوان المقترح البحثي</th>
@@ -34,65 +36,73 @@
                     {
                         bool isDone = ev.SubmittedAt.HasValue;
 
-                        <tr class="@(isDone ? "" : "table-warning-subtle")">
-                            <td>@index</td>
-                            <td class="fw-bold" style="max-width: 250px;">@ev.Research?.Title</td>
-                            <td><span class="badge bg-light text-dark border">@ev.Research?.College?.Name</span></td>
+                        <tr style="@(isDone ? "" : "border-right: 3px solid #B88E38;")">
+                            <td class="font-mono-tabular text-muted">@index</td>
+                            <td class="fw-bold" style="max-width: 260px; color: var(--ink-primary, #0E2235);">@ev.Research?.Title</td>
                             <td>
-                                <div>@ev.Research?.Category?.Name</div>
-                                <div class="text-muted small">@ev.Research?.AcademicSpecialty</div>
+                                <span style="display: inline-block; padding: 2px 8px; font-size: 0.8rem; background: var(--bg-subtle, #F3F5F8); color: var(--ink-primary, #0E2235); border: 1px solid var(--border-hairline, #E2E8F0); border-radius: 3px;">@ev.Research?.College?.Name</span>
                             </td>
-                            <td><span class="badge bg-secondary">الجولة @ev.RoundNumber</span></td>
+                            <td>
+                                <div class="fw-medium">@ev.Research?.Category?.Name</div>
+                                <div class="small" style="color: var(--ink-secondary, #475569);">@ev.Research?.AcademicSpecialty</div>
+                            </td>
+                            <td>
+                                <span style="display: inline-block; padding: 2px 8px; font-size: 0.8rem; font-weight: 600; background: var(--bg-subtle, #F3F5F8); color: var(--ink-primary, #0E2235); border: 1px solid var(--border-hairline, #E2E8F0); border-radius: 3px;">
+                                    الجولة <span class="font-mono-tabular">@ev.RoundNumber</span>
+                                </span>
+                            </td>
                             <td>
                                 @if (isDone)
                                 {
                                     @if (ev.Decision == EvaluationDecisionConstants.ClosedDueToOtherJudge || ev.Decision == "مغلق لاكتمال التحكيم")
                                     {
-                                        <span class="badge bg-secondary"><i class="bi bi-lock me-1"></i>مغلق (تم التحكيم بواسطة محكم آخر)</span>
+                                        <span class="status-stamp status-inactive"><i class="bi bi-lock me-1"></i>مغلق (تم التحكيم بواسطة محكم آخر)</span>
                                     }
                                     else if (ev.Decision == EvaluationDecisionConstants.Approved)
                                     {
-                                        <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>موافق</span>
+                                        <span class="status-stamp status-approved"><i class="bi bi-check-lg me-1"></i>موافق</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger"><i class="bi bi-exclamation-circle me-1"></i>طلب تعديلات</span>
+                                        <span class="status-stamp status-modifications"><i class="bi bi-exclamation-circle me-1"></i>طلب تعديلات</span>
                                     }
                                 }
                                 else
                                 {
-                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>قيد التقييم</span>
+                                    <span class="status-stamp status-screening"><i class="bi bi-hourglass-split me-1"></i>قيد التقييم</span>
                                 }
                             </td>
                             <td>
                                 @if (ev.IsDigitallySigned)
                                 {
-                                    <span class="badge bg-primary-subtle text-primary"><i class="bi bi-check2-circle me-1"></i>موقع</span>
+                                    <span class="status-stamp status-assigned"><i class="bi bi-check2-circle me-1"></i>موقع</span>
                                 }
                                 else
                                 {
-                                    <span class="text-muted small">-</span>
+                                    <span class="small font-mono-tabular" style="color: var(--ink-muted, #64748B);">-</span>
                                 }
                             </td>
                             <td>
-                                @if (ev.Decision == EvaluationDecisionConstants.ClosedDueToOtherJudge || ev.Decision == "مغلق لاكتمال التحكيم")
-                                {
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');">
-                                        <i class="bi bi-eye me-1"></i> استعراض (مغلق)
-                                    </button>
-                                }
-                                else if (!isDone)
-                                {
-                                    <button class="btn btn-sm btn-primary-custom" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');">
-                                        <i class="bi bi-pencil-square me-1"></i> تعبئة نموذج التقييم
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');">
-                                        <i class="bi bi-eye me-1"></i> استعراض التقييم
-                                    </button>
-                                }
+                                <div class="table-actions-inline">
+                                    @if (ev.Decision == EvaluationDecisionConstants.ClosedDueToOtherJudge || ev.Decision == "مغلق لاكتمال التحكيم")
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');" title="استعراض التقييم المغلق">
+                                            <i class="bi bi-eye me-1"></i> استعراض (مغلق)
+                                        </button>
+                                    }
+                                    else if (!isDone)
+                                    {
+                                        <button class="btn btn-sm btn-primary-custom" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');" title="تعبئة نموذج التقييم الأخلاقي">
+                                            <i class="bi bi-pencil-square me-1"></i> تعبئة نموذج التقييم
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="loadPartial('/Judge/EvaluationFormPartial/@ev.Id', '#main-content-container', 'assigned-researches');" title="استعراض نتيجة التقييم">
+                                            <i class="bi bi-eye me-1"></i> استعراض التقييم
+                                        </button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                         index++;
@@ -101,8 +111,8 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            <i class="bi bi-check-circle text-success fs-3 d-block mb-2"></i>
+                        <td colspan="8" class="text-center py-5" style="color: var(--ink-muted, #64748B);">
+                            <i class="bi bi-check-circle fs-3 d-block mb-2" style="color: var(--brand-sovereign, #0E2235);"></i>
                             لا توجد أبحاث جديدة مسندة إليكم حالياً للتحكيم.
                         </td>
                     </tr>

@@ -15,35 +15,45 @@
 }
 
 <aside class="right-sidebar">
-    <!-- User Portal Badge -->
-    <div class="px-2 pb-2 border-bottom">
-        <div class="small text-muted fw-bold mb-1">الأدوار الممنوحة للحساب:</div>
+    <!-- User Portal Role Stamps -->
+    <div class="sidebar-roles-panel">
+        <div class="sidebar-roles-caption">الأدوار الممنوحة للحساب:</div>
         <div class="d-flex flex-wrap gap-1">
             @if (User.IsInRole(RoleConstants.SuperAdmin))
             {
-                <span class="badge bg-danger">مدير النظام العام</span>
+                <span class="role-stamp role-stamp-admin">مدير النظام العام</span>
             }
             @if (User.IsInRole(RoleConstants.CollegeCoAdmin))
             {
-                <span class="badge bg-primary">مدير اللجنة الفرعية</span>
+                <span class="role-stamp role-stamp-coadmin">مدير اللجنة الفرعية</span>
             }
             @if (User.IsInRole(RoleConstants.Judge))
             {
-                <span class="badge bg-info text-dark">محكم علمي</span>
+                <span class="role-stamp role-stamp-judge">محكم علمي</span>
             }
             @if (User.IsInRole(RoleConstants.Researcher))
             {
-                <span class="badge bg-success">باحث أكاديمي</span>
+                <span class="role-stamp role-stamp-researcher">باحث أكاديمي</span>
             }
         </div>
+
+        @if (User.IsInRole(RoleConstants.Judge) && !User.IsInRole(RoleConstants.Researcher))
+        {
+            <div class="sidebar-promo-box text-center">
+                <div class="small fw-semibold mb-2 sidebar-promo-title">باحث أكاديمي؟</div>
+                <a asp-controller="Account" asp-action="Profile" class="btn btn-sm btn-primary w-100 fw-semibold">
+                    <i class="bi bi-plus-circle me-1"></i> تفعيل صفة باحث
+                </a>
+            </div>
+        }
     </div>
 
     <!-- 1. Super Admin Section -->
     @if (User.IsInRole(RoleConstants.SuperAdmin))
     {
-        <div>
+        <div class="sidebar-section">
             <div class="sidebar-heading">
-                <i class="bi bi-shield-lock-fill text-danger me-1"></i> بوابة الإدارة العليا
+                <i class="bi bi-shield-lock-fill"></i> بوابة الإدارة العليا
             </div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
@@ -103,24 +113,24 @@
     <!-- 2. College Co-Admin Section -->
     @if (User.IsInRole(RoleConstants.CollegeCoAdmin))
     {
-        <div>
+        <div class="sidebar-section">
             <div class="sidebar-heading">
-                <i class="bi bi-person-workspace text-primary me-1"></i> إدارة اللجنة الفرعية بالكلية
+                <i class="bi bi-person-workspace"></i> إدارة اللجنة الفرعية بالكلية
             </div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
                     <a asp-controller="CollegeCoAdmin" asp-action="ScreeningQueue" class="@(IsActive("CollegeCoAdmin", "ScreeningQueue", "Index", "Review") ? "active" : "")">
-                        <i class="bi bi-hourglass-split text-warning"></i> طابور الفحص الشكلي
+                        <i class="bi bi-hourglass-split"></i> طابور الفحص الشكلي
                     </a>
                 </li>
                 <li class="sidebar-item">
                     <a asp-controller="CollegeCoAdmin" asp-action="FinalApproval" class="@(IsActive("CollegeCoAdmin", "FinalApproval") ? "active" : "")">
-                        <i class="bi bi-award text-success"></i> اعتماد وإصدار الشهادات
+                        <i class="bi bi-award"></i> اعتماد وإصدار الشهادات
                     </a>
                 </li>
                 <li class="sidebar-item">
                     <a asp-controller="CollegeCoAdmin" asp-action="InviteJudge" class="@(IsActive("CollegeCoAdmin", "InviteJudge") ? "active" : "")">
-                        <i class="bi bi-envelope-plus text-info"></i> دعوة محكم علمي
+                        <i class="bi bi-envelope-plus"></i> دعوة محكم علمي
                     </a>
                 </li>
                 <li class="sidebar-item">
@@ -140,9 +150,9 @@
     <!-- 3. Judge Section -->
     @if (User.IsInRole(RoleConstants.Judge))
     {
-        <div>
+        <div class="sidebar-section">
             <div class="sidebar-heading">
-                <i class="bi bi-clipboard2-check text-info me-1"></i> بوابة المحكمين
+                <i class="bi bi-clipboard2-check"></i> بوابة المحكمين
             </div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
@@ -157,36 +167,36 @@
     <!-- 4. Researcher Section -->
     @if (User.IsInRole(RoleConstants.Researcher))
     {
-        <div>
+        <div class="sidebar-section">
             <div class="sidebar-heading">
-                <i class="bi bi-pencil-square text-success me-1"></i> بوابة الباحثين
+                <i class="bi bi-pencil-square"></i> بوابة الباحثين
             </div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
                     <a asp-controller="Researcher" asp-action="Create" class="@(IsActive("Researcher", "Create") ? "active" : "")">
-                        <i class="bi bi-file-earmark-plus text-success"></i> تقديم مقترح بحثي جديد
+                        <i class="bi bi-file-earmark-plus"></i> تقديم مقترح بحثي جديد
                     </a>
                 </li>
                 <li class="sidebar-item">
                     <a asp-controller="Researcher" asp-action="MyResearches" class="@(IsActive("Researcher", "MyResearches", "Index", "Tracker", "Modify") ? "active" : "")">
-                        <i class="bi bi-folder2-open text-primary"></i> مقترحاتي ومتابعة الحالات
+                        <i class="bi bi-folder2-open"></i> مقترحاتي ومتابعة الحالات
                     </a>
                 </li>
                 <li class="sidebar-item">
                     <a asp-controller="Researcher" asp-action="Certificates" class="@(IsActive("Researcher", "Certificates") ? "active" : "")">
-                        <i class="bi bi-patch-check-fill text-success"></i> شهاداتي الأخلاقية المعتمدة
+                        <i class="bi bi-patch-check-fill"></i> شهاداتي الأخلاقية المعتمدة
                     </a>
                 </li>
             </ul>
         </div>
     }
 
-    <!-- Common Profile & Security Section -->
-    <div class="mt-3 pt-2 border-top">
+    <!-- 5. Profile & Account Settings -->
+    <div class="sidebar-footer-section mt-auto pt-2 border-top">
         <ul class="sidebar-menu">
             <li class="sidebar-item">
                 <a asp-controller="Account" asp-action="Profile" class="@(IsActive("Account", "Profile") ? "active" : "")">
-                    <i class="bi bi-person-gear text-primary"></i> الملف الشخصي والأمان
+                    <i class="bi bi-person-gear"></i> الملف الشخصي والأمان
                 </a>
             </li>
         </ul>

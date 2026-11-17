@@ -1,22 +1,22 @@
 @model List<researchProject.Models.Entities.Research>
 @using researchProject.Models.Constants
 
-<div class="card card-custom">
+<div class="card-custom archival-card">
     <div class="card-header-custom">
         <div>
             <h4 class="card-title-custom">
-                <i class="bi bi-folder2-open text-primary"></i> مقترحاتي البحثية ومتابعة الحالات
+                <i class="bi bi-folder2-open" style="color: var(--brand-sovereign);"></i> مقترحاتي البحثية ومتابعة الحالات
             </h4>
             <div class="text-muted small">تتبع مسار كافة الأبحاث المقدمة منكم للجنان الأخلاقيات بالجامعة</div>
         </div>
-        <button class="btn btn-accent-custom btn-sm" onclick="loadPartial('/Researcher/CreateResearchPartial', '#main-content-container', 'create-research');">
+        <button class="btn btn-primary-custom btn-sm" onclick="loadPartial('/Researcher/CreateResearchPartial', '#main-content-container', 'create-research');">
             <i class="bi bi-plus-lg me-1"></i> تقديم مقترح جديد
         </button>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table table-hover ledger-table align-middle">
+            <thead>
                 <tr>
                     <th>#</th>
                     <th>عنوان المقترح البحثي</th>
@@ -39,35 +39,35 @@
                             ResearchStatusConstants.ModificationsRequired => "status-modifications",
                             ResearchStatusConstants.Approved => "status-approved",
                             ResearchStatusConstants.CertificateIssued => "status-issued",
-                            _ => "bg-secondary text-white"
+                            _ => "status-inactive"
                         };
 
                         <tr>
-                            <td>@index</td>
-                            <td class="fw-bold" style="max-width: 280px;">@r.Title</td>
+                            <td class="font-mono-tabular text-muted">@index</td>
+                            <td class="fw-bold" style="min-width: 200px; max-width: 280px;">@r.Title</td>
                             <td>
                                 <div>@r.Category?.Name</div>
                                 <div class="text-muted small">@r.AcademicSpecialty</div>
                             </td>
-                            <td class="text-muted small">@r.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</td>
-                            <td><span class="badge-status @badgeClass">@r.WorkflowStatus</span></td>
+                            <td class="text-muted small font-mono-tabular" style="white-space: nowrap;" dir="ltr">@r.SubmittedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td><span class="status-stamp @badgeClass">@r.WorkflowStatus</span></td>
                             <td>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="loadPartial('/Researcher/ResearchStatusTrackerPartial/@r.Id', '#main-content-container', 'my-researches');">
-                                        <i class="bi bi-activity me-1"></i> تتبع المسار
+                                <div class="table-actions-inline">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="loadPartial('/Researcher/ResearchStatusTrackerPartial/@r.Id', '#main-content-container', 'my-researches');" title="تتبع مسار المقترح">
+                                        <i class="bi bi-activity"></i> تتبع المسار
                                     </button>
 
                                     @if (r.WorkflowStatus == ResearchStatusConstants.ModificationsRequired)
                                     {
-                                        <button class="btn btn-sm btn-danger fw-bold" onclick="loadPartial('/Researcher/UploadModificationsPartial/@r.Id', '#main-content-container', 'my-researches');">
-                                            <i class="bi bi-upload me-1"></i> رفع التعديلات
+                                        <button class="btn btn-sm btn-outline-danger fw-bold" onclick="loadPartial('/Researcher/UploadModificationsPartial/@r.Id', '#main-content-container', 'my-researches');" title="رفع التعديلات والملفات المطلوبة">
+                                            <i class="bi bi-upload"></i> رفع التعديلات
                                         </button>
                                     }
 
                                     @if (r.WorkflowStatus == ResearchStatusConstants.CertificateIssued)
                                     {
-                                        <a href="/Researcher/DownloadCertificate?researchId=@r.Id" target="_blank" class="btn btn-sm btn-success">
-                                            <i class="bi bi-download me-1"></i> الشهادة
+                                        <a href="/Researcher/DownloadCertificate?researchId=@r.Id" target="_blank" class="btn btn-sm btn-primary-custom" title="تحميل الشهادة الرقمية المعتمدة">
+                                            <i class="bi bi-download"></i> الشهادة
                                         </a>
                                     }
                                 </div>
