@@ -73,6 +73,13 @@ namespace researchProject.Tests
         }
 
         [Fact]
+        public void SuperAdminController_DoesNotHave_AuditLogsPartial_Action()
+        {
+            var method = typeof(SuperAdminController).GetMethod("AuditLogsPartial");
+            Assert.Null(method);
+        }
+
+        [Fact]
         public async Task DeveloperController_AuditLogs_Returns_View_With_Model()
         {
             var mockRepo = new Mock<ISuperAdminRepository>();
@@ -86,6 +93,23 @@ namespace researchProject.Tests
 
             var viewResult = Assert.IsType<ViewResult>(result);
             Assert.Same(expectedModel, viewResult.Model);
+        }
+
+        [Fact]
+        public async Task DeveloperController_AuditLogsPartial_Returns_PartialView_With_Model()
+        {
+            var mockRepo = new Mock<ISuperAdminRepository>();
+            var expectedModel = new AuditLogListViewModel();
+            mockRepo.Setup(r => r.GetAuditLogsAsync(1, 25, null, null, null, null, null))
+                    .ReturnsAsync(expectedModel);
+
+            var controller = new DeveloperController(mockRepo.Object);
+
+            var result = await controller.AuditLogsPartial(1);
+
+            var partialResult = Assert.IsType<PartialViewResult>(result);
+            Assert.Equal("_AuditLogsPartial", partialResult.ViewName);
+            Assert.Same(expectedModel, partialResult.Model);
         }
 
         [Fact]

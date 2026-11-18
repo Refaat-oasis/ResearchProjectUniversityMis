@@ -71,7 +71,8 @@ namespace researchProject.Filters
                     var userName = user.FindFirstValue("FullName") ?? user.Identity?.Name;
 
                     string? userRole = null;
-                    if (user.IsInRole(RoleConstants.SuperAdmin)) userRole = RoleConstants.SuperAdmin;
+                    if (user.IsInRole(RoleConstants.Developer)) userRole = RoleConstants.Developer;
+                    else if (user.IsInRole(RoleConstants.SuperAdmin)) userRole = RoleConstants.SuperAdmin;
                     else if (user.IsInRole(RoleConstants.CollegeCoAdmin)) userRole = RoleConstants.CollegeCoAdmin;
                     else if (user.IsInRole(RoleConstants.Judge)) userRole = RoleConstants.Judge;
                     else if (user.IsInRole(RoleConstants.Researcher)) userRole = RoleConstants.Researcher;
@@ -164,8 +165,13 @@ namespace researchProject.Filters
                     "savecollege" or "createcollege" => prefix + "إضافة/تعديل كلية",
                     "savedepartment" => prefix + "إضافة/تعديل قسم علمي",
                     "savecategory" => prefix + "إضافة/تعديل تصنيف بحثي",
-                    "auditlogs" => "استعراض سجلات الرقابة والتدقيق بالنظام",
                     _ => $"{prefix}إجراءات المشرف العام ({action})"
+                },
+                "developer" => action.ToLowerInvariant() switch
+                {
+                    "auditlogs" or "auditlogspartial" => "استعراض سجلات الرقابة والتدقيق بالنظام",
+                    "hangfire" => "استعراض لوحة مهام Hangfire",
+                    _ => $"{prefix}إجراءات مهندس التطوير ({action})"
                 },
                 "attachment" => action.ToLowerInvariant() switch
                 {
