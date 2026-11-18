@@ -57,12 +57,19 @@ namespace researchProject.Tests
         }
 
         [Fact]
-        public void DeveloperController_Has_AuthorizeAttribute_With_Developer_And_SuperAdmin()
+        public void DeveloperController_Has_AuthorizeAttribute_With_Developer_Only()
         {
             var authAttr = (AuthorizeAttribute?)Attribute.GetCustomAttribute(typeof(DeveloperController), typeof(AuthorizeAttribute));
             Assert.NotNull(authAttr);
-            Assert.Contains(RoleConstants.Developer, authAttr.Roles);
-            Assert.Contains(RoleConstants.SuperAdmin, authAttr.Roles);
+            Assert.Equal(RoleConstants.Developer, authAttr.Roles);
+            Assert.DoesNotContain(RoleConstants.SuperAdmin, authAttr.Roles);
+        }
+
+        [Fact]
+        public void SuperAdminController_DoesNotHave_AuditLogs_Action()
+        {
+            var method = typeof(SuperAdminController).GetMethod("AuditLogs");
+            Assert.Null(method);
         }
 
         [Fact]

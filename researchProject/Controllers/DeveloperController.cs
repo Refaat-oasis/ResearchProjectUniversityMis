@@ -7,7 +7,7 @@ using researchProject.Repositories.Interfaces;
 
 namespace researchProject.Controllers
 {
-    [Authorize(Roles = $"{RoleConstants.Developer},{RoleConstants.SuperAdmin}")]
+    [Authorize(Roles = RoleConstants.Developer)]
     public class DeveloperController : Controller
     {
         private readonly ISuperAdminRepository _superAdminRepo;
@@ -40,7 +40,7 @@ namespace researchProject.Controllers
             DateTime? toDate = null)
         {
             var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate);
-            return PartialView("~/Views/SuperAdmin/_AuditLogsPartial.cshtml", model);
+            return PartialView("_AuditLogsPartial", model);
         }
 
         [HttpGet]
