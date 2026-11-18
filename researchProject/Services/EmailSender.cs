@@ -185,6 +185,9 @@ namespace researchProject.Services
 
         public Task SendRegistrationTokenAsync(string email, string token, string confirmationLink)
         {
+            var safeToken = WebUtility.HtmlEncode(token ?? "");
+            var safeConfirmationLink = WebUtility.HtmlEncode(confirmationLink ?? "");
+
             var body = $@"
                 <div style='text-align: right; font-family: Cairo, Tahoma, Arial, sans-serif;'>
                     <div style='display:inline-block; background-color:#eff6ff; color:#1d4ed8; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:12px; border:1px solid #bfdbfe;'>
@@ -205,11 +208,11 @@ namespace researchProject.Services
                     <!-- 6-digit OTP Box (Email Client Safe) -->
                     <div style='background: linear-gradient(135deg, #f8fafc 0%, #eef2f6 100%); border: 2px dashed #3b82f6; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;'>
                         <div style='color: #475569; font-size: 13px; font-weight: bold; margin-bottom: 10px;'>رمز التحقق الرقمي الخاص بك (OTP):</div>
-                        <div onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{token}');}}"" title='انقر لنسخ الرمز' style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e3a8a; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #93c5fd; display:inline-block; margin: 0 auto 10px auto; cursor: pointer;'>
-                            {token}
+                        <div style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e3a8a; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #93c5fd; display:inline-block; margin: 0 auto 10px auto;'>
+                            {safeToken}
                         </div>
                         <div style='margin-top: 10px;'>
-                            <a href='{confirmationLink}' target='_blank' onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{token}'); return false;}} else {{navigator.clipboard.writeText('{token}'); alert('تم نسخ رمز التحقق بنجاح: {token}'); return false;}}"" style='display:inline-block; text-decoration:none; cursor:pointer; background:#2563eb; color:#ffffff; padding:10px 24px; border-radius:8px; font-weight:700; font-size:14px; box-shadow:0 2px 6px rgba(37,99,235,0.3); font-family:Cairo, Tahoma, Arial, sans-serif;'>
+                            <a href='{safeConfirmationLink}' target='_blank' data-original-bg='#2563eb' onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{safeToken}'); return false;}} else if(navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText){{navigator.clipboard.writeText('{safeToken}').catch(function(){{}}); alert('تم نسخ رمز التحقق بنجاح: {safeToken}'); return false;}}"" style='display:inline-block; text-decoration:none; cursor:pointer; background:#2563eb; color:#ffffff; padding:10px 24px; border-radius:8px; font-weight:700; font-size:14px; box-shadow:0 2px 6px rgba(37,99,235,0.3); font-family:Cairo, Tahoma, Arial, sans-serif;'>
                                 📋 نسخ رمز التحقق
                             </a>
                         </div>
@@ -223,7 +226,7 @@ namespace researchProject.Services
 
                     <!-- 1-Click Verification Link with Auto-Fill & Auto-Copy -->
                     <div style='text-align: center; margin: 28px 0;'>
-                        <a href='{confirmationLink}' style='display:inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(37,99,235,0.25);'>
+                        <a href='{safeConfirmationLink}' style='display:inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(37,99,235,0.25);'>
                             🚀 تفعيل الحساب وتعبئة الرمز تلقائياً بنقرة واحدة
                         </a>
                     </div>
@@ -238,6 +241,9 @@ namespace researchProject.Services
 
         public Task SendPasswordResetTokenAsync(string email, string token, string resetLink)
         {
+            var safeToken = WebUtility.HtmlEncode(token ?? "");
+            var safeResetLink = WebUtility.HtmlEncode(resetLink ?? "");
+
             var body = $@"
                 <div style='text-align: right; font-family: Cairo, Tahoma, Arial, sans-serif;'>
                     <div style='display:inline-block; background-color:#fef2f2; color:#b91c1c; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:12px; border:1px solid #fecaca;'>
@@ -258,11 +264,11 @@ namespace researchProject.Services
                     <!-- 6-digit OTP Box (Email Client Safe) -->
                     <div style='background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px dashed #ea580c; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;'>
                         <div style='color: #9a3412; font-size: 13px; font-weight: bold; margin-bottom: 10px;'>رمز استعادة كلمة المرور (OTP):</div>
-                        <div onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{token}');}}"" title='انقر لنسخ الرمز' style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #7c2d12; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #fdba74; display:inline-block; margin: 0 auto 10px auto; cursor: pointer;'>
-                            {token}
+                        <div style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #7c2d12; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #fdba74; display:inline-block; margin: 0 auto 10px auto;'>
+                            {safeToken}
                         </div>
                         <div style='margin-top: 10px;'>
-                            <a href='{resetLink}' target='_blank' onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{token}'); return false;}} else {{navigator.clipboard.writeText('{token}'); alert('تم نسخ رمز الاستعادة بنجاح: {token}'); return false;}}"" style='display:inline-block; text-decoration:none; cursor:pointer; background:#ea580c; color:#ffffff; padding:10px 24px; border-radius:8px; font-weight:700; font-size:14px; box-shadow:0 2px 6px rgba(234,88,12,0.3); font-family:Cairo, Tahoma, Arial, sans-serif;'>
+                            <a href='{safeResetLink}' target='_blank' data-original-bg='#ea580c' onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{safeToken}'); return false;}} else if(navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText){{navigator.clipboard.writeText('{safeToken}').catch(function(){{}}); alert('تم نسخ رمز الاستعادة بنجاح: {safeToken}'); return false;}}"" style='display:inline-block; text-decoration:none; cursor:pointer; background:#ea580c; color:#ffffff; padding:10px 24px; border-radius:8px; font-weight:700; font-size:14px; box-shadow:0 2px 6px rgba(234,88,12,0.3); font-family:Cairo, Tahoma, Arial, sans-serif;'>
                                 📋 نسخ رمز الاستعادة
                             </a>
                         </div>
@@ -276,7 +282,7 @@ namespace researchProject.Services
 
                     <!-- 1-Click Direct Reset Link with Auto-Fill -->
                     <div style='text-align: center; margin: 28px 0;'>
-                        <a href='{resetLink}' style='display:inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(220,38,38,0.25);'>
+                        <a href='{safeResetLink}' style='display:inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(220,38,38,0.25);'>
                             🔒 تعيين كلمة المرور الجديدة وتعبئة الرمز تلقائياً
                         </a>
                     </div>
@@ -395,13 +401,14 @@ namespace researchProject.Services
 
         private static string WrapHtmlInRtlTemplate(string title, string content)
         {
+            var safeTitle = WebUtility.HtmlEncode(title ?? "");
             return $@"
                 <!DOCTYPE html>
                 <html lang='ar' dir='rtl'>
                 <head>
                     <meta charset='utf-8' />
                     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-                    <title>{title}</title>
+                    <title>{safeTitle}</title>
                     <script>
                         function copyOtpToClipboard(btn, text) {{
                             try {{
@@ -446,12 +453,14 @@ namespace researchProject.Services
                         function notifyCopied(btn, text) {{
                             if (btn) {{
                                 var origText = btn.getAttribute('data-original-text') || btn.innerText;
+                                var origBg = btn.getAttribute('data-original-bg') || btn.style.backgroundColor || '#2563eb';
                                 btn.setAttribute('data-original-text', origText);
+                                btn.setAttribute('data-original-bg', origBg);
                                 btn.innerText = '✅ تم نسخ الرمز: ' + text;
                                 btn.style.backgroundColor = '#16a34a';
                                 setTimeout(function() {{
                                     btn.innerText = origText;
-                                    btn.style.backgroundColor = '';
+                                    btn.style.backgroundColor = origBg;
                                 }}, 3500);
                             }}
                             alert('تم نسخ رمز التحقق بنجاح إلى الحافظة: ' + text);

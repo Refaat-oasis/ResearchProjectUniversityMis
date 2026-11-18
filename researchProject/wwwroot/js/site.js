@@ -134,6 +134,56 @@ window.showToast = function (firstArg, secondArg) {
     });
 };
 
+// ==========================================================================
+// Global Safe Clipboard Copy Helper with ExecCommand Fallback
+// ==========================================================================
+window.safeCopyToClipboard = function (text, onSuccess, onError) {
+    if (!text) return;
+    try {
+        if (navigator.clipboard && window.isSecureContext && typeof navigator.clipboard.writeText === 'function') {
+            navigator.clipboard.writeText(text).then(function () {
+                if (typeof onSuccess === 'function') onSuccess();
+            }).catch(function () {
+                fallbackCopy(text, onSuccess, onError);
+            });
+            return;
+        }
+    } catch (e) { }
+
+    fallbackCopy(text, onSuccess, onError);
+
+    function fallbackCopy(val, onOk, onFail) {
+        try {
+            var textArea = document.createElement("textarea");
+            textArea.value = val;
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            textArea.style.left = "-9999px";
+            textArea.setAttribute("readonly", "");
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            var success = false;
+            try {
+                success = document.execCommand('copy');
+            } catch (err) {
+                success = false;
+            }
+            document.body.removeChild(textArea);
+            if (success) {
+                if (typeof onOk === 'function') onOk();
+                return;
+            }
+        } catch (ex) { }
+
+        if (typeof onFail === 'function') {
+            onFail();
+        } else {
+            window.prompt('يرجى نسخ الرمز (Ctrl+C):', val);
+        }
+    }
+};
+
 // Global window.alert override as a universal fallback guard
 window.alert = function (msg) {
     if (!msg) return;

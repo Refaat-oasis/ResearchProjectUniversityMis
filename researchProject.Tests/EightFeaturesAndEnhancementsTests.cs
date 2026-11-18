@@ -200,11 +200,10 @@ namespace researchProject.Tests
                 await sender.SendPasswordResetTokenAsync("reset@univ.edu.eg", "654321", "https://example.com/reset?token=654321");
 
                 var archiveDir = Path.Combine(tempDir, "App_Data", "SentEmails");
-                var expectedFile = Path.Combine(archiveDir, "last_new_account.html"); // or last_otp/last_notification depending on subject
+                var expectedFile = Path.Combine(archiveDir, "last_otp.html");
 
-                Assert.True(Directory.GetFiles(archiveDir).Length > 0, "No archive file created for reset token email");
-                var createdFile = Directory.GetFiles(archiveDir)[0];
-                var content = await File.ReadAllTextAsync(createdFile);
+                Assert.True(File.Exists(expectedFile), $"Expected reset token archive at {expectedFile}");
+                var content = await File.ReadAllTextAsync(expectedFile);
 
                 Assert.Contains("654321", content);
                 Assert.Contains("نسخ رمز الاستعادة", content);

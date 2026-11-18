@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "researchProject/Services/EmailSender.cs": {
-    "mtime": 1795023475.3580606,
-    "seen": 1795023672.4037669,
-    "ast_hash": "31e154cabaa45ce29f970ee388083289",
+    "mtime": 1795023949.8410516,
+    "seen": 1795024056.500157,
+    "ast_hash": "4cb95f3f60c00d139db584fd591848e2",
     "semantic_hash": ""
   },
   "researchProject/Services/FileStorageService.cs": {
@@ -534,9 +534,9 @@
     "semantic_hash": ""
   },
   "researchProject/wwwroot/js/site.js": {
-    "mtime": 1794948287.1169841,
-    "seen": 1794949814.063105,
-    "ast_hash": "b557c598f032b4f7986b76ca2470a8d8",
+    "mtime": 1795023963.369007,
+    "seen": 1795024056.5011566,
+    "ast_hash": "ffb3de3d211b59ca0ca22b5b798f91c6",
     "semantic_hash": ""
   },
   "ai_agent_instructions_architecture_rules.md": {
@@ -1152,15 +1152,15 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Account/ResetPassword.cshtml": {
-    "mtime": 1795023502.488234,
-    "seen": 1795023672.4037669,
-    "ast_hash": "966cb0bd9a6f3bdc19a728f5cd34bf58",
+    "mtime": 1795023993.0417032,
+    "seen": 1795024056.500157,
+    "ast_hash": "c890cc61da3e3897140ce141fa73317e",
     "semantic_hash": ""
   },
   "researchProject/Views/Account/VerifyEmailToken.cshtml": {
-    "mtime": 1795023494.5701604,
-    "seen": 1795023672.4037669,
-    "ast_hash": "4bc1786eaac5179ebd05f1eb732690a9",
+    "mtime": 1795023978.203279,
+    "seen": 1795024056.500157,
+    "ast_hash": "8d9109c7ba4790e62f9b971a0909eb2c",
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/Categories.cshtml": {
@@ -1530,9 +1530,9 @@
     "semantic_hash": ""
   },
   "researchProject.Tests/EightFeaturesAndEnhancementsTests.cs": {
-    "mtime": 1795023516.4122293,
-    "seen": 1795023672.4037669,
-    "ast_hash": "d0146411c7a9838333d3d09451cb23d2",
+    "mtime": 1795024006.9312649,
+    "seen": 1795024056.500157,
+    "ast_hash": "3ca225b45a01583e88352fc961aaa520",
     "semantic_hash": ""
   },
   "researchProject/Controllers/DeveloperController.cs": {
@@ -1557,12 +1557,6 @@
     "mtime": 1794950961.905517,
     "seen": 1794956383.7228415,
     "ast_hash": "8031e87197efc8d3671a7fb86ee3b1d3",
-    "semantic_hash": ""
-  },
-  "researchProject/Services/HangfireAuthorizationFilter.cs": {
-    "mtime": 1795023196.8334394,
-    "seen": 1795023672.4037669,
-    "ast_hash": "c7630fab078e1e812f63dd2872049d2c",
     "semantic_hash": ""
   }
 }
