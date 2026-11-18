@@ -415,31 +415,5 @@ namespace researchProject.Controllers
             var archives = await _superAdminRepo.SearchCertificatesArchiveAsync(serialNumber, researcherName, collegeId, fromDate, toDate);
             return PartialView("_CertificatesArchivePartial", archives);
         }
-
-        [HttpGet]
-        public async Task<IActionResult> AuditLogs(
-            int page = 1,
-            string? searchTerm = null,
-            string? roleFilter = null,
-            bool? successFilter = null,
-            DateTime? fromDate = null,
-            DateTime? toDate = null)
-        {
-            var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate);
-            return View(model);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> AuditLogsPartial(
-            int page = 1,
-            string? searchTerm = null,
-            string? roleFilter = null,
-            bool? successFilter = null,
-            DateTime? fromDate = null,
-            DateTime? toDate = null)
-        {
-            var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate);
-            return PartialView("_AuditLogsPartial", model);
-        }
     }
 }

@@ -60,9 +60,9 @@
     "semantic_hash": ""
   },
   "researchProject/Controllers/SuperAdminController.cs": {
-    "mtime": 1794342434.4778304,
-    "seen": 1794348161.0444925,
-    "ast_hash": "ac4d1731d89fcda561c1dab378d97eb0",
+    "mtime": 1795030278.1988778,
+    "seen": 1795030578.441545,
+    "ast_hash": "02faeed95d93ce40e3480a7b9de7d8a3",
     "semantic_hash": ""
   },
   "researchProject/Data/ApplicationDbContext.cs": {
@@ -294,8 +294,8 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Account/Login.cshtml": {
-    "mtime": 1795029243.170818,
-    "seen": 1795029304.3271506,
+    "mtime": 1795029405.3671644,
+    "seen": 1795030124.0902948,
     "ast_hash": "9f14e7b3e2dbba712b62df23b7343373",
     "semantic_hash": ""
   },
@@ -426,15 +426,15 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Shared/_Layout.cshtml": {
-    "mtime": 1794954316.0262125,
-    "seen": 1794956383.7228415,
-    "ast_hash": "8c46b40077b9f89b427921db77f6321e",
+    "mtime": 1795030278.660532,
+    "seen": 1795030578.4425485,
+    "ast_hash": "72fe623a4e37dd394ff7eba211241807",
     "semantic_hash": ""
   },
   "researchProject/Views/Shared/_RightSidebarPartial.cshtml": {
-    "mtime": 1794948287.044293,
-    "seen": 1794949814.0621424,
-    "ast_hash": "699ed46b88da1006bf5cf129d0856bdf",
+    "mtime": 1795030278.8954296,
+    "seen": 1795030578.4425485,
+    "ast_hash": "889a5a268bed6b3593e9f7c8b21d6e6e",
     "semantic_hash": ""
   },
   "researchProject/Views/Shared/_ValidationScriptsPartial.cshtml": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "researchProject/Filters/AuditLogFilter.cs": {
-    "mtime": 1794342142.3910067,
-    "seen": 1794348161.0444925,
-    "ast_hash": "ae6519ff53a662fc19d5b905facc867a",
+    "mtime": 1795030486.908116,
+    "seen": 1795030578.441545,
+    "ast_hash": "450dbe4d272094c6b2185ac5bd0d60b7",
     "semantic_hash": ""
   },
   "researchProject/Hubs/NotificationHub.cs": {
@@ -1259,12 +1259,6 @@
     "ast_hash": "b8d2f009db373c1381574da70d4257ba",
     "semantic_hash": ""
   },
-  "researchProject/Views/SuperAdmin/AuditLogs.cshtml": {
-    "mtime": 1794341602.5143309,
-    "seen": 1794348161.046496,
-    "ast_hash": "431f4d6050e566670b873dfe2e298928",
-    "semantic_hash": ""
-  },
   "researchProject/Views/SuperAdmin/Categories.cshtml": {
     "mtime": 1795026513.972813,
     "seen": 1795028899.7150733,
@@ -1317,12 +1311,6 @@
     "mtime": 1794948287.0593457,
     "seen": 1794949814.0621424,
     "ast_hash": "3c09748b5ad9404b87bba5054c588dee",
-    "semantic_hash": ""
-  },
-  "researchProject/Views/SuperAdmin/_AuditLogsPartial.cshtml": {
-    "mtime": 1794341602.7151637,
-    "seen": 1794348161.046496,
-    "ast_hash": "7d727b0053fa438de39f73ac99042b3e",
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/_ManageResearchersPartial.cshtml": {
@@ -1530,21 +1518,21 @@
     "semantic_hash": ""
   },
   "researchProject.Tests/EightFeaturesAndEnhancementsTests.cs": {
-    "mtime": 1795024006.9312649,
-    "seen": 1795024056.500157,
-    "ast_hash": "3ca225b45a01583e88352fc961aaa520",
+    "mtime": 1795030501.8781185,
+    "seen": 1795030578.441545,
+    "ast_hash": "7576bde7f4b1c602947c68c6e36dfc80",
     "semantic_hash": ""
   },
   "researchProject/Controllers/DeveloperController.cs": {
-    "mtime": 1794954221.2412045,
-    "seen": 1794956383.7228415,
-    "ast_hash": "1469fcf1ea18561410850d2ca6b8d4de",
+    "mtime": 1795030277.7395384,
+    "seen": 1795030578.441545,
+    "ast_hash": "dc556108ecfc9029b83752be5762a452",
     "semantic_hash": ""
   },
   "researchProject/Views/Developer/AuditLogs.cshtml": {
-    "mtime": 1794954255.7441773,
-    "seen": 1794956383.7228415,
-    "ast_hash": "4f45c061ffb4d2d454537da0103c87de",
+    "mtime": 1795030278.330669,
+    "seen": 1795030578.4425485,
+    "ast_hash": "5d86b5add6c373d92fb04f12fc68a8ee",
     "semantic_hash": ""
   },
   "researchProject/Views/Developer/Hangfire.cshtml": {
@@ -1557,6 +1545,12 @@
     "mtime": 1794950961.905517,
     "seen": 1794956383.7228415,
     "ast_hash": "8031e87197efc8d3671a7fb86ee3b1d3",
+    "semantic_hash": ""
+  },
+  "researchProject/Views/Developer/_AuditLogsPartial.cshtml": {
+    "mtime": 1795029937.0196912,
+    "seen": 1795030124.0902948,
+    "ast_hash": "b8754b810899263c7e8ee76a5ef751b8",
     "semantic_hash": ""
   }
 }

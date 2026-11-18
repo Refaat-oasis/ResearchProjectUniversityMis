@@ -57,12 +57,26 @@ namespace researchProject.Tests
         }
 
         [Fact]
-        public void DeveloperController_Has_AuthorizeAttribute_With_Developer_And_SuperAdmin()
+        public void DeveloperController_Has_AuthorizeAttribute_With_Developer_Only()
         {
             var authAttr = (AuthorizeAttribute?)Attribute.GetCustomAttribute(typeof(DeveloperController), typeof(AuthorizeAttribute));
             Assert.NotNull(authAttr);
-            Assert.Contains(RoleConstants.Developer, authAttr.Roles);
-            Assert.Contains(RoleConstants.SuperAdmin, authAttr.Roles);
+            Assert.Equal(RoleConstants.Developer, authAttr.Roles);
+            Assert.DoesNotContain(RoleConstants.SuperAdmin, authAttr.Roles);
+        }
+
+        [Fact]
+        public void SuperAdminController_DoesNotHave_AuditLogs_Action()
+        {
+            var method = typeof(SuperAdminController).GetMethod("AuditLogs");
+            Assert.Null(method);
+        }
+
+        [Fact]
+        public void SuperAdminController_DoesNotHave_AuditLogsPartial_Action()
+        {
+            var method = typeof(SuperAdminController).GetMethod("AuditLogsPartial");
+            Assert.Null(method);
         }
 
         [Fact]
@@ -79,6 +93,23 @@ namespace researchProject.Tests
 
             var viewResult = Assert.IsType<ViewResult>(result);
             Assert.Same(expectedModel, viewResult.Model);
+        }
+
+        [Fact]
+        public async Task DeveloperController_AuditLogsPartial_Returns_PartialView_With_Model()
+        {
+            var mockRepo = new Mock<ISuperAdminRepository>();
+            var expectedModel = new AuditLogListViewModel();
+            mockRepo.Setup(r => r.GetAuditLogsAsync(1, 25, null, null, null, null, null))
+                    .ReturnsAsync(expectedModel);
+
+            var controller = new DeveloperController(mockRepo.Object);
+
+            var result = await controller.AuditLogsPartial(1);
+
+            var partialResult = Assert.IsType<PartialViewResult>(result);
+            Assert.Equal("_AuditLogsPartial", partialResult.ViewName);
+            Assert.Same(expectedModel, partialResult.Model);
         }
 
         [Fact]

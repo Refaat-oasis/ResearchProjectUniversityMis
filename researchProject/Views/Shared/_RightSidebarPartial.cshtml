@@ -23,6 +23,10 @@
             {
                 <span class="role-stamp role-stamp-admin">مدير النظام العام</span>
             }
+            @if (User.IsInRole(RoleConstants.Developer))
+            {
+                <span class="role-stamp" style="background-color: rgba(16, 185, 129, 0.15); color: #047857; border: 1px solid rgba(16, 185, 129, 0.3);">مهندس تطوير المنصة</span>
+            }
             @if (User.IsInRole(RoleConstants.CollegeCoAdmin))
             {
                 <span class="role-stamp role-stamp-coadmin">مدير اللجنة الفرعية</span>
@@ -47,6 +51,28 @@
             </div>
         }
     </div>
+
+    <!-- 0. Developer Section (Audit & Hangfire) -->
+    @if (User.IsInRole(RoleConstants.Developer))
+    {
+        <div class="sidebar-section">
+            <div class="sidebar-heading" style="color: #047857;">
+                <i class="bi bi-code-slash"></i> بوابة التطوير والرقابة
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a asp-controller="Developer" asp-action="AuditLogs" class="@(IsActive("Developer", "AuditLogs") ? "active" : "")">
+                        <i class="bi bi-shield-check"></i> سجل تدقيق العمليات (Audit Logs)
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="Developer" asp-action="Hangfire" class="@(IsActive("Developer", "Hangfire") ? "active" : "")">
+                        <i class="bi bi-cpu"></i> لوحة مهام Hangfire
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
 
     <!-- 1. Super Admin Section -->
     @if (User.IsInRole(RoleConstants.SuperAdmin))
@@ -99,11 +125,6 @@
                 <li class="sidebar-item">
                     <a asp-controller="SuperAdmin" asp-action="Certificates" class="@(IsActive("SuperAdmin", "Certificates") ? "active" : "")">
                         <i class="bi bi-archive"></i> الشهادات المستخرجة و المعتمدة
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a asp-controller="SuperAdmin" asp-action="AuditLogs" class="@(IsActive("SuperAdmin", "AuditLogs") ? "active" : "")">
-                        <i class="bi bi-shield-check"></i> سجل رقابة العمليات (Audit Logs)
                     </a>
                 </li>
             </ul>
