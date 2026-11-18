@@ -106,11 +106,9 @@
             // Auto copy token to clipboard if pre-filled from email link
             var initialToken = $('#tokenInput').val();
             if (initialToken && initialToken.trim().length === 6) {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(initialToken.trim()).then(function () {
-                        window.showToast('success', 'تم نسخ وتعبئة رمز التحقق تلقائياً من البريد الإلكتروني.');
-                    }).catch(function() { });
-                }
+                window.safeCopyToClipboard(initialToken.trim(), function () {
+                    window.showToast('success', 'تم نسخ وتعبئة رمز التحقق تلقائياً من البريد الإلكتروني.');
+                });
             }
 
             // Copy Token Button
@@ -120,12 +118,14 @@
                     window.showToast('error', 'حقل الرمز فارغ، يرجى إدخال الرمز أولاً.');
                     return;
                 }
-                navigator.clipboard.writeText(tokenVal).then(function () {
+                window.safeCopyToClipboard(tokenVal, function () {
                     var $btn = $('#copyTokenBtn');
                     var oldHtml = $btn.html();
                     $btn.html('<i class="bi bi-check2 text-success me-1"></i> تم النسخ!');
                     window.showToast('success', 'تم نسخ رمز التحقق للحافظة بنجاح.');
                     setTimeout(function () { $btn.html(oldHtml); }, 2000);
+                }, function () {
+                    window.showToast('error', 'تعذر النسخ تلقائياً، يرجى النسخ يدوياً (Ctrl+C).');
                 });
             });
 

@@ -116,15 +116,17 @@ namespace researchProject
 
             var app = builder.Build();
 
-            // 7. Database Migration / Seeding
+            // 7. Apply pending database migrations
             try
             {
-                await DbSeeder.SeedAsync(app.Services, app.Configuration);
+                using var scope = app.Services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                await db.Database.MigrateAsync();
             }
             catch (Exception ex)
             {
                 var logger = app.Services.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "حدث خطأ أثناء تهيئة قاعدة البيانات والتلقيم الأولي (Seeding).");
+                logger.LogError(ex, "حدث خطأ أثناء فحص وتطبيق ترحيلات قاعدة البيانات (Database Migration).");
             }
 
             // 8. Global Error Handling & Request Pipeline

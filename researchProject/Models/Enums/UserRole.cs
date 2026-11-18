@@ -5,6 +5,7 @@ namespace researchProject.Models.Enums
         SuperAdmin,
         CollegeCoAdmin,
         Judge,
-        Researcher
+        Researcher,
+        Developer
     }
 }
