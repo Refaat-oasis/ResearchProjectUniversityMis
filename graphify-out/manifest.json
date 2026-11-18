@@ -72,8 +72,8 @@
     "semantic_hash": ""
   },
   "researchProject/Data/DbSeeder.cs": {
-    "mtime": 1794956168.8349185,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956938.765268,
+    "seen": 1795023672.4037669,
     "ast_hash": "e316e4f56d2f50047981d465cd3cccc2",
     "semantic_hash": ""
   },
@@ -162,8 +162,8 @@
     "semantic_hash": ""
   },
   "researchProject/Program.cs": {
-    "mtime": 1794956271.0464087,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956935.7742927,
+    "seen": 1795023672.4037669,
     "ast_hash": "bf8f728807dd9dd3f71089cd14c58919",
     "semantic_hash": ""
   },
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "researchProject/Services/EmailSender.cs": {
-    "mtime": 1794956271.7968018,
-    "seen": 1794956383.7228415,
-    "ast_hash": "766d513a8d430fead5dc13db6a4e6f60",
+    "mtime": 1795023475.3580606,
+    "seen": 1795023672.4037669,
+    "ast_hash": "31e154cabaa45ce29f970ee388083289",
     "semantic_hash": ""
   },
   "researchProject/Services/FileStorageService.cs": {
@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Account/SignUp.cshtml": {
-    "mtime": 1794956272.07878,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956936.6130226,
+    "seen": 1795023672.4037669,
     "ast_hash": "b544a7058a6e0ff0f31f6cc4e38e0845",
     "semantic_hash": ""
   },
@@ -318,8 +318,8 @@
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/_FinalApprovalPartial.cshtml": {
-    "mtime": 1794954854.6107795,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956936.963257,
+    "seen": 1795023672.4037669,
     "ast_hash": "eeb17d46882ce7a428a67bd6365edd3b",
     "semantic_hash": ""
   },
@@ -462,8 +462,8 @@
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/_ManageCategoriesPartial.cshtml": {
-    "mtime": 1794954653.2386625,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956938.3349462,
+    "seen": 1795023672.4037669,
     "ast_hash": "cb77924fa9e5678539a76587bec49d30",
     "semantic_hash": ""
   },
@@ -978,8 +978,8 @@
     "semantic_hash": ""
   },
   "researchProject/Models/Enums/UserRole.cs": {
-    "mtime": 1794954040.6066852,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956935.652393,
+    "seen": 1795023672.4037669,
     "ast_hash": "74a8ec947f7cd759cf40d28f6ff2db6e",
     "semantic_hash": ""
   },
@@ -1086,8 +1086,8 @@
     "semantic_hash": ""
   },
   "researchProject/Services/HangfireDashboardAuthorizationFilter.cs": {
-    "mtime": 1794954175.3745897,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956936.4050694,
+    "seen": 1795023672.4037669,
     "ast_hash": "afea7b17c9a8bde26a2b9c314d5b9d7a",
     "semantic_hash": ""
   },
@@ -1152,15 +1152,15 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Account/ResetPassword.cshtml": {
-    "mtime": 1794948286.987705,
-    "seen": 1794949814.0621424,
-    "ast_hash": "9cd45ce097c588ba3030fe1d07d51f4f",
+    "mtime": 1795023502.488234,
+    "seen": 1795023672.4037669,
+    "ast_hash": "966cb0bd9a6f3bdc19a728f5cd34bf58",
     "semantic_hash": ""
   },
   "researchProject/Views/Account/VerifyEmailToken.cshtml": {
-    "mtime": 1794948286.990693,
-    "seen": 1794949814.0621424,
-    "ast_hash": "3a5513359451a17a296dc2fe6dde4bac",
+    "mtime": 1795023494.5701604,
+    "seen": 1795023672.4037669,
+    "ast_hash": "4bc1786eaac5179ebd05f1eb732690a9",
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/Categories.cshtml": {
@@ -1170,8 +1170,8 @@
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/FinalApproval.cshtml": {
-    "mtime": 1794954804.0371125,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956936.8558803,
+    "seen": 1795023672.4037669,
     "ast_hash": "6fa9ad2cfff8210b07e81e26a3a3ac45",
     "semantic_hash": ""
   },
@@ -1200,8 +1200,8 @@
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/_ManageCategoriesPartial.cshtml": {
-    "mtime": 1794954747.8693652,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956937.0748742,
+    "seen": 1795023672.4037669,
     "ast_hash": "b8406cf2083e180a5ea762624d6b1152",
     "semantic_hash": ""
   },
@@ -1266,8 +1266,8 @@
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/Categories.cshtml": {
-    "mtime": 1794956272.5476594,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956937.891361,
+    "seen": 1795023672.4037669,
     "ast_hash": "d68229f4e91a2df481d2665953b7b7ac",
     "semantic_hash": ""
   },
@@ -1278,14 +1278,14 @@
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/CoAdmins.cshtml": {
-    "mtime": 1794954902.941599,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956938.088317,
+    "seen": 1795023672.4037669,
     "ast_hash": "1427eb56c3f6fd4a4740619864e8b2aa",
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/Colleges.cshtml": {
-    "mtime": 1794954952.816997,
-    "seen": 1794956383.7228415,
+    "mtime": 1794956938.2172644,
+    "seen": 1795023672.4037669,
     "ast_hash": "c1a6293eb9c0043e44a6f6fa78b6f919",
     "semantic_hash": ""
   },
@@ -1530,9 +1530,9 @@
     "semantic_hash": ""
   },
   "researchProject.Tests/EightFeaturesAndEnhancementsTests.cs": {
-    "mtime": 1794955368.6293113,
-    "seen": 1794956383.7228415,
-    "ast_hash": "321f06d0abf4d2c339aaf4410ab90b0a",
+    "mtime": 1795023516.4122293,
+    "seen": 1795023672.4037669,
+    "ast_hash": "d0146411c7a9838333d3d09451cb23d2",
     "semantic_hash": ""
   },
   "researchProject/Controllers/DeveloperController.cs": {
@@ -1557,6 +1557,12 @@
     "mtime": 1794950961.905517,
     "seen": 1794956383.7228415,
     "ast_hash": "8031e87197efc8d3671a7fb86ee3b1d3",
+    "semantic_hash": ""
+  },
+  "researchProject/Services/HangfireAuthorizationFilter.cs": {
+    "mtime": 1795023196.8334394,
+    "seen": 1795023672.4037669,
+    "ast_hash": "c7630fab078e1e812f63dd2872049d2c",
     "semantic_hash": ""
   }
 }

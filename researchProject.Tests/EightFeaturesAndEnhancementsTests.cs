@@ -161,6 +161,55 @@ namespace researchProject.Tests
                 Assert.Contains("123456", content);
                 Assert.Contains("نسخ رمز التحقق", content);
                 Assert.Contains("navigator.clipboard.writeText", content);
+                Assert.Contains("copyOtpToClipboard", content);
+                Assert.Contains("execCommand", content);
+                Assert.Contains("href='https://example.com/verify?token=123456'", content);
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    try { Directory.Delete(tempDir, true); } catch { }
+                }
+            }
+        }
+
+        [Fact]
+        public async Task EmailSender_PasswordResetToken_Contains_Resilient_Copy_And_Fallback_Link()
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), "EmailResetArchiveTest_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                var mockLogger = new Mock<ILogger<EmailSender>>();
+                var inMemoryConfig = new System.Collections.Generic.Dictionary<string, string?>
+                {
+                    { "Smtp:Host", "" },
+                    { "Smtp:Port", "587" },
+                    { "Smtp:User", "" },
+                    { "Smtp:Password", "" }
+                };
+                var config = new ConfigurationBuilder().AddInMemoryCollection(inMemoryConfig).Build();
+
+                var mockEnv = new Mock<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+                mockEnv.Setup(e => e.ContentRootPath).Returns(tempDir);
+
+                var sender = new EmailSender(mockLogger.Object, config, mockEnv.Object);
+
+                await sender.SendPasswordResetTokenAsync("reset@univ.edu.eg", "654321", "https://example.com/reset?token=654321");
+
+                var archiveDir = Path.Combine(tempDir, "App_Data", "SentEmails");
+                var expectedFile = Path.Combine(archiveDir, "last_new_account.html"); // or last_otp/last_notification depending on subject
+
+                Assert.True(Directory.GetFiles(archiveDir).Length > 0, "No archive file created for reset token email");
+                var createdFile = Directory.GetFiles(archiveDir)[0];
+                var content = await File.ReadAllTextAsync(createdFile);
+
+                Assert.Contains("654321", content);
+                Assert.Contains("نسخ رمز الاستعادة", content);
+                Assert.Contains("copyOtpToClipboard", content);
+                Assert.Contains("https://example.com/reset?token=654321", content);
             }
             finally
             {

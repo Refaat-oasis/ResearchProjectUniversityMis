@@ -205,16 +205,19 @@ namespace researchProject.Services
                     <!-- 6-digit OTP Box (Email Client Safe) -->
                     <div style='background: linear-gradient(135deg, #f8fafc 0%, #eef2f6 100%); border: 2px dashed #3b82f6; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;'>
                         <div style='color: #475569; font-size: 13px; font-weight: bold; margin-bottom: 10px;'>رمز التحقق الرقمي الخاص بك (OTP):</div>
-                        <div style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e3a8a; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #93c5fd; display:inline-block; margin: 0 auto 10px auto;'>
+                        <div onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{token}');}}"" title='انقر لنسخ الرمز' style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e3a8a; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #93c5fd; display:inline-block; margin: 0 auto 10px auto; cursor: pointer;'>
                             {token}
                         </div>
-                        <div style='margin-top: 8px;'>
-                            <button type='button' onclick=""navigator.clipboard.writeText('{token}'); alert('تم نسخ رمز التحقق بنجاح: {token}');"" style='cursor:pointer; background:#2563eb; color:#ffffff; border:none; padding:8px 20px; border-radius:6px; font-weight:700; font-size:13px;'>
+                        <div style='margin-top: 10px;'>
+                            <a href='{confirmationLink}' target='_blank' onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{token}'); return false;}} else {{navigator.clipboard.writeText('{token}'); alert('تم نسخ رمز التحقق بنجاح: {token}'); return false;}}"" style='display:inline-block; text-decoration:none; cursor:pointer; background:#2563eb; color:#ffffff; padding:10px 24px; border-radius:8px; font-weight:700; font-size:14px; box-shadow:0 2px 6px rgba(37,99,235,0.3); font-family:Cairo, Tahoma, Arial, sans-serif;'>
                                 📋 نسخ رمز التحقق
-                            </button>
+                            </a>
                         </div>
-                        <div style='color: #64748b; font-size: 12px; margin-top: 8px;'>
-                            * انقر على زر نسخ رمز التحقق أعلاه، أو انقر نقراً مزدوجاً على الرمز لتحديده، أو استخدم زر التفعيل المباشر أدناه.
+                        <div style='color: #64748b; font-size: 12px; margin-top: 12px; line-height: 1.6;'>
+                            💡 <strong>طرق استخدام الرمز:</strong><br/>
+                            1. انقر على زر <strong>نسخ رمز التحقق</strong> أعلاه (في المتصفح ينسخ الرمز فوراً، وفي بريد Gmail ينقلك مباشرة لتأكيد حسابك وتعبئة الرمز تلقائياً).<br/>
+                            2. أو انقر نقراً مزدوجاً على أرقام الرمز أعلاه لتحديده ونسخه يدوياً (Ctrl+C).<br/>
+                            3. أو انقر على زر التفعيل المباشر أدناه لإتمام التفعيل بنقرة واحدة.
                         </div>
                     </div>
 
@@ -255,16 +258,19 @@ namespace researchProject.Services
                     <!-- 6-digit OTP Box (Email Client Safe) -->
                     <div style='background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px dashed #ea580c; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;'>
                         <div style='color: #9a3412; font-size: 13px; font-weight: bold; margin-bottom: 10px;'>رمز استعادة كلمة المرور (OTP):</div>
-                        <div style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #7c2d12; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #fdba74; display:inline-block; margin: 0 auto 10px auto;'>
+                        <div onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{token}');}}"" title='انقر لنسخ الرمز' style='font-family: ""Courier New"", Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #7c2d12; user-select: all; -webkit-user-select: all; -moz-user-select: all; background:#ffffff; padding:12px 24px; border-radius:10px; border:2px solid #fdba74; display:inline-block; margin: 0 auto 10px auto; cursor: pointer;'>
                             {token}
                         </div>
-                        <div style='margin-top: 8px;'>
-                            <button type='button' onclick=""navigator.clipboard.writeText('{token}'); alert('تم نسخ رمز الاستعادة بنجاح: {token}');"" style='cursor:pointer; background:#ea580c; color:#ffffff; border:none; padding:8px 20px; border-radius:6px; font-weight:700; font-size:13px;'>
+                        <div style='margin-top: 10px;'>
+                            <a href='{resetLink}' target='_blank' onclick=""if(typeof copyOtpToClipboard==='function'){{copyOtpToClipboard(this, '{token}'); return false;}} else {{navigator.clipboard.writeText('{token}'); alert('تم نسخ رمز الاستعادة بنجاح: {token}'); return false;}}"" style='display:inline-block; text-decoration:none; cursor:pointer; background:#ea580c; color:#ffffff; padding:10px 24px; border-radius:8px; font-weight:700; font-size:14px; box-shadow:0 2px 6px rgba(234,88,12,0.3); font-family:Cairo, Tahoma, Arial, sans-serif;'>
                                 📋 نسخ رمز الاستعادة
-                            </button>
+                            </a>
                         </div>
-                        <div style='color: #9a3412; font-size: 12px; margin-top: 8px;'>
-                            * انقر على زر نسخ رمز الاستعادة أعلاه، أو انقر نقراً مزدوجاً على الرمز لتحديده، أو استخدم زر التعيين المباشر أدناه.
+                        <div style='color: #9a3412; font-size: 12px; margin-top: 12px; line-height: 1.6;'>
+                            💡 <strong>طرق استخدام الرمز:</strong><br/>
+                            1. انقر على زر <strong>نسخ رمز الاستعادة</strong> أعلاه لنسخه تلقائياً أو فتح صفحة التعيين مباشرة.<br/>
+                            2. أو انقر نقراً مزدوجاً على أرقام الرمز أعلاه لتحديده ونسخه يدوياً (Ctrl+C).<br/>
+                            3. أو استخدم زر تعيين كلمة المرور أدناه لفتح النموذج وتعبئة الرمز مباشرة.
                         </div>
                     </div>
 
@@ -396,6 +402,61 @@ namespace researchProject.Services
                     <meta charset='utf-8' />
                     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
                     <title>{title}</title>
+                    <script>
+                        function copyOtpToClipboard(btn, text) {{
+                            try {{
+                                if (navigator.clipboard && window.isSecureContext) {{
+                                    navigator.clipboard.writeText(text).then(function() {{
+                                        notifyCopied(btn, text);
+                                    }}).catch(function() {{
+                                        execCommandFallback(btn, text);
+                                    }});
+                                    return;
+                                }}
+                            }} catch(e) {{}}
+                            execCommandFallback(btn, text);
+                        }}
+
+                        function execCommandFallback(btn, text) {{
+                            try {{
+                                var textArea = document.createElement('textarea');
+                                textArea.value = text;
+                                textArea.style.position = 'fixed';
+                                textArea.style.top = '-9999px';
+                                textArea.style.left = '-9999px';
+                                textArea.setAttribute('readonly', '');
+                                document.body.appendChild(textArea);
+                                textArea.focus();
+                                textArea.select();
+                                var successful = false;
+                                try {{
+                                    successful = document.execCommand('copy');
+                                }} catch (err) {{
+                                    successful = false;
+                                }}
+                                document.body.removeChild(textArea);
+                                if (successful) {{
+                                    notifyCopied(btn, text);
+                                    return;
+                                }}
+                            }} catch (e) {{}}
+                            prompt('يرجى نسخ رمز التحقق يدوياً بالضغط على Ctrl+C ثم Enter:', text);
+                        }}
+
+                        function notifyCopied(btn, text) {{
+                            if (btn) {{
+                                var origText = btn.getAttribute('data-original-text') || btn.innerText;
+                                btn.setAttribute('data-original-text', origText);
+                                btn.innerText = '✅ تم نسخ الرمز: ' + text;
+                                btn.style.backgroundColor = '#16a34a';
+                                setTimeout(function() {{
+                                    btn.innerText = origText;
+                                    btn.style.backgroundColor = '';
+                                }}, 3500);
+                            }}
+                            alert('تم نسخ رمز التحقق بنجاح إلى الحافظة: ' + text);
+                        }}
+                    </script>
                 </head>
                 <body style='margin:0; padding:20px; background-color:#f1f5f9; font-family: -apple-system, BlinkMacSystemFont, ""Segoe UI"", Cairo, Tahoma, Arial, sans-serif; direction: rtl; text-align: right; color: #1e293b;'>
                     <table width='100%' border='0' cellspacing='0' cellpadding='0'>
