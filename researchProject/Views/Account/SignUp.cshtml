@@ -412,6 +412,12 @@
 
             $('#CollegeId').on('change', function () {
                 var cid = $(this).val();
+                var $deptInput = $('#departmentDisplayInput');
+                $deptInput.val('');
+                $('#Department').val('');
+                $deptInput.closest('.dedicated-dropdown-wrapper')
+                    .find('.dedicated-dropdown-clear-btn').hide();
+                $('#departmentDropdownMenu .dedicated-dropdown-item').removeClass('selected');
                 window.loadDepartmentsForCollege(cid);
             });
 

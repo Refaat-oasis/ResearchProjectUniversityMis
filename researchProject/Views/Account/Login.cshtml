@@ -1,5 +1,6 @@
 @model researchProject.Models.ViewModels.LoginViewModel
 @using researchProject.Models.Entities
+@using researchProject.Models.Enums
 @{
     ViewData["Title"] = "تسجيل الدخول الموحد - منصة النزاهة الأكاديمية";
     var initialMode = ViewBag.InitialMode as string ?? "login";
@@ -151,7 +152,7 @@
                                         <!-- Researcher Type via Dedicated Dropdown -->
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">الفئة الأكاديمية <span class="text-danger">*</span></label>
-                                            <input type="hidden" name="ResearcherType" id="ResearcherType" value="0" />
+                                            <input type="hidden" name="ResearcherType" id="ResearcherType" />
                                             <div class="dedicated-dropdown-wrapper" data-target-input="#ResearcherType">
                                                 <div class="dedicated-dropdown-input-group">
                                                     <i class="bi bi-person-badge dedicated-dropdown-icon-right"></i>
@@ -167,13 +168,13 @@
                                                     </div>
                                                 </div>
                                                 <div class="dedicated-dropdown-menu">
-                                                    <div class="dedicated-dropdown-item" data-id="0" data-name="طالب دراسات عليا (ماجستير / دكتوراه)">
+                                                    <div class="dedicated-dropdown-item" data-id="@((int)ResearcherType.PostgraduateStudent)" data-name="طالب دراسات عليا (ماجستير / دكتوراه)">
                                                         <span>طالب دراسات عليا (ماجستير / دكتوراه)</span>
                                                     </div>
-                                                    <div class="dedicated-dropdown-item" data-id="1" data-name="عضو هيئة تدريس / هيئة معاونة">
+                                                    <div class="dedicated-dropdown-item" data-id="@((int)ResearcherType.FacultyMember)" data-name="عضو هيئة تدريس / هيئة معاونة">
                                                         <span>عضو هيئة تدريس / هيئة معاونة</span>
                                                     </div>
-                                                    <div class="dedicated-dropdown-item" data-id="2" data-name="باحث خارجي / باحث مستقل">
+                                                    <div class="dedicated-dropdown-item" data-id="@((int)ResearcherType.Researcher)" data-name="باحث خارجي / باحث مستقل">
                                                         <span>باحث خارجي / باحث مستقل</span>
                                                     </div>
                                                 </div>
@@ -392,6 +393,12 @@
 
             $('#CollegeId').on('change', function () {
                 var cid = $(this).val();
+                var $deptInput = $('#departmentDisplayInput');
+                $deptInput.val('');
+                $('#Department').val('');
+                $deptInput.closest('.dedicated-dropdown-wrapper')
+                    .find('.dedicated-dropdown-clear-btn').hide();
+                $('#departmentDropdownMenu .dedicated-dropdown-item').removeClass('selected');
                 window.loadDepartmentsForCollege(cid);
             });
 

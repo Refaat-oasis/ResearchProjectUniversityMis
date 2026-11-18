@@ -127,9 +127,12 @@ body {
     overflow-x: hidden;
 }
 
-h1, .h1,
-h2, .h2,
-h3, .h3,
+h1,
+.h1,
+h2,
+.h2,
+h3,
+.h3,
 .page-title,
 .brand-title,
 .card-title-custom,
@@ -683,6 +686,7 @@ select:focus-visible {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -775,7 +779,7 @@ select:focus-visible {
     color: var(--ink-primary);
 }
 
-.sidebar-section + .sidebar-section {
+.sidebar-section+.sidebar-section {
     padding-top: 12px;
     border-top: 1px solid var(--border-hairline);
 }
@@ -892,7 +896,7 @@ select:focus-visible {
     margin-bottom: 20px;
 }
 
-.main-content > .dossier-panel {
+.main-content>.dossier-panel {
     background-color: var(--bg-surface) !important;
     border: 1px solid var(--border-hairline) !important;
     border-radius: var(--radius-lg) !important;
@@ -1217,7 +1221,7 @@ select:focus-visible {
 }
 
 .ledger-table tbody tr:hover td,
-.table-hover > tbody > tr:hover > * {
+.table-hover>tbody>tr:hover>* {
     background-color: var(--bg-hover) !important;
     --bs-table-accent-bg: var(--bg-hover);
 }
@@ -2206,7 +2210,8 @@ select:focus-visible {
     position: fixed !important;
     top: 24px !important;
     right: 24px !important;
-    left: auto !important; /* Strictly lock to the top-right in RTL and LTR */
+    left: auto !important;
+    /* Strictly lock to the top-right in RTL and LTR */
     z-index: 99999 !important;
     display: flex;
     flex-direction: column;
@@ -2302,7 +2307,8 @@ select:focus-visible {
 
 .dedicated-dropdown-input {
     width: 100%;
-    padding: 0.625rem 2.5rem 0.625rem 2.5rem !important; /* Space for search icon on right and clear/chevron on left */
+    padding: 0.625rem 2.5rem 0.625rem 2.5rem !important;
+    /* Space for search icon on right and clear/chevron on left */
     font-size: 0.95rem;
     border-radius: 10px !important;
     border: 1.5px solid #cbd5e1;
@@ -2402,8 +2408,15 @@ select:focus-visible {
 }
 
 @keyframes dropdownFadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .dedicated-dropdown-item {
@@ -2778,6 +2791,7 @@ select:focus-visible {
         opacity: 0;
         transform: translateY(14px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2830,6 +2844,7 @@ select:focus-visible {
         border-inline-start: none !important;
         border-top: 2px solid var(--accent-brass) !important;
     }
+
     .auth-scrollable-body {
         max-height: none;
         overflow-y: visible;
@@ -2996,24 +3011,29 @@ select:focus-visible {
         display: block;
         min-height: auto;
     }
+
     .auth-sliding-plate {
         position: relative;
         width: 100%;
         min-height: 220px;
         transform: none !important;
     }
+
     .auth-panel-login-side,
     .auth-panel-signup-side {
         position: relative;
         width: 100%;
         transform: none !important;
     }
+
     .auth-panel-signup-side {
         display: none;
     }
+
     .auth-mode-signup .auth-panel-login-side {
         display: none !important;
     }
+
     .auth-mode-signup .auth-panel-signup-side {
         display: block !important;
         opacity: 1 !important;
