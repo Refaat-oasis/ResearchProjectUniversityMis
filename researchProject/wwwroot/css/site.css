@@ -2864,8 +2864,13 @@ select:focus-visible {
 
 @media (min-width: 992px) {
     .auth-animated-shell {
-        display: flex;
+        position: relative;
+        display: block;
         min-height: 650px;
+    }
+
+    .auth-animated-shell.auth-mode-signup {
+        min-height: 700px;
     }
 
     /* Shared sliding photo plate */
@@ -2885,10 +2890,14 @@ select:focus-visible {
         transform: translate3d(-140%, 0, 0);
     }
 
-    /* Left form panel (Login) */
+    /* Left form panel (Login) - sits explicitly on the LEFT */
     .auth-panel-login-side {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: auto;
         width: 58.333333%;
-        margin-inline-start: auto;
         opacity: 1;
         visibility: visible;
         pointer-events: all;
@@ -2901,21 +2910,22 @@ select:focus-visible {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-        transform: translate3d(30px, 0, 0);
+        transform: translate3d(-30px, 0, 0);
         transition: opacity 0.25s ease, transform 0.4s ease, visibility 0.25s;
     }
 
-    /* Right form panel (SignUp) */
+    /* Right form panel (SignUp) - sits explicitly on the RIGHT */
     .auth-panel-signup-side {
         position: absolute;
         top: 0;
+        bottom: 0;
         right: 0;
+        left: auto;
         width: 58.333333%;
-        height: 100%;
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-        transform: translate3d(-30px, 0, 0);
+        transform: translate3d(30px, 0, 0);
         transition: opacity 0.25s ease, transform 0.4s ease, visibility 0.25s;
         z-index: 5;
     }
@@ -2944,29 +2954,39 @@ select:focus-visible {
 /* Plate internal content cross-fading */
 .auth-plate-login-content,
 .auth-plate-signup-content {
-    transition: opacity 0.35s ease, transform 0.4s ease;
+    transition: opacity 0.35s ease 0.1s, transform 0.4s ease 0.1s, visibility 0.35s;
 }
 
 .auth-plate-login-content {
     opacity: 1;
+    visibility: visible;
     transform: translate3d(0, 0, 0);
 }
 
 .auth-plate-signup-content {
-    display: none;
     opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 2.5rem;
+    right: 2rem;
+    left: 2rem;
     transform: translate3d(0, 15px, 0);
 }
 
 .auth-mode-signup .auth-plate-login-content {
-    display: none;
     opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 2.5rem;
+    right: 2rem;
+    left: 2rem;
     transform: translate3d(0, -15px, 0);
 }
 
 .auth-mode-signup .auth-plate-signup-content {
-    display: block;
     opacity: 1;
+    visibility: visible;
+    position: static;
     transform: translate3d(0, 0, 0);
 }
 

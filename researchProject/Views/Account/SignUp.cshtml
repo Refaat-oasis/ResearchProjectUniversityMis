@@ -376,12 +376,10 @@
                 var $deptInput = $('#departmentDisplayInput');
                 var $deptHidden = $('#Department');
 
-                // Clear previous department selection on college change
-                $deptInput.val('');
-                $deptHidden.val('');
-
                 if (!collegeId) {
                     $deptMenu.html('<div class="dedicated-dropdown-empty text-muted p-2">اختر الكلية أولاً لعرض أقسامها الأكاديمية</div>');
+                    $deptInput.val('');
+                    $deptHidden.val('');
                     return;
                 }
 
