@@ -23,7 +23,7 @@ namespace researchProject.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult Login(string? returnUrl = null)
+        public async Task<IActionResult> Login(string? returnUrl = null)
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
@@ -31,6 +31,9 @@ namespace researchProject.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
+            ViewBag.InitialMode = "login";
+            var colleges = await _accountRepository.GetActiveCollegesAsync();
+            ViewBag.Colleges = colleges;
             return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
 
@@ -42,6 +45,8 @@ namespace researchProject.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (!ModelState.IsValid)
             {
+                ViewBag.InitialMode = "login";
+                ViewBag.Colleges = await _accountRepository.GetActiveCollegesAsync();
                 var vm = new LoginViewModel { Email = dto.Email, RememberMe = dto.RememberMe, ReturnUrl = returnUrl };
                 return View(vm);
             }
@@ -52,6 +57,8 @@ namespace researchProject.Controllers
             if (isLockedOut)
             {
                 ModelState.AddModelError(string.Empty, "تم قفل الحساب مؤقتاً بسبب تكرار المحاولات الخاطئة. يرجى المحاولة بعد 15 دقيقة.");
+                ViewBag.InitialMode = "login";
+                ViewBag.Colleges = await _accountRepository.GetActiveCollegesAsync();
                 var vm = new LoginViewModel { Email = dto.Email, RememberMe = dto.RememberMe, ReturnUrl = returnUrl };
                 return View(vm);
             }
@@ -59,6 +66,8 @@ namespace researchProject.Controllers
             if (!succeeded)
             {
                 ModelState.AddModelError(string.Empty, errorMessage ?? "فشل تسجيل الدخول. يرجى التحقق من صحة البيانات.");
+                ViewBag.InitialMode = "login";
+                ViewBag.Colleges = await _accountRepository.GetActiveCollegesAsync();
                 var vm = new LoginViewModel { Email = dto.Email, RememberMe = dto.RememberMe, ReturnUrl = returnUrl, ErrorMessage = errorMessage };
                 return View(vm);
             }
@@ -80,6 +89,7 @@ namespace researchProject.Controllers
                 return RedirectToUserDashboard();
             }
 
+            ViewBag.InitialMode = "signup";
             var colleges = await _accountRepository.GetActiveCollegesAsync();
             ViewBag.Colleges = colleges;
             return View(new ResearcherSignUpViewModel { AvailableColleges = colleges });
@@ -90,6 +100,7 @@ namespace researchProject.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SignUp(ResearcherSignUpDto dto)
         {
+            ViewBag.InitialMode = "signup";
             if (!ModelState.IsValid)
             {
                 var colleges = await _accountRepository.GetActiveCollegesAsync();
@@ -114,6 +125,7 @@ namespace researchProject.Controllers
             if (!succeeded)
             {
                 ModelState.AddModelError(string.Empty, errorMessage ?? "فشل تسجيل الحساب.");
+                ViewBag.InitialMode = "signup";
                 var colleges = await _accountRepository.GetActiveCollegesAsync();
                 ViewBag.Colleges = colleges;
                 var vm = new ResearcherSignUpViewModel

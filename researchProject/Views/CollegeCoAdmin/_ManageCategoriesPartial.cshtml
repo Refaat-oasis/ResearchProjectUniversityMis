@@ -204,48 +204,69 @@
             var isDropdown = f.Type === 'dropdown';
             var optionsVal = Array.isArray(f.Options) ? f.Options.join(', ') : (f.Options || '');
 
-            var html = '<div class="bg-white p-2 border rounded shadow-sm mb-2">' +
-                '<div class="row g-2 align-items-center">' +
-                '<div class="col-md-3">' +
-                '<input type="text" class="form-control form-control-sm font-mono-tabular" placeholder="اسم المعرف (Code)" value="' + (f.Name || '') + '" onchange="currentFields[' + i + '].Name = this.value;" dir="ltr" />' +
-                '</div>' +
-                '<div class="col-md-4">' +
-                '<input type="text" class="form-control form-control-sm" placeholder="التسمية العربية للحقل" value="' + (f.Label || '') + '" onchange="currentFields[' + i + '].Label = this.value;" />' +
-                '</div>' +
-                '<div class="col-md-3">' +
-                '<select class="form-select form-select-sm" onchange="currentFields[' + i + '].Type = this.value; renderFieldRows();">' +
-                '<option value="text"' + (f.Type === 'text' ? ' selected' : '') + '>نص عادي</option>' +
-                '<option value="textarea"' + (f.Type === 'textarea' ? ' selected' : '') + '>نص تفصيلي (فقرة)</option>' +
-                '<option value="number"' + (f.Type === 'number' ? ' selected' : '') + '>رقم</option>' +
-                '<option value="date"' + (f.Type === 'date' ? ' selected' : '') + '>تاريخ</option>' +
-                '<option value="dropdown"' + (isDropdown ? ' selected' : '') + '>قائمة اختيار (MCQ)</option>' +
-                '<option value="yesno"' + (f.Type === 'yesno' ? ' selected' : '') + '>نعم / لا</option>' +
-                '</select>' +
-                '</div>' +
-                '<div class="col-md-1 text-center">' +
-                '<div class="form-check d-inline-block">' +
-                '<input class="form-check-input" type="checkbox"' + (f.IsRequired ? ' checked' : '') + ' onchange="currentFields[' + i + '].IsRequired = this.checked;" title="إلزامي؟" />' +
-                '</div>' +
-                '</div>' +
-                '<div class="col-md-1 text-center">' +
-                '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFieldRow(' + i + ')"><i class="bi bi-trash"></i></button>' +
-                '</div>' +
-                '</div>';
+            var $card = $('<div class="bg-white p-2 border rounded shadow-sm mb-2"></div>');
+            var $row = $('<div class="row g-2 align-items-center"></div>');
+
+            var $colName = $('<div class="col-md-3"></div>');
+            var $inputName = $('<input type="text" class="form-control form-control-sm font-mono-tabular" placeholder="اسم المعرف (Code)" dir="ltr" />')
+                .val(f.Name || '')
+                .on('input change', function () { currentFields[i].Name = this.value; });
+            $colName.append($inputName);
+
+            var $colLabel = $('<div class="col-md-4"></div>');
+            var $inputLabel = $('<input type="text" class="form-control form-control-sm" placeholder="التسمية العربية للحقل" />')
+                .val(f.Label || '')
+                .on('input change', function () { currentFields[i].Label = this.value; });
+            $colLabel.append($inputLabel);
+
+            var $colType = $('<div class="col-md-3"></div>');
+            var $selectType = $('<select class="form-select form-select-sm"></select>')
+                .append($('<option value="text">نص عادي</option>'))
+                .append($('<option value="textarea">نص تفصيلي (فقرة)</option>'))
+                .append($('<option value="number">رقم</option>'))
+                .append($('<option value="date">تاريخ</option>'))
+                .append($('<option value="dropdown">قائمة اختيار (MCQ)</option>'))
+                .append($('<option value="yesno">نعم / لا</option>'))
+                .val(f.Type || 'text')
+                .on('change', function () {
+                    currentFields[i].Type = this.value;
+                    renderFieldRows();
+                });
+            $colType.append($selectType);
+
+            var $colReq = $('<div class="col-md-1 text-center"></div>');
+            var $formCheck = $('<div class="form-check d-inline-block"></div>');
+            var $inputReq = $('<input class="form-check-input" type="checkbox" title="إلزامي؟" />')
+                .prop('checked', !!f.IsRequired)
+                .on('change', function () { currentFields[i].IsRequired = this.checked; });
+            $formCheck.append($inputReq);
+            $colReq.append($formCheck);
+
+            var $colDel = $('<div class="col-md-1 text-center"></div>');
+            var $btnDel = $('<button type="button" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>')
+                .on('click', function () { removeFieldRow(i); });
+            $colDel.append($btnDel);
+
+            $row.append($colName).append($colLabel).append($colType).append($colReq).append($colDel);
+            $card.append($row);
 
             if (isDropdown) {
-                html += '<div class="row g-2 align-items-center mt-1 pt-2 border-top">' +
-                    '<div class="col-12">' +
-                    '<div class="d-flex align-items-center gap-2 bg-light p-2 rounded border border-dashed">' +
-                    '<span class="badge bg-primary text-nowrap"><i class="bi bi-list-check me-1"></i>خيارات القائمة:</span>' +
-                    '<input type="text" class="form-control form-control-sm" placeholder="أدخل الخيارات مفصولة بفاصلة (مثال: خيار 1, خيار 2, خيار 3)" value="' + optionsVal + '" onchange="updateFieldOptions(' + i + ', this.value);" />' +
-                    '</div>' +
-                    '<div class="text-muted small mt-1 ps-2"><i class="bi bi-info-circle me-1"></i>اكتب الخيارات وافصل بين كل خيار والآخر بفاصلة (,) لتظهر كقائمة منسدلة للباحث.</div>' +
-                    '</div>' +
-                    '</div>';
+                var $rowOpt = $('<div class="row g-2 align-items-center mt-1 pt-2 border-top"></div>');
+                var $colOpt = $('<div class="col-12"></div>');
+                var $optWrap = $('<div class="d-flex align-items-center gap-2 bg-light p-2 rounded border border-dashed"></div>');
+                var $badge = $('<span class="badge bg-primary text-nowrap"><i class="bi bi-list-check me-1"></i>خيارات القائمة:</span>');
+                var $inputOpt = $('<input type="text" class="form-control form-control-sm" placeholder="أدخل الخيارات مفصولة بفاصلة (مثال: خيار 1, خيار 2, خيار 3)" />')
+                    .val(optionsVal)
+                    .on('input change', function () { updateFieldOptions(i, this.value); });
+                $optWrap.append($badge).append($inputOpt);
+
+                var $hint = $('<div class="text-muted small mt-1 ps-2"><i class="bi bi-info-circle me-1"></i>اكتب الخيارات وافصل بين كل خيار والآخر بفاصلة (,) لتظهر كقائمة منسدلة للباحث.</div>');
+                $colOpt.append($optWrap).append($hint);
+                $rowOpt.append($colOpt);
+                $card.append($rowOpt);
             }
 
-            html += '</div>';
-            $c.append(html);
+            $c.append($card);
         });
     }
 

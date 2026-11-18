@@ -2848,6 +2848,160 @@ select:focus-visible {
     border-inline-end: 2px solid var(--accent-brass);
 }
 
+/* ==========================================================================
+   Interactive Animated Auth Split Shell (Sliding Transition)
+   ========================================================================== */
+.auth-animated-shell {
+    position: relative;
+    overflow: hidden;
+    min-height: 640px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card-hover);
+    transition: min-height 0.3s ease;
+}
+
+@media (min-width: 992px) {
+    .auth-animated-shell {
+        display: flex;
+        min-height: 650px;
+    }
+
+    /* Shared sliding photo plate */
+    .auth-sliding-plate {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 41.666667%;
+        z-index: 15;
+        transition: transform 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+        will-change: transform;
+    }
+
+    /* In SignUp mode: plate slides to the far LEFT (in RTL, -140% of its width) */
+    .auth-mode-signup .auth-sliding-plate {
+        transform: translate3d(-140%, 0, 0);
+    }
+
+    /* Left form panel (Login) */
+    .auth-panel-login-side {
+        width: 58.333333%;
+        margin-inline-start: auto;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: all;
+        transform: translate3d(0, 0, 0);
+        transition: opacity 0.35s ease 0.2s, transform 0.5s ease 0.15s, visibility 0.35s;
+        z-index: 5;
+    }
+
+    .auth-mode-signup .auth-panel-login-side {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translate3d(30px, 0, 0);
+        transition: opacity 0.25s ease, transform 0.4s ease, visibility 0.25s;
+    }
+
+    /* Right form panel (SignUp) */
+    .auth-panel-signup-side {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 58.333333%;
+        height: 100%;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translate3d(-30px, 0, 0);
+        transition: opacity 0.25s ease, transform 0.4s ease, visibility 0.25s;
+        z-index: 5;
+    }
+
+    .auth-mode-signup .auth-panel-signup-side {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: all;
+        transform: translate3d(0, 0, 0);
+        transition: opacity 0.35s ease 0.25s, transform 0.5s ease 0.15s, visibility 0.35s;
+    }
+
+    /* Dynamic Border adjustments for the sliding plate */
+    .auth-sliding-plate .auth-campus-plate {
+        border-inline-end: 2px solid var(--accent-brass);
+        border-inline-start: none;
+        transition: border 0.65s ease;
+    }
+
+    .auth-mode-signup .auth-sliding-plate .auth-campus-plate {
+        border-inline-end: none;
+        border-inline-start: 2px solid var(--accent-brass);
+    }
+}
+
+/* Plate internal content cross-fading */
+.auth-plate-login-content,
+.auth-plate-signup-content {
+    transition: opacity 0.35s ease, transform 0.4s ease;
+}
+
+.auth-plate-login-content {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+}
+
+.auth-plate-signup-content {
+    display: none;
+    opacity: 0;
+    transform: translate3d(0, 15px, 0);
+}
+
+.auth-mode-signup .auth-plate-login-content {
+    display: none;
+    opacity: 0;
+    transform: translate3d(0, -15px, 0);
+}
+
+.auth-mode-signup .auth-plate-signup-content {
+    display: block;
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+}
+
+/* Mobile responsive fallback (< 992px) */
+@media (max-width: 991.98px) {
+    .auth-animated-shell {
+        display: block;
+        min-height: auto;
+    }
+    .auth-sliding-plate {
+        position: relative;
+        width: 100%;
+        min-height: 220px;
+        transform: none !important;
+    }
+    .auth-panel-login-side,
+    .auth-panel-signup-side {
+        position: relative;
+        width: 100%;
+        transform: none !important;
+    }
+    .auth-panel-signup-side {
+        display: none;
+    }
+    .auth-mode-signup .auth-panel-login-side {
+        display: none !important;
+    }
+    .auth-mode-signup .auth-panel-signup-side {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: all !important;
+    }
+}
+
 .auth-ledger-panel {
     width: 100%;
     max-width: 520px;
@@ -2858,7 +3012,8 @@ select:focus-visible {
     padding: 32px;
 }
 
-.auth-split-shell .auth-ledger-panel {
+.auth-split-shell .auth-ledger-panel,
+.auth-animated-shell .auth-ledger-panel {
     max-width: none;
     box-shadow: none;
     padding: 2.5rem 2.25rem;
@@ -3186,6 +3341,7 @@ select:focus-visible {
     }
 
     .auth-split-shell .auth-ledger-panel,
+    .auth-animated-shell .auth-ledger-panel,
     .auth-campus-plate {
         padding: 1.5rem 1.25rem;
     }

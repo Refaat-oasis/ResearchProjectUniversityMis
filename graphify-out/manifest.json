@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "researchProject/Controllers/AccountController.cs": {
-    "mtime": 1794954158.4049523,
-    "seen": 1794956383.7228415,
-    "ast_hash": "45ad29d5b6d82331571e056530ca9311",
+    "mtime": 1795024364.591198,
+    "seen": 1795024989.4014575,
+    "ast_hash": "f7679f4d6d274aeef0019dcfbc7219db",
     "semantic_hash": ""
   },
   "researchProject/Controllers/CollegeCoAdminController.cs": {
@@ -294,15 +294,15 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Account/Login.cshtml": {
-    "mtime": 1794948286.9840481,
-    "seen": 1794949814.0621424,
-    "ast_hash": "1dc3f8ead93eab1fa5bf3832b13a3706",
+    "mtime": 1795025703.04115,
+    "seen": 1795025760.20305,
+    "ast_hash": "fb89588ba50d1120ff272a01227c8508",
     "semantic_hash": ""
   },
   "researchProject/Views/Account/SignUp.cshtml": {
-    "mtime": 1794956936.6130226,
-    "seen": 1795023672.4037669,
-    "ast_hash": "b544a7058a6e0ff0f31f6cc4e38e0845",
+    "mtime": 1795025716.54501,
+    "seen": 1795025760.20305,
+    "ast_hash": "943e7cb4122183f69feac21cdee86e45",
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/Index.cshtml": {
@@ -462,9 +462,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/_ManageCategoriesPartial.cshtml": {
-    "mtime": 1794956938.3349462,
-    "seen": 1795023672.4037669,
-    "ast_hash": "cb77924fa9e5678539a76587bec49d30",
+    "mtime": 1795025451.0519533,
+    "seen": 1795025760.20305,
+    "ast_hash": "53d18ac8fa9052bc4f0e1f17ea4eb97a",
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/_ManageCoAdminsPartial.cshtml": {
@@ -534,9 +534,9 @@
     "semantic_hash": ""
   },
   "researchProject/wwwroot/js/site.js": {
-    "mtime": 1795023963.369007,
-    "seen": 1795024056.5011566,
-    "ast_hash": "ffb3de3d211b59ca0ca22b5b798f91c6",
+    "mtime": 1795025695.8191833,
+    "seen": 1795025760.204047,
+    "ast_hash": "a9fc2b46d2d274a00f429e99aa999721",
     "semantic_hash": ""
   },
   "ai_agent_instructions_architecture_rules.md": {
@@ -1200,9 +1200,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/CollegeCoAdmin/_ManageCategoriesPartial.cshtml": {
-    "mtime": 1794956937.0748742,
-    "seen": 1795023672.4037669,
-    "ast_hash": "b8406cf2083e180a5ea762624d6b1152",
+    "mtime": 1795025505.2783618,
+    "seen": 1795025760.20305,
+    "ast_hash": "2a9a7d5dbd6439b2eb1c9a1518a9252d",
     "semantic_hash": ""
   },
   "researchProject/Views/Error/GeneralError.cshtml": {
@@ -1266,9 +1266,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/Categories.cshtml": {
-    "mtime": 1794956937.891361,
-    "seen": 1795023672.4037669,
-    "ast_hash": "d68229f4e91a2df481d2665953b7b7ac",
+    "mtime": 1795025429.3161273,
+    "seen": 1795025760.20305,
+    "ast_hash": "fbcc1be42c225d863a2875fb46f70849",
     "semantic_hash": ""
   },
   "researchProject/Views/SuperAdmin/Certificates.cshtml": {
@@ -1410,9 +1410,9 @@
     "semantic_hash": ""
   },
   "researchProject/Views/Home/Developers.cshtml": {
-    "mtime": 1794953959.1212964,
-    "seen": 1794956383.7228415,
-    "ast_hash": "c8d8eb2858073dcfb52ba796c2966bb7",
+    "mtime": 1795024904.2058742,
+    "seen": 1795024989.4014575,
+    "ast_hash": "a49efae8dd5c2a770cf29e8d9327bcf7",
     "semantic_hash": ""
   },
   "researchProject/Views/Shared/_SeoMetaTagsPartial.cshtml": {

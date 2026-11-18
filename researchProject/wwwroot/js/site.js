@@ -284,7 +284,9 @@ function initDedicatedDropdowns(container) {
         var $clearBtn = $wrapper.find('.dedicated-dropdown-clear-btn');
         var $chevronBtn = $wrapper.find('.dedicated-dropdown-chevron-btn');
         var $menu = $wrapper.find('.dedicated-dropdown-menu');
-        var $items = $wrapper.find('.dedicated-dropdown-item');
+        function getItems() {
+            return $wrapper.find('.dedicated-dropdown-item');
+        }
         var hiddenSelector = $wrapper.data('target-input');
         var $hiddenInput = hiddenSelector ? $(hiddenSelector) : $wrapper.find('input[type="hidden"]');
 
@@ -299,8 +301,9 @@ function initDedicatedDropdowns(container) {
         function filterOptions(term) {
             var search = (term || '').trim().toLowerCase();
             var visibleCount = 0;
+            var $currentItems = getItems();
 
-            $items.each(function () {
+            $currentItems.each(function () {
                 var $item = $(this);
                 var text = ($item.data('label') || $item.data('name') || $item.text() || '').toLowerCase();
                 if (!search || text.indexOf(search) !== -1) {
@@ -326,12 +329,13 @@ function initDedicatedDropdowns(container) {
         // Pre-select if hidden input already has a value
         if ($hiddenInput.length && $hiddenInput.val()) {
             var currentVal = $hiddenInput.val();
-            var $matched = $items.filter(function () {
+            var $currentItems = getItems();
+            var $matched = $currentItems.filter(function () {
                 var itemVal = $(this).data('value') !== undefined ? $(this).data('value') : $(this).data('id');
                 return String(itemVal) === String(currentVal);
             });
             if ($matched.length) {
-                $items.removeClass('selected');
+                $currentItems.removeClass('selected');
                 $matched.addClass('selected');
                 $input.val(($matched.data('label') || $matched.data('name') || $matched.text()).trim());
             }
@@ -360,7 +364,7 @@ function initDedicatedDropdowns(container) {
                 if ($hiddenInput.length) {
                     $hiddenInput.val('').trigger('change');
                 }
-                $items.removeClass('selected');
+                getItems().removeClass('selected');
             }
         });
 
@@ -394,7 +398,7 @@ function initDedicatedDropdowns(container) {
             if ($hiddenInput.length) {
                 $hiddenInput.val('').trigger('change');
             }
-            $items.removeClass('selected');
+            getItems().removeClass('selected');
             toggleClearBtn();
             filterOptions('');
             $input.focus();
@@ -407,7 +411,7 @@ function initDedicatedDropdowns(container) {
             var id = $item.data('value') !== undefined ? $item.data('value') : $item.data('id');
             var name = ($item.data('label') || $item.data('name') || $item.text() || '').trim();
 
-            $items.removeClass('selected');
+            getItems().removeClass('selected');
             $item.addClass('selected');
 
             $input.val(name);
@@ -422,11 +426,12 @@ function initDedicatedDropdowns(container) {
 
         // Keyboard navigation
         $input.on('keydown', function (e) {
+            var $currentItems = getItems();
             if (e.key === 'Escape') {
                 $wrapper.removeClass('open');
             } else if (e.key === 'ArrowDown') {
                 $wrapper.addClass('open');
-                var $visible = $items.filter(':visible');
+                var $visible = $currentItems.filter(':visible');
                 var $active = $visible.filter('.active');
                 if (!$active.length) {
                     $visible.first().addClass('active');
@@ -440,7 +445,7 @@ function initDedicatedDropdowns(container) {
                     }
                 }
             } else if (e.key === 'ArrowUp') {
-                var $visible = $items.filter(':visible');
+                var $visible = $currentItems.filter(':visible');
                 var $active = $visible.filter('.active');
                 if ($active.length) {
                     $active.removeClass('active');
@@ -452,7 +457,7 @@ function initDedicatedDropdowns(container) {
                     }
                 }
             } else if (e.key === 'Enter') {
-                var $active = $items.filter(':visible.active');
+                var $active = $currentItems.filter(':visible.active');
                 if ($active.length) {
                     e.preventDefault();
                     $active.trigger('click');
