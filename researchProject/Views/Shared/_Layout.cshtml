@@ -225,6 +225,11 @@
         </div>
     </div>
 
+    <!-- Hidden global Anti-Forgery Token -->
+    <div style="display:none;" id="global-antiforgery-holder">
+        @Html.AntiForgeryToken()
+    </div>
+
     <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -235,10 +240,16 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        // Global AJAX setup for Anti-Forgery Token
+        // Global App Base URL
+        window.appBaseUrl = '@Url.Content("~/")';
+
+        // Global AJAX setup for Anti-Forgery Token with dynamic evaluation
         $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+            beforeSend: function (xhr, settings) {
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                if (token) {
+                    xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                }
             }
         });
 
@@ -288,7 +299,14 @@
                 },
                 error: function (xhr) {
                     $('#partial-loading-spinner').hide();
-                    var msg = xhr.responseText || 'حدث خطأ أثناء تحميل المحتوى.';
+                    var msg = 'حدث خطأ أثناء تحميل المحتوى.';
+                    if (xhr.status === 404) {
+                        msg = 'المحتوى المطلوب غير موجود أو تم نقله (404 Not Found).';
+                    } else if (xhr.status === 403 || xhr.status === 401) {
+                        msg = 'ليس لديك الصلاحية لعرض هذا المحتوى أو انتهت جلستك الحالية.';
+                    } else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) {
+                        msg = xhr.responseText;
+                    }
                     $(targetSelector).html('<div class="alert alert-danger m-3"><i class="bi bi-exclamation-triangle me-2"></i>' + msg + '</div>');
                 }
             });

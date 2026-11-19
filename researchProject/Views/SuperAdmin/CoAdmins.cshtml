@@ -71,6 +71,14 @@
                                         <i class="bi bi-arrow-left-right me-1"></i>
                                         تغيير الكلية
                                     </button>
+                                    <button class="btn btn-sm btn-outline-danger ms-1 btn-remove-coadmin"
+                                            data-id="@a.Id"
+                                            data-fullname="@(a.User?.FullName ?? "")"
+                                            data-college-name="@(a.College?.Name ?? "")"
+                                            title="إلغاء تكليف وإزالة مدير الكلية">
+                                        <i class="bi bi-person-dash me-1"></i>
+                                        إزالة من الكلية
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -304,6 +312,13 @@
             openReassignModal(id, collegeId, fullname, collegeName);
         });
 
+        $(document).on('click', '.btn-remove-coadmin', function () {
+            var id = $(this).data('id');
+            var fullname = $(this).data('fullname');
+            var collegeName = $(this).data('college-name');
+            removeCoAdminFromCollege(id, fullname, collegeName);
+        });
+
         function openReassignModal(coAdminId, currentCollegeId, adminName, currentCollegeName) {
             $('#reassignCoAdminId').val(coAdminId);
             $('#reassignAdminName').text(adminName);
@@ -321,7 +336,7 @@
             $('#partial-loading-spinner').css('display', 'flex');
 
             $.ajax({
-                url: '/SuperAdmin/ToggleCoAdminStatus',
+                url: '@Url.Action("ToggleCoAdminStatus", "SuperAdmin")',
                 type: 'POST',
                 data: {
                     coAdminId: coAdminId,
@@ -339,7 +354,43 @@
                 },
                 error: function (xhr) {
                     $('#partial-loading-spinner').hide();
-                    window.showToast('error', xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.');
+                    var msg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    if (xhr.status === 404) msg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+                    else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) msg = xhr.responseText;
+                    window.showToast('error', msg);
+                }
+            });
+        }
+
+        function removeCoAdminFromCollege(coAdminId, adminName, collegeName) {
+            var msg = 'هل أنت متأكد من رغبتك في إزالة وإلغاء تكليف مدير الكلية (' + (adminName || '') + ') من (' + (collegeName || '') + ') نهائياً؟';
+            if (!confirm(msg)) return;
+
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            $('#partial-loading-spinner').css('display', 'flex');
+
+            $.ajax({
+                url: '@Url.Action("RemoveCoAdminFromCollege", "SuperAdmin")',
+                type: 'POST',
+                data: {
+                    coAdminId: coAdminId,
+                    __RequestVerificationToken: token
+                },
+                success: function (res) {
+                    $('#partial-loading-spinner').hide();
+                    if (res && res.success) {
+                        window.showToast('success', res.message || 'تمت إزالة وإلغاء تكليف مدير الكلية بنجاح.');
+                        setTimeout(function () { window.location.reload(); }, 1000);
+                    } else {
+                        window.showToast('error', res.message || 'فشلت عملية إزالة مدير الكلية.');
+                    }
+                },
+                error: function (xhr) {
+                    $('#partial-loading-spinner').hide();
+                    var errMsg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    if (xhr.status === 404) errMsg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+                    else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) errMsg = xhr.responseText;
+                    window.showToast('error', errMsg);
                 }
             });
         }

@@ -218,21 +218,35 @@
     }
 
     function toggleJudgeStatus(id, isActive) {
-        $.post('/SuperAdmin/ToggleJudgeStatus', { judgeId: id, isActive: isActive }, function (res) {
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $.post('@Url.Action("ToggleJudgeStatus", "SuperAdmin")', { judgeId: id, isActive: isActive, __RequestVerificationToken: token }, function (res) {
             showToast(res.message, res.success ? 'success' : 'error');
             if (res.success) {
-                loadPartial('/SuperAdmin/ManageJudgesPartial', '#main-content-container', 'judges');
+                loadPartial('@Url.Action("ManageJudgesPartial", "SuperAdmin")', '#main-content-container', 'judges');
             }
         }).fail(function (xhr) {
-            showToast(xhr.responseText || 'حدث خطأ أثناء تغيير الحالة.', 'error');
+            var msg = 'حدث خطأ أثناء تغيير الحالة.';
+            if (xhr.status === 404) msg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+            else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) msg = xhr.responseText;
+            showToast(msg, 'error');
         });
     }
 
     function revokeInvitation(id) {
         if (!confirm('هل أنت متأكد من رغبتك في إلغاء هذه الدعوة؟')) return;
-        $.post('/SuperAdmin/RevokeInvitation', { invitationId: id }, function (res) {
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $.post('@Url.Action("RevokeInvitation", "SuperAdmin")', { invitationId: id, __RequestVerificationToken: token }, function (res) {
             showToast(res.message, res.success ? 'success' : 'error');
             if (res.success) {
+                loadPartial('@Url.Action("ManageJudgesPartial", "SuperAdmin")', '#main-content-container', 'judges');
+            }
+        }).fail(function (xhr) {
+            var msg = 'حدث خطأ أثناء إلغاء الدعوة.';
+            if (xhr.status === 404) msg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+            else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) msg = xhr.responseText;
+            showToast(msg, 'error');
+        });
+    }
                 loadPartial('/SuperAdmin/ManageJudgesPartial', '#main-content-container', 'judges');
             }
         }).fail(function (xhr) {

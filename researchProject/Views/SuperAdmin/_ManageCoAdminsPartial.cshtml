@@ -66,6 +66,12 @@
                                         <i class="bi bi-arrow-left-right me-1"></i>
                                         تغيير الكلية
                                     </button>
+                                    <button class="btn btn-sm btn-outline-danger ms-1"
+                                            onclick="removeCoAdminFromCollegePartial(@a.Id, '@a.User?.FullName', '@(a.College?.Name ?? "")')"
+                                            title="إلغاء تكليف وإزالة مدير الكلية">
+                                        <i class="bi bi-person-dash me-1"></i>
+                                        إزالة من الكلية
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -303,7 +309,7 @@
         $('#partial-loading-spinner').css('display', 'flex');
 
         $.ajax({
-            url: '/SuperAdmin/ToggleCoAdminStatus',
+            url: '@Url.Action("ToggleCoAdminStatus", "SuperAdmin")',
             type: 'POST',
             data: {
                 coAdminId: coAdminId,
@@ -314,14 +320,50 @@
                 $('#partial-loading-spinner').hide();
                 if (res && res.success) {
                     window.showToast('success', res.message || 'تم تحديث حالة الحساب بنجاح.');
-                    loadPartial('/SuperAdmin/ManageCoAdminsPartial', '#main-content-container', 'manage-coadmins');
+                    loadPartial('@Url.Action("ManageCoAdminsPartial", "SuperAdmin")', '#main-content-container', 'manage-coadmins');
                 } else {
                     window.showToast('error', res.message || 'فشل تحديث حالة الحساب.');
                 }
             },
             error: function (xhr) {
                 $('#partial-loading-spinner').hide();
-                window.showToast('error', xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.');
+                var msg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                if (xhr.status === 404) msg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+                else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) msg = xhr.responseText;
+                window.showToast('error', msg);
+            }
+        });
+    }
+
+    function removeCoAdminFromCollegePartial(coAdminId, adminName, collegeName) {
+        var msg = 'هل أنت متأكد من رغبتك في إزالة وإلغاء تكليف مدير الكلية (' + (adminName || '') + ') من (' + (collegeName || '') + ') نهائياً؟';
+        if (!confirm(msg)) return;
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $('#partial-loading-spinner').css('display', 'flex');
+
+        $.ajax({
+            url: '@Url.Action("RemoveCoAdminFromCollege", "SuperAdmin")',
+            type: 'POST',
+            data: {
+                coAdminId: coAdminId,
+                __RequestVerificationToken: token
+            },
+            success: function (res) {
+                $('#partial-loading-spinner').hide();
+                if (res && res.success) {
+                    window.showToast('success', res.message || 'تمت إزالة وإلغاء تكليف مدير الكلية بنجاح.');
+                    loadPartial('@Url.Action("ManageCoAdminsPartial", "SuperAdmin")', '#main-content-container', 'manage-coadmins');
+                } else {
+                    window.showToast('error', res.message || 'فشلت عملية إزالة مدير الكلية.');
+                }
+            },
+            error: function (xhr) {
+                $('#partial-loading-spinner').hide();
+                var errMsg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                if (xhr.status === 404) errMsg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+                else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) errMsg = xhr.responseText;
+                window.showToast('error', errMsg);
             }
         });
     }

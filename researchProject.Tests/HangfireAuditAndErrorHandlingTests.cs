@@ -319,6 +319,77 @@ namespace researchProject.Tests
             Assert.Single(resultFailed.Logs);
             Assert.Equal(400, resultFailed.Logs[0].StatusCode);
             Assert.False(resultFailed.Logs[0].IsSuccess);
+
+            // Act 3 - Filter by ActionName
+            var resultAction = await repo.GetAuditLogsAsync(actionFilter: "CreateCoAdmin");
+            Assert.Single(resultAction.Logs);
+            Assert.Equal("CreateCoAdmin", resultAction.Logs[0].ActionName);
+        }
+
+        [Fact]
+        public async Task SuperAdminRepository_RemoveCoAdminFromCollegeAsync_RemovesEntityAndRole()
+        {
+            // Arrange
+            var dbName = Guid.NewGuid().ToString();
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: dbName)
+                .Options;
+
+            var userStore = new Mock<IUserStore<ApplicationUser>>();
+            var userManagerMock = new Mock<UserManager<ApplicationUser>>(
+                userStore.Object, null, null, null, null, null, null, null, null);
+
+            var college = new College { Id = 1, Name = "كلية الهندسة" };
+            var user = new ApplicationUser
+            {
+                Id = "coadmin-user-1",
+                UserName = "coadmin@test.edu.eg",
+                Email = "coadmin@test.edu.eg",
+                FullName = "مهندس الاختبار",
+                IsActive = true
+            };
+            var coAdmin = new CollegeCoAdmin
+            {
+                Id = 10,
+                UserId = "coadmin-user-1",
+                User = user,
+                CollegeId = 1,
+                College = college,
+                IsActive = true
+            };
+
+            using (var db = new ApplicationDbContext(options))
+            {
+                db.Colleges.Add(college);
+                db.Users.Add(user);
+                db.CollegeCoAdmins.Add(coAdmin);
+                await db.SaveChangesAsync();
+            }
+
+            userManagerMock.Setup(m => m.IsInRoleAsync(It.IsAny<ApplicationUser>(), RoleConstants.CollegeCoAdmin))
+                .ReturnsAsync(true);
+            userManagerMock.Setup(m => m.RemoveFromRoleAsync(It.IsAny<ApplicationUser>(), RoleConstants.CollegeCoAdmin))
+                .ReturnsAsync(IdentityResult.Success);
+            userManagerMock.Setup(m => m.UpdateSecurityStampAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            using (var db = new ApplicationDbContext(options))
+            {
+                var roleManagerMock = new Mock<RoleManager<IdentityRole>>(
+                    new Mock<IRoleStore<IdentityRole>>().Object, null, null, null, null);
+                var emailSenderMock = new Mock<IEmailSender>();
+
+                var repo = new SuperAdminRepository(db, userManagerMock.Object, roleManagerMock.Object, emailSenderMock.Object);
+
+                // Act
+                var (succeeded, error) = await repo.RemoveCoAdminFromCollegeAsync(10);
+
+                // Assert
+                Assert.True(succeeded);
+                Assert.Null(error);
+                Assert.Empty(db.CollegeCoAdmins);
+                userManagerMock.Verify(m => m.RemoveFromRoleAsync(It.IsAny<ApplicationUser>(), RoleConstants.CollegeCoAdmin), Times.Once);
+            }
         }
     }
 }

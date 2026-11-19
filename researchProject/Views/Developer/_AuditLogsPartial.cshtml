@@ -1,5 +1,30 @@
 @model researchProject.Models.ViewModels.AuditLogListViewModel
 
+@if (!string.IsNullOrWhiteSpace(Model.ActionFilter) || !string.IsNullOrWhiteSpace(Model.RoleFilter) || Model.SuccessFilter.HasValue || !string.IsNullOrWhiteSpace(Model.SearchTerm))
+{
+    <div class="px-3 py-2 bg-light border-bottom d-flex align-items-center flex-wrap gap-2 small">
+        <span class="text-secondary fw-bold"><i class="bi bi-funnel-fill text-primary me-1"></i>الفلاتر النشطة:</span>
+        @if (!string.IsNullOrWhiteSpace(Model.ActionFilter))
+        {
+            <span class="badge bg-primary-subtle text-primary border">العملية: @Model.ActionFilter</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.RoleFilter))
+        {
+            <span class="badge bg-secondary-subtle text-secondary border">الدور: @Model.RoleFilter</span>
+        }
+        @if (Model.SuccessFilter.HasValue)
+        {
+            <span class="badge @(Model.SuccessFilter.Value ? "bg-success-subtle text-success border" : "bg-danger-subtle text-danger border")">
+                الحالة: @(Model.SuccessFilter.Value ? "ناجحة" : "أخطاء")
+            </span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+        {
+            <span class="badge bg-light text-dark border">البحث: "@Model.SearchTerm"</span>
+        }
+    </div>
+}
+
 <div class="table-responsive">
     <table class="table table-hover align-middle custom-table mb-0">
         <thead class="table-light">

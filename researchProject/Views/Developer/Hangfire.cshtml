@@ -9,7 +9,7 @@
             <p class="text-secondary mb-0">لوحة تحكم للمطورين لمراقبة الطوابير الخلفية، مهام إرسال البريد الإلكتروني، والمهام الدورية المجدولة</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="/hangfire" target="_blank" class="btn btn-primary-custom d-inline-flex align-items-center gap-1 shadow-sm">
+            <a href="@Url.Content("~/hangfire")" target="_blank" class="btn btn-primary-custom d-inline-flex align-items-center gap-1 shadow-sm">
                 <i class="bi bi-box-arrow-up-right"></i>
                 فتح لوحة Hangfire في نافذة مستقلة
             </a>
@@ -68,11 +68,11 @@
 <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
     <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
         <h5 class="mb-0 fw-bold"><i class="bi bi-speedometer2 text-primary me-2"></i>معاينة لوحة تحكم Hangfire المباشرة</h5>
-        <a href="/hangfire" target="_blank" class="btn btn-sm btn-outline-primary">
+        <a href="@Url.Content("~/hangfire")" target="_blank" class="btn btn-sm btn-outline-primary">
             تكبير الشاشة <i class="bi bi-arrows-fullscreen ms-1"></i>
         </a>
     </div>
     <div class="card-body p-0">
-        <iframe src="/hangfire" style="width: 100%; height: 750px; border: none; background: #fff;" title="Hangfire Live Dashboard"></iframe>
+        <iframe src="@Url.Content("~/hangfire")" style="width: 100%; height: 750px; border: none; background: #fff;" title="Hangfire Live Dashboard"></iframe>
     </div>
 </div>

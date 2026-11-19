@@ -145,8 +145,8 @@ namespace researchProject
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Hangfire Dashboard (Secured for SuperAdmin only)
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            // Hangfire Dashboard Endpoint (Secured for Developer and SuperAdmin)
+            app.MapHangfireDashboard("/hangfire", new DashboardOptions
             {
                 Authorization = new[] { new HangfireDashboardAuthorizationFilter() },
                 DashboardTitle = "لوحة مهام وإرسال البريد - منصة أخلاقيات البحث العلمي"

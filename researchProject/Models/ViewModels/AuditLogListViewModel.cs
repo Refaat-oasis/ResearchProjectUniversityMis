@@ -11,6 +11,7 @@ namespace researchProject.Models.ViewModels
         public int TotalCount { get; set; }
         public string? SearchTerm { get; set; }
         public string? RoleFilter { get; set; }
+        public string? ActionFilter { get; set; }
         public bool? SuccessFilter { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }

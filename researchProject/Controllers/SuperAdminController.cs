@@ -364,6 +364,14 @@ namespace researchProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveCoAdminFromCollege(int coAdminId)
+        {
+            var (succeeded, errorMessage) = await _superAdminRepo.RemoveCoAdminFromCollegeAsync(coAdminId);
+            return Json(new { success = succeeded, message = errorMessage ?? "تمت إزالة وإلغاء تكليف مدير الكلية من الكلية بنجاح." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleCategoryStatus(int id, bool isActive)
         {
             var (succeeded, errorMessage) = await _superAdminRepo.ToggleCategoryStatusAsync(id, isActive);

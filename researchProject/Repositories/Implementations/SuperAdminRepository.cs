@@ -340,6 +340,31 @@ namespace researchProject.Repositories.Implementations
             return await SetUserActiveStatusAsync(coAdmin.UserId, isActive);
         }
 
+        public async Task<(bool Succeeded, string? ErrorMessage)> RemoveCoAdminFromCollegeAsync(int coAdminId)
+        {
+            var coAdmin = await _db.CollegeCoAdmins.Include(a => a.User).FirstOrDefaultAsync(a => a.Id == coAdminId);
+            if (coAdmin == null) return (false, "مدير الكلية غير موجود.");
+
+            var userId = coAdmin.UserId;
+            var user = coAdmin.User;
+
+            _db.CollegeCoAdmins.Remove(coAdmin);
+            await _db.SaveChangesAsync();
+
+            // If user has no other co-admin assignments across the university, remove the role
+            if (user != null)
+            {
+                var hasOtherAssignments = await _db.CollegeCoAdmins.AnyAsync(a => a.UserId == userId);
+                if (!hasOtherAssignments && await _userManager.IsInRoleAsync(user, RoleConstants.CollegeCoAdmin))
+                {
+                    await _userManager.RemoveFromRoleAsync(user, RoleConstants.CollegeCoAdmin);
+                    await _userManager.UpdateSecurityStampAsync(user);
+                }
+            }
+
+            return (true, null);
+        }
+
         public async Task<List<Judge>> GetAllJudgesAsync()
         {
             return await _db.Judges
@@ -671,7 +696,8 @@ namespace researchProject.Repositories.Implementations
             string? roleFilter = null,
             bool? successFilter = null,
             DateTime? fromDate = null,
-            DateTime? toDate = null)
+            DateTime? toDate = null,
+            string? actionFilter = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 5) pageSize = 25;
@@ -693,6 +719,12 @@ namespace researchProject.Repositories.Implementations
             if (!string.IsNullOrWhiteSpace(roleFilter))
             {
                 query = query.Where(l => l.UserRole == roleFilter);
+            }
+
+            if (!string.IsNullOrWhiteSpace(actionFilter))
+            {
+                var act = actionFilter.Trim();
+                query = query.Where(l => l.ActionName == act || (l.ActionName != null && l.ActionName.Contains(act)));
             }
 
             if (successFilter.HasValue)
@@ -748,6 +780,7 @@ namespace researchProject.Repositories.Implementations
                 TotalCount = totalCount,
                 SearchTerm = searchTerm,
                 RoleFilter = roleFilter,
+                ActionFilter = actionFilter,
                 SuccessFilter = successFilter,
                 FromDate = fromDate,
                 ToDate = toDate
