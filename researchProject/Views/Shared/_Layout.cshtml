@@ -284,6 +284,11 @@
                         initUniversalTablePagination(targetSelector);
                     }
 
+                    // Initialize counter and progress bar animations in the partial
+                    if (typeof initAnimatedElements === 'function') {
+                        initAnimatedElements(targetSelector);
+                    }
+
                     // Update sidebar active link
                     $('.sidebar-item a').removeClass('active');
                     if (hashKey) {

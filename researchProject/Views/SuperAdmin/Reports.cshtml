@@ -22,34 +22,34 @@
 <div class="kpi-ledger-grid mb-4">
     <div class="kpi-ledger-cell">
         <div class="kpi-ledger-label"><i class="bi bi-stopwatch me-1"></i>متوسط زمن الفحص الشكلي</div>
-        <div class="kpi-ledger-value" style="color: @(Model.AverageScreeningHours <= 48 ? "var(--brand-sovereign)" : "#8C1D24");">@Model.AverageScreeningHours.ToString("0.0")</div>
+        <div class="kpi-ledger-value font-mono-tabular" style="color: @(Model.AverageScreeningHours <= 48 ? "var(--brand-sovereign)" : "#8C1D24");" data-counter data-target="@Model.AverageScreeningHours.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1">@Model.AverageScreeningHours.ToString("0.0")</div>
         <div class="kpi-ledger-sub" title="ساعة (الحد النظامي: 48 ساعة)">ساعة (الحد النظامي: 48 ساعة)</div>
         <div class="progress mt-1" style="height: 5px;">
-            <div class="progress-bar" style="width: @Math.Min(100, (Model.AverageScreeningHours / 48.0) * 100)%; background-color: @(Model.AverageScreeningHours <= 48 ? "var(--brand-sovereign)" : "#8C1D24");"></div>
+            <div class="progress-bar animated-progress-bar" style="width: 0%; background-color: @(Model.AverageScreeningHours <= 48 ? "var(--brand-sovereign)" : "#8C1D24");" data-target-width="@Math.Min(100, (Model.AverageScreeningHours / 48.0) * 100).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
         </div>
     </div>
     <div class="kpi-ledger-cell">
         <div class="kpi-ledger-label"><i class="bi bi-calendar-check me-1"></i>متوسط فترة التحكيم الأخلاقي</div>
-        <div class="kpi-ledger-value" style="color: #1D3A5F;">@Model.AverageJudgingDays.ToString("0.0")</div>
+        <div class="kpi-ledger-value font-mono-tabular" style="color: #1D3A5F;" data-counter data-target="@Model.AverageJudgingDays.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1">@Model.AverageJudgingDays.ToString("0.0")</div>
         <div class="kpi-ledger-sub" title="يوم عمل (الحد النظامي: 14 يوم)">يوم عمل (الحد النظامي: 14 يوم)</div>
         <div class="progress mt-1" style="height: 5px;">
-            <div class="progress-bar" style="width: @Math.Min(100, (Model.AverageJudgingDays / 14.0) * 100)%; background-color: @(Model.AverageJudgingDays <= 14 ? "#1D3A5F" : "var(--brand-brass)");"></div>
+            <div class="progress-bar animated-progress-bar" style="width: 0%; background-color: @(Model.AverageJudgingDays <= 14 ? "#1D3A5F" : "var(--brand-brass)");" data-target-width="@Math.Min(100, (Model.AverageJudgingDays / 14.0) * 100).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
         </div>
     </div>
     <div class="kpi-ledger-cell">
         <div class="kpi-ledger-label"><i class="bi bi-shield-check me-1"></i>نسبة الالتزام بالمهلة (SLA)</div>
-        <div class="kpi-ledger-value" style="color: @(Model.SlaCompliancePercentage >= 85 ? "var(--brand-sovereign)" : "var(--brand-brass)");">@Model.SlaCompliancePercentage.ToString("0.0")%</div>
+        <div class="kpi-ledger-value font-mono-tabular" style="color: @(Model.SlaCompliancePercentage >= 85 ? "var(--brand-sovereign)" : "var(--brand-brass)");" data-counter data-target="@Model.SlaCompliancePercentage.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1" data-suffix="%">@Model.SlaCompliancePercentage.ToString("0.0")%</div>
         <div class="kpi-ledger-sub" title="المعدل المستهدف: 90%+">المعدل المستهدف: 90%+</div>
         <div class="progress mt-1" style="height: 5px;">
-            <div class="progress-bar" style="width: @Math.Min(100, Model.SlaCompliancePercentage)%; background-color: var(--brand-sovereign);"></div>
+            <div class="progress-bar animated-progress-bar" style="width: 0%; background-color: var(--brand-sovereign);" data-target-width="@Math.Min(100, Model.SlaCompliancePercentage).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
         </div>
     </div>
     <div class="kpi-ledger-cell">
         <div class="kpi-ledger-label"><i class="bi bi-patch-check me-1"></i>إجمالي الشهادات المعتمدة الصادرة</div>
-        <div class="kpi-ledger-value" style="color: var(--brand-brass);">@Model.CertificatesIssuedCount</div>
-        <div class="kpi-ledger-sub" title="من إجمالي @Model.TotalResearches مقترحاً">من إجمالي <span class="font-mono-tabular">@Model.TotalResearches</span> مقترحاً</div>
+        <div class="kpi-ledger-value font-mono-tabular" style="color: var(--brand-brass);" data-counter data-target="@Model.CertificatesIssuedCount">@Model.CertificatesIssuedCount</div>
+        <div class="kpi-ledger-sub" title="من إجمالي @Model.TotalResearches مقترحاً">من إجمالي <span class="font-mono-tabular" data-counter data-target="@Model.TotalResearches">@Model.TotalResearches</span> مقترحاً</div>
         <div class="progress mt-1" style="height: 5px;">
-            <div class="progress-bar" style="width: @(Model.TotalResearches > 0 ? (Model.CertificatesIssuedCount * 100.0 / Model.TotalResearches) : 0)%; background-color: var(--brand-brass);"></div>
+            <div class="progress-bar animated-progress-bar" style="width: 0%; background-color: var(--brand-brass);" data-target-width="@(Model.TotalResearches > 0 ? (Model.CertificatesIssuedCount * 100.0 / Model.TotalResearches) : 0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
         </div>
     </div>
 </div>
@@ -62,7 +62,7 @@
                 <h2 class="card-title-custom fs-5">
                     <i class="bi bi-buildings"></i> توزيع المقترحات حسب كليات الجامعة
                 </h2>
-                <span class="status-stamp status-assigned"><span class="font-mono-tabular">@Model.TotalColleges</span> كلية</span>
+                <span class="status-stamp status-assigned"><span class="font-mono-tabular" data-counter data-target="@Model.TotalColleges">@Model.TotalColleges</span> كلية</span>
             </div>
             <div class="table-responsive">
                 <table class="table ledger-table align-middle">
@@ -82,11 +82,11 @@
                                 var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches) : 0.0;
                                 <tr>
                                     <td class="fw-bold">@item.Key</td>
-                                    <td class="text-center"><span class="status-stamp status-assigned font-mono-tabular">@item.Value</span></td>
-                                    <td class="text-center font-mono-tabular" style="color: var(--ink-muted);">@pct.ToString("0.0")%</td>
+                                    <td class="text-center"><span class="status-stamp status-assigned font-mono-tabular" data-counter data-target="@item.Value">@item.Value</span></td>
+                                    <td class="text-center font-mono-tabular" style="color: var(--ink-muted);" data-counter data-target="@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1" data-suffix="%">@pct.ToString("0.0")%</td>
                                     <td>
                                         <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar" role="progressbar" style="width: @pct%; background-color: var(--brand-sovereign);"></div>
+                                            <div class="progress-bar animated-progress-bar" role="progressbar" style="width: 0%; background-color: var(--brand-sovereign);" data-target-width="@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
                                         </div>
                                     </td>
                                 </tr>
@@ -133,11 +133,11 @@
                                 var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches) : 0.0;
                                 <tr>
                                     <td class="fw-bold">@item.Key</td>
-                                    <td class="text-center"><span class="status-stamp status-screening font-mono-tabular">@item.Value</span></td>
-                                    <td class="text-center font-mono-tabular" style="color: var(--ink-muted);">@pct.ToString("0.0")%</td>
+                                    <td class="text-center"><span class="status-stamp status-screening font-mono-tabular" data-counter data-target="@item.Value">@item.Value</span></td>
+                                    <td class="text-center font-mono-tabular" style="color: var(--ink-muted);" data-counter data-target="@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1" data-suffix="%">@pct.ToString("0.0")%</td>
                                     <td>
                                         <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar" role="progressbar" style="width: @pct%; background-color: var(--brand-brass);"></div>
+                                            <div class="progress-bar animated-progress-bar" role="progressbar" style="width: 0%; background-color: var(--brand-brass);" data-target-width="@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
                                         </div>
                                     </td>
                                 </tr>
@@ -169,37 +169,37 @@
         <div class="col-6 col-md-4 col-lg-2">
             <div class="dossier-panel-subtle h-100">
                 <div class="small" style="color: var(--ink-muted);">قيد الفحص الشكلي</div>
-                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: var(--ink-secondary);">@Model.UnderScreeningCount</div>
+                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: var(--ink-secondary);" data-counter data-target="@Model.UnderScreeningCount">@Model.UnderScreeningCount</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="dossier-panel-subtle h-100">
                 <div class="small" style="color: var(--ink-muted);">مسند للجان التحكيم</div>
-                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: #1D3A5F;">@Model.AssignedToJudgesCount</div>
+                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: #1D3A5F;" data-counter data-target="@Model.AssignedToJudgesCount">@Model.AssignedToJudgesCount</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="dossier-panel-subtle h-100">
                 <div class="small" style="color: var(--ink-muted);">تعديلات قيد الإجراء</div>
-                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: #8C1D24;">@Model.ModificationsRequiredCount</div>
+                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: #8C1D24;" data-counter data-target="@Model.ModificationsRequiredCount">@Model.ModificationsRequiredCount</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="dossier-panel-subtle h-100">
                 <div class="small" style="color: var(--ink-muted);">معتمد أخلاقياً</div>
-                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: var(--brand-sovereign);">@Model.ApprovedCount</div>
+                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: var(--brand-sovereign);" data-counter data-target="@Model.ApprovedCount">@Model.ApprovedCount</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="dossier-panel-subtle h-100">
                 <div class="small" style="color: var(--ink-muted);">إجمالي المحكمين</div>
-                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: var(--ink-primary);">@Model.TotalJudges</div>
+                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: var(--ink-primary);" data-counter data-target="@Model.TotalJudges">@Model.TotalJudges</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="dossier-panel-subtle h-100">
                 <div class="small" style="color: var(--ink-muted);">إجمالي الباحثين</div>
-                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: var(--brand-brass);">@Model.TotalResearchers</div>
+                <div class="fs-4 fw-bold font-mono-tabular mt-1" style="color: var(--brand-brass);" data-counter data-target="@Model.TotalResearchers">@Model.TotalResearchers</div>
             </div>
         </div>
     </div>

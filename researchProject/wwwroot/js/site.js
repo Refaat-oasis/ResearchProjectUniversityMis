@@ -5,6 +5,7 @@ $(document).ready(function () {
     initCustomDatalists();
     initSidebarToggle();
     initUniversalTablePagination();
+    initAnimatedElements();
 
     // 1. Sidebar link click handling
     $(document).on('click', '.sidebar-item a[data-url]', function (e) {
@@ -712,3 +713,160 @@ function initUniversalTablePagination(container) {
         renderPage();
     });
 }
+
+// ==========================================================================
+// Universal Count-Up and Progress Bar Animation System
+// ==========================================================================
+window.initAnimatedElements = function (container) {
+    var $root = container ? $(container) : $('body');
+    if (!$root.length) return;
+
+    var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Helper: Animate Single Progress Bar
+    function animateProgressBar(bar) {
+        var $bar = $(bar);
+        if ($bar.data('animated-bar-done')) return;
+        $bar.data('animated-bar-done', true);
+
+        var targetWidth = $bar.attr('data-target-width') || $bar[0].style.width;
+        if (!targetWidth || targetWidth === '0px' || targetWidth === '0%') {
+            return;
+        }
+
+        if (prefersReducedMotion) {
+            $bar.css('width', targetWidth);
+            return;
+        }
+
+        // Start from 0% and smoothly transition to targetWidth
+        $bar.css({
+            'width': '0%',
+            'transition': 'none'
+        });
+
+        // Trigger reflow then apply transition & width
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                $bar.addClass('progress-bar-animated-fill');
+                $bar.css({
+                    'width': targetWidth,
+                    'transition': 'width 1.35s cubic-bezier(0.16, 1, 0.3, 1)'
+                });
+            });
+        });
+    }
+
+    // Helper: Animate Single Counter Number
+    function animateCounter(el) {
+        var $el = $(el);
+        if ($el.data('animated-counter-done')) return;
+        $el.data('animated-counter-done', true);
+
+        var rawTarget = $el.attr('data-target');
+        var suffix = $el.attr('data-suffix') || '';
+        var prefix = $el.attr('data-prefix') || '';
+        var decimalsAttr = $el.attr('data-decimals');
+
+        var target = 0;
+        var decimals = 0;
+
+        if (rawTarget !== undefined && rawTarget !== null && rawTarget !== '') {
+            target = parseFloat(rawTarget);
+            if (decimalsAttr !== undefined && decimalsAttr !== null && decimalsAttr !== '') {
+                decimals = parseInt(decimalsAttr, 10);
+            } else if (rawTarget.indexOf('.') !== -1) {
+                decimals = rawTarget.split('.')[1].length;
+            }
+        } else {
+            var text = $el.text().trim();
+            if (text.endsWith('%')) {
+                suffix = '%';
+                text = text.slice(0, -1).trim();
+            }
+            if (text.indexOf('.') !== -1) {
+                decimals = text.split('.')[1].length;
+            }
+            target = parseFloat(text);
+        }
+
+        if (isNaN(target)) {
+            return;
+        }
+
+        if (prefersReducedMotion || target === 0) {
+            $el.text(prefix + target.toFixed(decimals) + suffix);
+            return;
+        }
+
+        if (!$el.hasClass('font-mono-tabular')) {
+            $el.addClass('font-mono-tabular');
+        }
+
+        var duration = 1400; // ms
+        var startValue = 0;
+        var startTime = null;
+
+        function easeOutExpo(x) {
+            return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        }
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            var elapsed = timestamp - startTime;
+            var progress = Math.min(elapsed / duration, 1);
+            var easedProgress = easeOutExpo(progress);
+
+            var current = startValue + (target - startValue) * easedProgress;
+            $el.text(prefix + current.toFixed(decimals) + suffix);
+
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                $el.text(prefix + target.toFixed(decimals) + suffix);
+            }
+        }
+
+        requestAnimationFrame(function () {
+            requestAnimationFrame(step);
+        });
+    }
+
+    // Process Progress Bars
+    var $progressBars = $root.find('.progress-bar[data-target-width], .animated-progress-bar');
+    $progressBars.each(function () {
+        var bar = this;
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function (entries, obs) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        animateProgressBar(entry.target);
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            observer.observe(bar);
+        } else {
+            animateProgressBar(bar);
+        }
+    });
+
+    // Process Counter Numbers
+    var $counters = $root.find('[data-counter], .stat-number[data-target], .kpi-ledger-value[data-target], .animated-counter');
+    $counters.each(function () {
+        var el = this;
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function (entries, obs) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        animateCounter(entry.target);
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            observer.observe(el);
+        } else {
+            animateCounter(el);
+        }
+    });
+};
