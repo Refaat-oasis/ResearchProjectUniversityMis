@@ -24,9 +24,10 @@ namespace researchProject.Controllers
             string? roleFilter = null,
             bool? successFilter = null,
             DateTime? fromDate = null,
-            DateTime? toDate = null)
+            DateTime? toDate = null,
+            string? actionFilter = null)
         {
-            var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate);
+            var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate, actionFilter);
             return View(model);
         }
 
@@ -37,9 +38,10 @@ namespace researchProject.Controllers
             string? roleFilter = null,
             bool? successFilter = null,
             DateTime? fromDate = null,
-            DateTime? toDate = null)
+            DateTime? toDate = null,
+            string? actionFilter = null)
         {
-            var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate);
+            var model = await _superAdminRepo.GetAuditLogsAsync(page, 25, searchTerm, roleFilter, successFilter, fromDate, toDate, actionFilter);
             return PartialView("_AuditLogsPartial", model);
         }
 

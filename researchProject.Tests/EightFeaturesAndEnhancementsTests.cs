@@ -26,7 +26,7 @@ namespace researchProject.Tests
         public void DeveloperRole_Constant_Exists_AndMatchesUserRoleEnum()
         {
             Assert.Equal("Developer", RoleConstants.Developer);
-            Assert.Equal(UserRole.Developer.ToString(), RoleConstants.Developer);
+            Assert.Equal(RoleConstants.Developer, UserRole.Developer.ToString());
         }
 
         [Fact]
@@ -84,7 +84,7 @@ namespace researchProject.Tests
         {
             var mockRepo = new Mock<ISuperAdminRepository>();
             var expectedModel = new AuditLogListViewModel();
-            mockRepo.Setup(r => r.GetAuditLogsAsync(1, 25, null, null, null, null, null))
+            mockRepo.Setup(r => r.GetAuditLogsAsync(1, 25, null, null, null, null, null, null))
                     .ReturnsAsync(expectedModel);
 
             var controller = new DeveloperController(mockRepo.Object);
@@ -100,7 +100,7 @@ namespace researchProject.Tests
         {
             var mockRepo = new Mock<ISuperAdminRepository>();
             var expectedModel = new AuditLogListViewModel();
-            mockRepo.Setup(r => r.GetAuditLogsAsync(1, 25, null, null, null, null, null))
+            mockRepo.Setup(r => r.GetAuditLogsAsync(1, 25, null, null, null, null, null, null))
                     .ReturnsAsync(expectedModel);
 
             var controller = new DeveloperController(mockRepo.Object);
@@ -248,6 +248,45 @@ namespace researchProject.Tests
                     try { Directory.Delete(tempDir, true); } catch { }
                 }
             }
+        }
+
+        [Fact]
+        public async Task SuperAdminController_RemoveCoAdminFromCollege_Returns_JsonResult()
+        {
+            var mockRepo = new Mock<ISuperAdminRepository>();
+            mockRepo.Setup(r => r.RemoveCoAdminFromCollegeAsync(5))
+                    .ReturnsAsync((true, null));
+
+            var mockEmail = new Mock<IEmailSender>();
+            var mockDispatcher = new Mock<IHangfireEmailDispatcher>();
+            var mockExport = new Mock<IReportExportService>();
+
+            var controller = new SuperAdminController(mockRepo.Object, mockEmail.Object, mockDispatcher.Object, mockExport.Object);
+
+            var result = await controller.RemoveCoAdminFromCollege(5);
+
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            var val = jsonResult.Value;
+            var successProp = val?.GetType().GetProperty("success")?.GetValue(val);
+            Assert.Equal(true, successProp);
+            mockRepo.Verify(r => r.RemoveCoAdminFromCollegeAsync(5), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeveloperController_AuditLogs_WithActionFilter_PassesFilterToRepo()
+        {
+            var mockRepo = new Mock<ISuperAdminRepository>();
+            var expectedModel = new AuditLogListViewModel { ActionFilter = "SubmitResearch" };
+            mockRepo.Setup(r => r.GetAuditLogsAsync(1, 25, null, null, null, null, null, "SubmitResearch"))
+                    .ReturnsAsync(expectedModel);
+
+            var controller = new DeveloperController(mockRepo.Object);
+
+            var result = await controller.AuditLogs(1, null, null, null, null, null, "SubmitResearch");
+
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Same(expectedModel, viewResult.Model);
+            mockRepo.Verify(r => r.GetAuditLogsAsync(1, 25, null, null, null, null, null, "SubmitResearch"), Times.Once);
         }
     }
 }

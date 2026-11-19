@@ -218,9 +218,9 @@
         function toggleJudgeStatus(judgeId, isActive) {
             var token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
-                url: '/SuperAdmin/ToggleJudgeStatus',
+                url: '@Url.Action("ToggleJudgeStatus", "SuperAdmin")',
                 type: 'POST',
-                data: { judgeId: judgeId, isActive: isActive },
+                data: { judgeId: judgeId, isActive: isActive, __RequestVerificationToken: token },
                 headers: { 'X-CSRF-TOKEN': token },
                 success: function (res) {
                     if (res && res.success) {
@@ -233,7 +233,10 @@
                     }, 1200);
                 },
                 error: function (xhr) {
-                    showToast(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.', 'error');
+                    var msg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    if (xhr.status === 404) msg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+                    else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) msg = xhr.responseText;
+                    showToast(msg, 'error');
                 }
             });
         }
@@ -242,9 +245,9 @@
             if (!confirm('هل أنت متأكد من إلغاء هذه الدعوة؟')) return;
             var token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
-                url: '/SuperAdmin/RevokeInvitation',
+                url: '@Url.Action("RevokeInvitation", "SuperAdmin")',
                 type: 'POST',
-                data: { invitationId: invitationId },
+                data: { invitationId: invitationId, __RequestVerificationToken: token },
                 headers: { 'X-CSRF-TOKEN': token },
                 success: function (res) {
                     if (res && res.success) {
@@ -257,7 +260,10 @@
                     }, 1200);
                 },
                 error: function (xhr) {
-                    showToast(xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.', 'error');
+                    var msg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    if (xhr.status === 404) msg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+                    else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) msg = xhr.responseText;
+                    showToast(msg, 'error');
                 }
             });
         }

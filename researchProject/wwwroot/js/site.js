@@ -89,6 +89,22 @@ window.showToast = function (firstArg, secondArg) {
     var defaultMsg = isSuccess ? 'تم الحفظ بنجاح.' : 'حدث خطأ ما، يرجى المحاولة مرة أخرى.';
     var text = message || defaultMsg;
 
+    // Sanitize any raw server error HTML payloads
+    if (typeof text === 'string') {
+        var trimmed = text.trim();
+        if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.indexOf('Server Error') !== -1 || trimmed.indexOf('404 - File') !== -1) {
+            if (trimmed.indexOf('404') !== -1) {
+                text = 'تعذر العثور على المسار أو المورد المطلوب في الخادم (404 Not Found).';
+            } else if (trimmed.indexOf('400') !== -1) {
+                text = 'فشل التحقق من صحة الطلب أو رمز الأمان (400 Bad Request).';
+            } else if (trimmed.indexOf('401') !== -1 || trimmed.indexOf('403') !== -1) {
+                text = 'ليس لديك الصلاحية لتنفيذ هذا الإجراء أو انتهت جلستك الحالية.';
+            } else {
+                text = 'حدث خطأ في استجابة الخادم. يرجى إعادة المحاولة.';
+            }
+        }
+    }
+
     var $container = $('#toast-container');
     if (!$container.length) {
         $('body').append('<div id="toast-container" class="app-toast-container" aria-live="polite" aria-atomic="true"></div>');
@@ -260,7 +276,17 @@ function handleAjaxFormSubmit(formElement, successCallback) {
                 var json = JSON.parse(xhr.responseText);
                 if (json && json.message) errMsg = json.message;
             } catch (e) {
-                if (xhr.responseText) errMsg = xhr.responseText;
+                if (xhr.status === 404) {
+                    errMsg = 'تعذر العثور على المسار المطلوب في الخادم (404 Not Found).';
+                } else if (xhr.status === 400) {
+                    errMsg = 'فشل التحقق من صحة البيانات أو رمز الأمان (400 Bad Request).';
+                } else if (xhr.status === 403 || xhr.status === 401) {
+                    errMsg = 'ليس لديك الصلاحية لتنفيذ هذا الإجراء أو انتهت جلستك الحالية.';
+                } else if (xhr.status >= 500) {
+                    errMsg = 'حدث خطأ غير متوقع في الخادم (500 Server Error).';
+                } else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) {
+                    errMsg = xhr.responseText;
+                }
             }
             window.showToast('error', errMsg);
         }

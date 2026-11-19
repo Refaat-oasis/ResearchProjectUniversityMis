@@ -27,6 +27,7 @@ namespace researchProject.Repositories.Interfaces
         Task<(bool Succeeded, string? ErrorMessage)> AddCoAdminRoleToExistingUserAsync(string userId, int collegeId);
         Task<(bool Succeeded, string? ErrorMessage)> ReassignCoAdminCollegeAsync(int coAdminId, int newCollegeId);
         Task<(bool Succeeded, string? ErrorMessage)> SetCoAdminActiveStatusAsync(int coAdminId, bool isActive);
+        Task<(bool Succeeded, string? ErrorMessage)> RemoveCoAdminFromCollegeAsync(int coAdminId);
         Task<(bool Succeeded, string? ErrorMessage)> UpdateCoAdminSignatureAsync(int coAdminId, string signaturePath);
 
         Task<List<Researcher>> GetAllResearchersAsync();
@@ -46,6 +47,6 @@ namespace researchProject.Repositories.Interfaces
 
         Task<List<Research>> SearchCertificatesArchiveAsync(string? serialNumber, string? researcherName, int? collegeId, DateTime? fromDate, DateTime? toDate);
         Task<SystemStatisticsViewModel> GetSystemStatisticsAsync();
-        Task<AuditLogListViewModel> GetAuditLogsAsync(int page = 1, int pageSize = 25, string? searchTerm = null, string? roleFilter = null, bool? successFilter = null, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<AuditLogListViewModel> GetAuditLogsAsync(int page = 1, int pageSize = 25, string? searchTerm = null, string? roleFilter = null, bool? successFilter = null, DateTime? fromDate = null, DateTime? toDate = null, string? actionFilter = null);
     }
 }

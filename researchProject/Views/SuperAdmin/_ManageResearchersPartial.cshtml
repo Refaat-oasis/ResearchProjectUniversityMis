@@ -97,7 +97,7 @@
         $('#partial-loading-spinner').css('display', 'flex');
 
         $.ajax({
-            url: '/SuperAdmin/ToggleResearcherStatus',
+            url: '@Url.Action("ToggleResearcherStatus", "SuperAdmin")',
             type: 'POST',
             data: {
                 researcherId: researcherId,
@@ -108,14 +108,17 @@
                 $('#partial-loading-spinner').hide();
                 if (res && res.success) {
                     window.showToast('success', res.message || 'تم تحديث حالة الحساب بنجاح.');
-                    loadPartial('/SuperAdmin/ManageResearchersPartial', '#main-content-container', 'manage-researchers');
+                    loadPartial('@Url.Action("ManageResearchersPartial", "SuperAdmin")', '#main-content-container', 'manage-researchers');
                 } else {
                     window.showToast('error', res.message || 'فشل تحديث حالة الحساب.');
                 }
             },
             error: function (xhr) {
                 $('#partial-loading-spinner').hide();
-                window.showToast('error', xhr.responseText || 'حدث خطأ أثناء الاتصال بالخادم.');
+                var msg = 'حدث خطأ أثناء الاتصال بالخادم.';
+                if (xhr.status === 404) msg = 'تعذر العثور على إجراء الخادم المطلوب (404).';
+                else if (xhr.responseText && !xhr.responseText.trim().startsWith('<')) msg = xhr.responseText;
+                window.showToast('error', msg);
             }
         });
     }
