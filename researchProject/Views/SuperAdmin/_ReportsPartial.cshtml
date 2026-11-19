@@ -30,6 +30,7 @@
                                 <th>الكلية</th>
                                 <th class="text-center">عدد المقترحات</th>
                                 <th class="text-center">النسبة المئوية</th>
+                                <th style="width: 30%;">مؤشر الحصة</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -37,17 +38,22 @@
                             {
                                 foreach (var item in Model.ResearchesByCollege)
                                 {
-                                    var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches).ToString("0.0") : "0";
+                                    var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches) : 0.0;
                                     <tr>
                                         <td class="fw-bold">@item.Key</td>
-                                        <td class="text-center"><span class="status-stamp status-assigned font-mono-tabular">@item.Value</span></td>
-                                        <td class="text-center font-mono-tabular" style="color: var(--ink-muted);">@pct%</td>
+                                        <td class="text-center"><span class="status-stamp status-assigned font-mono-tabular" data-counter data-target="@item.Value">@item.Value</span></td>
+                                        <td class="text-center font-mono-tabular" style="color: var(--ink-muted);" data-counter data-target="@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1" data-suffix="%">@pct.ToString("0.0")%</td>
+                                        <td>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar animated-progress-bar" role="progressbar" style="width: 0%; background-color: var(--brand-sovereign);" data-target-width="@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 }
                             }
                             else
                             {
-                                <tr><td colspan="3" class="text-center" style="color: var(--ink-muted);">لا توجد بيانات.</td></tr>
+                                <tr><td colspan="4" class="text-center" style="color: var(--ink-muted);">لا توجد بيانات.</td></tr>
                             }
                         </tbody>
                     </table>
@@ -66,6 +72,7 @@
                                 <th>تصنيف البحث</th>
                                 <th class="text-center">عدد المقترحات</th>
                                 <th class="text-center">النسبة المئوية</th>
+                                <th style="width: 30%;">مؤشر الحصة</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -73,17 +80,22 @@
                             {
                                 foreach (var item in Model.ResearchesByCategory)
                                 {
-                                    var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches).ToString("0.0") : "0";
+                                    var pct = Model.TotalResearches > 0 ? (item.Value * 100.0 / Model.TotalResearches) : 0.0;
                                     <tr>
                                         <td class="fw-bold">@item.Key</td>
-                                        <td class="text-center"><span class="status-stamp status-screening font-mono-tabular">@item.Value</span></td>
-                                        <td class="text-center font-mono-tabular" style="color: var(--ink-muted);">@pct%</td>
+                                        <td class="text-center"><span class="status-stamp status-screening font-mono-tabular" data-counter data-target="@item.Value">@item.Value</span></td>
+                                        <td class="text-center font-mono-tabular" style="color: var(--ink-muted);" data-counter data-target="@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1" data-suffix="%">@pct.ToString("0.0")%</td>
+                                        <td>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar animated-progress-bar" role="progressbar" style="width: 0%; background-color: var(--brand-brass);" data-target-width="@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 }
                             }
                             else
                             {
-                                <tr><td colspan="3" class="text-center" style="color: var(--ink-muted);">لا توجد بيانات.</td></tr>
+                                <tr><td colspan="4" class="text-center" style="color: var(--ink-muted);">لا توجد بيانات.</td></tr>
                             }
                         </tbody>
                     </table>
@@ -97,23 +109,35 @@
     <div class="kpi-ledger-grid mb-0">
         <div class="kpi-ledger-cell">
             <div class="kpi-ledger-label"><i class="bi bi-stopwatch me-1"></i>متوسط زمن الفحص الشكلي</div>
-            <div class="kpi-ledger-value" style="color: var(--brand-sovereign);">@Model.AverageScreeningHours.ToString("0.0")</div>
+            <div class="kpi-ledger-value font-mono-tabular" style="color: var(--brand-sovereign);" data-counter data-target="@Model.AverageScreeningHours.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1">@Model.AverageScreeningHours.ToString("0.0")</div>
             <div class="kpi-ledger-sub" title="ساعة (الحد الأقصى: 48 ساعة)">ساعة (الحد الأقصى: 48 ساعة)</div>
+            <div class="progress mt-1" style="height: 5px;">
+                <div class="progress-bar animated-progress-bar" style="width: 0%; background-color: var(--brand-sovereign);" data-target-width="@Math.Min(100, (Model.AverageScreeningHours / 48.0) * 100).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+            </div>
         </div>
         <div class="kpi-ledger-cell">
             <div class="kpi-ledger-label"><i class="bi bi-calendar-check me-1"></i>متوسط زمن التحكيم الأخلاقي</div>
-            <div class="kpi-ledger-value" style="color: #1D3A5F;">@Model.AverageJudgingDays.ToString("0.0")</div>
+            <div class="kpi-ledger-value font-mono-tabular" style="color: #1D3A5F;" data-counter data-target="@Model.AverageJudgingDays.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1">@Model.AverageJudgingDays.ToString("0.0")</div>
             <div class="kpi-ledger-sub" title="أيام عمل لكل مقترح">أيام عمل لكل مقترح</div>
+            <div class="progress mt-1" style="height: 5px;">
+                <div class="progress-bar animated-progress-bar" style="width: 0%; background-color: #1D3A5F;" data-target-width="@Math.Min(100, (Model.AverageJudgingDays / 14.0) * 100).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+            </div>
         </div>
         <div class="kpi-ledger-cell">
             <div class="kpi-ledger-label"><i class="bi bi-shield-check me-1"></i>الامتثال لاتفاقية مستوى الخدمة</div>
-            <div class="kpi-ledger-value" style="color: var(--brand-sovereign);">@Model.SlaCompliancePercentage.ToString("0.0")%</div>
+            <div class="kpi-ledger-value font-mono-tabular" style="color: var(--brand-sovereign);" data-counter data-target="@Model.SlaCompliancePercentage.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1" data-suffix="%">@Model.SlaCompliancePercentage.ToString("0.0")%</div>
             <div class="kpi-ledger-sub" title="أبحاث فُحصت خلال المهلة">أبحاث فُحصت خلال المهلة</div>
+            <div class="progress mt-1" style="height: 5px;">
+                <div class="progress-bar animated-progress-bar" style="width: 0%; background-color: var(--brand-sovereign);" data-target-width="@Math.Min(100, Model.SlaCompliancePercentage).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+            </div>
         </div>
         <div class="kpi-ledger-cell">
             <div class="kpi-ledger-label"><i class="bi bi-patch-check me-1"></i>إجمالي الشهادات المعتمدة الصادرة</div>
-            <div class="kpi-ledger-value" style="color: var(--brand-brass);">@Model.CertificatesIssuedCount</div>
+            <div class="kpi-ledger-value font-mono-tabular" style="color: var(--brand-brass);" data-counter data-target="@Model.CertificatesIssuedCount">@Model.CertificatesIssuedCount</div>
             <div class="kpi-ledger-sub" title="شهادة أخلاقية رقمية">شهادة أخلاقية رقمية</div>
+            <div class="progress mt-1" style="height: 5px;">
+                <div class="progress-bar animated-progress-bar" style="width: 0%; background-color: var(--brand-brass);" data-target-width="@(Model.TotalResearches > 0 ? (Model.CertificatesIssuedCount * 100.0 / Model.TotalResearches) : 0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+            </div>
         </div>
     </div>
 </div>

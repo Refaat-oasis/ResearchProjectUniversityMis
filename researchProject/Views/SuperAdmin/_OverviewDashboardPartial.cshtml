@@ -17,22 +17,22 @@
     <div class="kpi-ledger-grid mb-4">
         <div class="kpi-ledger-cell">
             <div class="stat-label">إجمالي المقترحات البحثية</div>
-            <div class="stat-number font-mono-tabular">@Model.TotalResearches</div>
+            <div class="stat-number font-mono-tabular" data-counter data-target="@Model.TotalResearches">@Model.TotalResearches</div>
         </div>
 
         <div class="kpi-ledger-cell">
             <div class="stat-label">قيد المراجعة الشكلية</div>
-            <div class="stat-number font-mono-tabular">@Model.UnderScreeningCount</div>
+            <div class="stat-number font-mono-tabular" data-counter data-target="@Model.UnderScreeningCount">@Model.UnderScreeningCount</div>
         </div>
 
         <div class="kpi-ledger-cell">
             <div class="stat-label">مسندة للمحكمين</div>
-            <div class="stat-number font-mono-tabular">@Model.AssignedToJudgesCount</div>
+            <div class="stat-number font-mono-tabular" data-counter data-target="@Model.AssignedToJudgesCount">@Model.AssignedToJudgesCount</div>
         </div>
 
         <div class="kpi-ledger-cell">
             <div class="stat-label">شهادات صادرة رسمياً</div>
-            <div class="stat-number font-mono-tabular">@Model.CertificatesIssuedCount</div>
+            <div class="stat-number font-mono-tabular" data-counter data-target="@Model.CertificatesIssuedCount">@Model.CertificatesIssuedCount</div>
         </div>
     </div>
 
@@ -42,13 +42,13 @@
             <div class="h-100">
                 <h6 class="fw-semibold mb-3 pb-2 border-bottom">مؤشر الالتزام بمهلة الفحص (48h)</h6>
                 <div class="d-flex align-items-baseline gap-2 mb-2">
-                    <span class="fs-2 fw-semibold font-mono-tabular">@Model.SlaCompliancePercentage%</span>
+                    <span class="fs-2 fw-semibold font-mono-tabular" data-counter data-target="@Model.SlaCompliancePercentage.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1" data-suffix="%">@Model.SlaCompliancePercentage%</span>
                     <span class="small text-muted">نسبة الالتزام بالـ SLA</span>
                 </div>
                 <div class="progress" style="height: 5px;">
-                    <div class="progress-bar" role="progressbar" style="width: @Model.SlaCompliancePercentage%;"></div>
+                    <div class="progress-bar animated-progress-bar" role="progressbar" style="width: 0%;" data-target-width="@Model.SlaCompliancePercentage.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
                 </div>
-                <div class="small mt-2 text-secondary">متوسط زمن الفحص الشكلي: <strong><span class="font-mono-tabular">@Model.AverageScreeningHours</span> ساعة</strong></div>
+                <div class="small mt-2 text-secondary">متوسط زمن الفحص الشكلي: <strong><span class="font-mono-tabular" data-counter data-target="@Model.AverageScreeningHours.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1">@Model.AverageScreeningHours</span> ساعة</strong></div>
             </div>
         </div>
 
@@ -57,15 +57,15 @@
                 <h6 class="fw-semibold mb-3 pb-2 border-bottom">هيئة المحكمين والباحثين</h6>
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                     <span class="text-secondary">المحكمون النشطون:</span>
-                    <strong><span class="font-mono-tabular">@Model.TotalJudges</span> محكم معتمد</strong>
+                    <strong><span class="font-mono-tabular" data-counter data-target="@Model.TotalJudges">@Model.TotalJudges</span> محكم معتمد</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                     <span class="text-secondary">الباحثون المسجلون:</span>
-                    <strong><span class="font-mono-tabular">@Model.TotalResearchers</span> باحث</strong>
+                    <strong><span class="font-mono-tabular" data-counter data-target="@Model.TotalResearchers">@Model.TotalResearchers</span> باحث</strong>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 small">
                     <span class="text-secondary">عدد الكليات المشاركة:</span>
-                    <strong><span class="font-mono-tabular">@Model.TotalColleges</span> كلية</strong>
+                    <strong><span class="font-mono-tabular" data-counter data-target="@Model.TotalColleges">@Model.TotalColleges</span> كلية</strong>
                 </div>
             </div>
         </div>
@@ -75,15 +75,15 @@
                 <h6 class="fw-semibold mb-3 pb-2 border-bottom">توزيع الحالات</h6>
                 <div class="d-flex justify-content-between align-items-center py-2 small border-bottom">
                     <span>تعديلات مطلوبة:</span>
-                    <span class="status-stamp status-modifications font-mono-tabular">@Model.ModificationsRequiredCount</span>
+                    <span class="status-stamp status-modifications font-mono-tabular" data-counter data-target="@Model.ModificationsRequiredCount">@Model.ModificationsRequiredCount</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 small border-bottom">
                     <span>معتمد (بانتظار الشهادة):</span>
-                    <span class="status-stamp status-approved font-mono-tabular">@Model.ApprovedCount</span>
+                    <span class="status-stamp status-approved font-mono-tabular" data-counter data-target="@Model.ApprovedCount">@Model.ApprovedCount</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-2 small">
                     <span>شهادات صادرة:</span>
-                    <span class="status-stamp status-issued font-mono-tabular">@Model.CertificatesIssuedCount</span>
+                    <span class="status-stamp status-issued font-mono-tabular" data-counter data-target="@Model.CertificatesIssuedCount">@Model.CertificatesIssuedCount</span>
                 </div>
             </div>
         </div>

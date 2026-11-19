@@ -2043,6 +2043,18 @@ select:focus-visible {
     background-color: var(--brand-sovereign);
 }
 
+.progress-bar-animated-fill {
+    transition: width 1.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: width;
+}
+
+@media print {
+    .progress-bar,
+    .progress-bar-animated-fill {
+        transition: none !important;
+    }
+}
+
 .main-content .rounded-pill,
 .public-container .rounded-pill {
     border-radius: var(--radius-sm) !important;
